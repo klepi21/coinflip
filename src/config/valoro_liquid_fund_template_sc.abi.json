@@ -434,7 +434,7 @@
                     "type": "List<u64>"
                 },
                 {
-                    "type": "List<FundTokenStructure>"
+                    "type": "List<LiquidFundTokenStructure>"
                 }
             ]
         },
@@ -910,72 +910,7 @@
             ]
         },
         {
-            "name": "getModelParameters",
-            "mutability": "readonly",
-            "inputs": [
-                {
-                    "name": "liquid_token",
-                    "type": "TokenIdentifier"
-                }
-            ],
-            "outputs": [
-                {
-                    "type": "ModelParameters"
-                }
-            ]
-        },
-        {
-            "name": "getBorrowRate",
-            "mutability": "readonly",
-            "inputs": [
-                {
-                    "name": "liquid_token",
-                    "type": "TokenIdentifier"
-                },
-                {
-                    "name": "borrows",
-                    "type": "BigUint"
-                },
-                {
-                    "name": "liquidity",
-                    "type": "BigUint"
-                }
-            ],
-            "outputs": [
-                {
-                    "type": "BigUint"
-                }
-            ]
-        },
-        {
-            "name": "getSupplyRate",
-            "mutability": "readonly",
-            "inputs": [
-                {
-                    "name": "liquid_token",
-                    "type": "TokenIdentifier"
-                },
-                {
-                    "name": "borrows",
-                    "type": "BigUint"
-                },
-                {
-                    "name": "liquidity",
-                    "type": "BigUint"
-                },
-                {
-                    "name": "reserve_factor",
-                    "type": "BigUint"
-                }
-            ],
-            "outputs": [
-                {
-                    "type": "BigUint"
-                }
-            ]
-        },
-        {
-            "name": "getBaseRate",
+            "name": "getTokenApr",
             "mutability": "readonly",
             "inputs": [
                 {
@@ -1223,7 +1158,7 @@
     "esdtAttributes": [],
     "hasCallback": true,
     "types": {
-        "FundTokenStructure": {
+        "LiquidFundTokenStructure": {
             "type": "struct",
             "fields": [
                 {
@@ -1241,30 +1176,9 @@
                 {
                     "name": "balance",
                     "type": "BigUint"
-                }
-            ]
-        },
-        "ModelParameters": {
-            "type": "struct",
-            "fields": [
-                {
-                    "name": "r0",
-                    "type": "BigUint"
                 },
                 {
-                    "name": "m1",
-                    "type": "BigUint"
-                },
-                {
-                    "name": "m2",
-                    "type": "BigUint"
-                },
-                {
-                    "name": "u0",
-                    "type": "BigUint"
-                },
-                {
-                    "name": "rmax",
+                    "name": "apr",
                     "type": "BigUint"
                 }
             ]

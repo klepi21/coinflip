@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, BarChart, Wallet, DollarSign, Percent, TrendingUp, Loader2 } from 'lucide-react';
 import { liquidFunds, LiquidFund } from '@/data/liquidFunds';
@@ -25,16 +25,84 @@ interface FundHolding {
   apr: number;
 }
 
-export const SingleFundView = ({ address }: SingleFundViewProps) => {
-  const { details, isLoading, error } = useGetLiquidFundDetails(address);
+interface TokenInfo {
+  identifier: string;
+  weight: number;
+  balance: string;
+  decimals: number;
+  apr: string;
+}
 
-  if (isLoading) return (
+const WAD = BigInt('1000000000000000000');
+const SECONDS_PER_YEAR = 31556926;
+
+const calculateApy = (aprValue: string | number) => {
+  if (!aprValue) return 0;
+  const apr = BigInt(aprValue);
+  const base = WAD + apr;
+  const exponent = SECONDS_PER_YEAR;
+  
+  const apy = (Math.pow(Number(base) / Number(WAD), exponent) - 1) * 100;
+  return apy;
+};
+
+export const SingleFundView = ({ params }: { params: { address: string } }) => {
+  console.log('=== COMPONENT MOUNTED ===', { 
+    time: new Date().toISOString(),
+    address: params.address 
+  });
+
+  console.log('SingleFundView rendered with address:', params.address);
+  
+  const { data: fundInfo, isLoading, error } = useGetLiquidFundInfo(params.address);
+  const { details: fundDetails, isLoading: detailsLoading } = useGetLiquidFundDetails(params.address);
+
+  useEffect(() => {
+    console.error('FORCE LOG:', { 
+      fundInfo,
+      hasData: !!fundInfo,
+      address: params.address
+    });
+  }, [fundInfo, params.address]);
+
+  useEffect(() => {
+    console.log('SingleFundView useEffect triggered');
+    console.log('fundInfo:', fundInfo);
+    if (fundInfo) {
+      console.log('=== Debug Logs ===');
+      console.log('Full fundInfo:', fundInfo);
+      console.log('Tokens array:', fundInfo.tokens);
+      console.log('First token:', fundInfo.tokens?.[0]);
+      console.log('APR values:', fundInfo.tokens?.map((t: any) => t.apr));
+      console.log('=================');
+    }
+  }, [fundInfo]);
+
+  useEffect(() => {
+    if (fundDetails) {
+      console.log('Fund Details:', fundDetails);
+    }
+  }, [fundDetails]);
+
+  useEffect(() => {
+    console.log('=== COMPONENT DATA ===');
+    console.log('Fund Details:', fundDetails);
+    console.log('Tokens from details:', fundDetails?.tokens);
+  }, [fundDetails]);
+
+  // Wait for both data sources to be loaded
+  if (isLoading || detailsLoading) return (
     <div className="flex items-center justify-center min-h-[400px]">
       <Loader2 className="w-8 h-8 animate-spin text-primary" />
     </div>
   );
   if (error) return <div>Error: {error.message}</div>;
-  if (!details) return null;
+  if (!fundInfo || !fundDetails) return null;
+
+  // Use the tokens directly from fundDetails instead of merging
+  const tokensWithApr = fundDetails.tokens;
+
+  console.log('Token data being rendered:', fundInfo.tokens);
 
   const formatPercentage = (value: number) => {
     return value.toFixed(2) + '%';
@@ -54,6 +122,25 @@ export const SingleFundView = ({ address }: SingleFundViewProps) => {
     return `${wholePart}.${fractionalStr.slice(0, 6)}`;
   };
 
+  const formatApr = (aprValue: string | number) => {
+    if (!aprValue) return '0.00%';
+    const apr = Number(aprValue) / Math.pow(10, 8);
+    return apr.toFixed(2) + '%';
+  };
+
+  console.log('Tokens being rendered:', tokensWithApr);
+
+  console.log('=== RENDER DATA ===');
+  console.log('tokensWithApr:', tokensWithApr);
+  console.log('First token apr:', tokensWithApr?.[0]?.apr);
+
+  console.log('Debug render:', {
+    hasFundDetails: !!fundDetails,
+    tokens: fundDetails?.tokens,
+    firstToken: fundDetails?.tokens?.[0],
+    firstTokenApr: fundDetails?.tokens?.[0]?.apr
+  });
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
@@ -66,7 +153,7 @@ export const SingleFundView = ({ address }: SingleFundViewProps) => {
           Back to Funds
         </Link>
         <h1 className="text-3xl font-bold text-stone-900 dark:text-white">
-          {details.name}
+          {fundInfo.name}
         </h1>
       </div>
 
@@ -78,7 +165,7 @@ export const SingleFundView = ({ address }: SingleFundViewProps) => {
             <h3 className="font-medium text-stone-600 dark:text-stone-400">Price</h3>
           </div>
           <p className="text-2xl font-semibold text-stone-900 dark:text-white">
-            ${formatBalance(details.price, 18)}
+            ${formatBalance(fundInfo.price, 18)}
           </p>
         </div>
 
@@ -88,7 +175,7 @@ export const SingleFundView = ({ address }: SingleFundViewProps) => {
             <h3 className="font-medium text-stone-600 dark:text-stone-400">NAV</h3>
           </div>
           <p className="text-2xl font-semibold text-stone-900 dark:text-white">
-            ${formatBalance(details.nav, 18)}
+            ${formatBalance(fundInfo.nav, 18)}
           </p>
         </div>
 
@@ -98,7 +185,7 @@ export const SingleFundView = ({ address }: SingleFundViewProps) => {
             <h3 className="font-medium text-stone-600 dark:text-stone-400">Supply</h3>
           </div>
           <p className="text-2xl font-semibold text-stone-900 dark:text-white">
-            {formatBalance(details.supply, 18)}
+            {formatBalance(fundInfo.supply, 18)}
           </p>
         </div>
 
@@ -108,7 +195,7 @@ export const SingleFundView = ({ address }: SingleFundViewProps) => {
             <h3 className="font-medium text-stone-600 dark:text-stone-400">Status</h3>
           </div>
           <p className="text-2xl font-semibold text-stone-900 dark:text-white">
-            {details.isPaused ? 'Paused' : 'Active'}
+            {fundInfo.isPaused ? 'Paused' : 'Active'}
           </p>
         </div>
       </div>
@@ -122,15 +209,15 @@ export const SingleFundView = ({ address }: SingleFundViewProps) => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-stone-600 dark:text-stone-400">Buy</span>
-                <span className="font-medium text-stone-900 dark:text-white">{formatPercentage(details.fees.protocol.buy)}</span>
+                <span className="font-medium text-stone-900 dark:text-white">{formatPercentage(fundInfo.fees.protocol.buy)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-stone-600 dark:text-stone-400">Withdraw</span>
-                <span className="font-medium text-stone-900 dark:text-white">{formatPercentage(details.fees.protocol.withdraw)}</span>
+                <span className="font-medium text-stone-900 dark:text-white">{formatPercentage(fundInfo.fees.protocol.withdraw)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-stone-600 dark:text-stone-400">Performance</span>
-                <span className="font-medium text-stone-900 dark:text-white">{formatPercentage(details.fees.protocol.performance)}</span>
+                <span className="font-medium text-stone-900 dark:text-white">{formatPercentage(fundInfo.fees.protocol.performance)}</span>
               </div>
             </div>
           </div>
@@ -140,15 +227,15 @@ export const SingleFundView = ({ address }: SingleFundViewProps) => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-stone-600 dark:text-stone-400">Buy</span>
-                <span className="font-medium text-stone-900 dark:text-white">{formatPercentage(details.fees.manager.buy)}</span>
+                <span className="font-medium text-stone-900 dark:text-white">{formatPercentage(fundInfo.fees.manager.buy)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-stone-600 dark:text-stone-400">Withdraw</span>
-                <span className="font-medium text-stone-900 dark:text-white">{formatPercentage(details.fees.manager.withdraw)}</span>
+                <span className="font-medium text-stone-900 dark:text-white">{formatPercentage(fundInfo.fees.manager.withdraw)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-stone-600 dark:text-stone-400">Performance</span>
-                <span className="font-medium text-stone-900 dark:text-white">{formatPercentage(details.fees.manager.performance)}</span>
+                <span className="font-medium text-stone-900 dark:text-white">{formatPercentage(fundInfo.fees.manager.performance)}</span>
               </div>
             </div>
           </div>
@@ -159,9 +246,35 @@ export const SingleFundView = ({ address }: SingleFundViewProps) => {
       <div>
         <h2 className="text-2xl font-bold text-stone-900 dark:text-white mb-6">Fund Composition</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {details.tokens.map((token, index) => (
-            <div key={index} className="p-6 rounded-xl bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
-              <h3 className="text-lg font-semibold text-stone-900 dark:text-white mb-4">{token.identifier}</h3>
+          {fundDetails.tokens.map((token: TokenInfo, index: number) => (
+            <div key={index} className="relative p-6 rounded-xl bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
+              {/* APR & APY Badge */}
+              <div className="absolute top-4 right-4 flex gap-2">
+                <div className="px-3 py-1.5 bg-primary/10 rounded-lg">
+                  <div className="text-xs text-primary font-medium mb-0.5">APR</div>
+                  <div className="text-lg font-bold text-primary">
+                    {formatApr(token.apr)}
+                  </div>
+                </div>
+                <div className="px-3 py-1.5 bg-emerald-500/10 rounded-lg">
+                  <div className="text-xs text-emerald-500 font-medium mb-0.5">APY</div>
+                  <div className="text-lg font-bold text-emerald-500">
+                    {calculateApy(token.apr).toFixed(2)}%
+                  </div>
+                </div>
+              </div>
+
+              {/* Token Info */}
+              <div className="flex items-center gap-3 mb-4 mt-12">
+                <Image
+                  src={`https://tools.multiversx.com/assets-cdn/devnet/tokens/${token.identifier}/icon.png`}
+                  alt={token.identifier}
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+                <h3 className="text-lg font-semibold text-stone-900 dark:text-white">{token.identifier}</h3>
+              </div>
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-stone-600 dark:text-stone-400">Weight</span>

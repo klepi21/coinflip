@@ -16,6 +16,7 @@ interface TokenInfo {
   weight: number;
   balance: string;
   decimals: number;
+  apr: string;
 }
 
 interface FundDetails {
@@ -37,6 +38,7 @@ interface TokenStructure {
   decimals: { valueOf: () => number };
   weight: { valueOf: () => number };
   balance: { toString: () => string };
+  apr: { toString: () => string };
 }
 
 // Add type for query response
@@ -65,13 +67,17 @@ const parseFundDetails = (values: any, priceValue: any, supplyValue: any): FundD
     supply: supply,
     isPaused: values[8].valueOf(),
     fundTokenId: values[2].toString(),
-    tokens: values[10].valueOf().map((structure: any) => ({
-      identifier: structure.token_identifier.toString(),
-      decimals: Number(structure.decimals.valueOf()),
-      weight: Number(structure.weight.valueOf()) / 100,
-      balance: structure.balance.toString(),
-      readableBalance: Number(structure.balance.toString()) / Math.pow(10, Number(structure.decimals.valueOf()))
-    })),
+    tokens: values[10].valueOf().map((structure: any) => {
+      const token = {
+        identifier: structure.token_identifier.toString(),
+        decimals: Number(structure.decimals.valueOf()),
+        weight: Number(structure.weight.valueOf()) / 100,
+        balance: structure.balance.toString(),
+        apr: structure.apr.toString()
+      };
+      console.log('Mapped token:', token);
+      return token;
+    }),
     fees: {
       protocol: {
         buy: Number(values[9].valueOf()[0]) / 100,
@@ -137,37 +143,13 @@ export const useGetLiquidFundDetails = (address: string) => {
           contract.getEndpoint('getIndexFundInfo')
         );
 
-        // Log each field individually
-        console.log('Fund Info Fields:');
-        console.log('----------------------------------------');
-        console.log('Manager Address:', values[0].toString());
-        console.log('Fund Token ID:', values[2].toString());
-        console.log('USDC Token ID:', values[1].toString());
-        console.log('Fund Name:', values[3].toString());
-        console.log('Fund Decimals:', Number(values[4].valueOf().c[0]));
-        console.log('NAV:', values[5].toString());
-        console.log('Supply:', values[6].toString());
-        console.log('Is Initialized:', values[7].valueOf());
-        console.log('Is Paused:', values[8].valueOf());
-        console.log('Fees:', {
-          protocol: {
-            buy: values[9].valueOf()[0],
-            withdraw: values[9].valueOf()[1],
-            performance: values[9].valueOf()[2]
-          },
-          manager: {
-            buy: values[9].valueOf()[3],
-            withdraw: values[9].valueOf()[4],
-            performance: values[9].valueOf()[5]
-          }
-        });
-        console.log('Token Structures:', values[10].valueOf().map((t: TokenStructure) => ({
-          identifier: t.token_identifier.toString(),
-          decimals: t.decimals.valueOf(),
-          weight: t.weight.valueOf(),
-          balance: t.balance.toString()
+        // Add these logs
+        console.log('=== DETAILS HOOK LOGS ===');
+        console.log('Raw values[10]:', values[10]?.valueOf());
+        console.log('Token structures before mapping:', values[10]?.valueOf()?.map((t: any) => ({
+          identifier: t.token_identifier?.toString(),
+          apr: t.apr?.toString()
         })));
-        console.log('----------------------------------------');
 
         // Get fund decimals from the response
         const fundDecimals = Number(values[4].valueOf());
@@ -185,8 +167,11 @@ export const useGetLiquidFundDetails = (address: string) => {
         ).values[0];
 
         const parsedDetails = parseFundDetails(values, priceValue, supplyValue);
-        console.log('Parsed Details:', parsedDetails);
+        //console.log('Parsed Details:', parsedDetails);
         setDetails(parsedDetails);
+
+        // Also log the final parsed details
+        console.log('Final parsed details:', parsedDetails);
 
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to fetch fund details'));

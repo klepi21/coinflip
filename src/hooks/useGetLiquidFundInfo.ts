@@ -13,6 +13,7 @@ export const useGetLiquidFundInfo = (contractAddress: string) => {
 
   useEffect(() => {
     const fetchFundInfo = async () => {
+      console.log('Fetching fund info for address:', contractAddress);
       try {
         const responses = (await Promise.all([
           queryContract('getFundName', [], ['bytes']),
@@ -25,7 +26,7 @@ export const useGetLiquidFundInfo = (contractAddress: string) => {
           queryContract('getIndexFundManager', [], ['Address'])
         ])) as IContractQueryResponse[];
 
-        setData({
+        const processedData = {
           name: new TextDecoder().decode(responses[0].getReturnDataParts()[0] ?? ''),
           tokens: responses[1].getReturnDataParts()[0],
           supply: responses[2].getReturnDataParts()[0]?.toString() ?? '0',
@@ -34,16 +35,21 @@ export const useGetLiquidFundInfo = (contractAddress: string) => {
           isInitialized: Boolean(responses[5].getReturnDataParts()[0]),
           isPaused: Boolean(responses[6].getReturnDataParts()[0]),
           manager: responses[7].getReturnDataParts()[0]?.toString() ?? '',
-        });
+        };
+
+        console.log('Processed data in hook:', processedData);
+        setData(processedData);
       } catch (err: any) {
-        console.error('Error fetching fund info:', err);
+        console.error('Error in useGetLiquidFundInfo:', err);
         setError(err instanceof Error ? err : new Error(err?.message || 'Unknown error'));
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchFundInfo();
+    if (contractAddress) {
+      fetchFundInfo();
+    }
   }, [contractAddress]);
 
   return { data, isLoading, error };

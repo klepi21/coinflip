@@ -62,14 +62,14 @@ export const SharesExchangeForm = ({
   useEffect(() => {
     const fetchBalances = async () => {
       if (!address) return;
-      console.log('Fetching balances for:', { address, fundTokenId });
+      //console.log('Fetching balances for:', { address, fundTokenId });
 
       try {
         // Fetch EGLD balance using SDK
         const proxy = new ProxyNetworkProvider('https://devnet-gateway.multiversx.com');
         const account = await proxy.getAccount(new Address(address));
         const egldBalance = account.balance.toString();
-        console.log('EGLD balance:', egldBalance); // Debug log
+        //console.log('EGLD balance:', egldBalance); // Debug log
         setEgldBalance((Number(egldBalance) / Math.pow(10, 18)).toFixed(4));
 
         // Fetch USDC balance and icon

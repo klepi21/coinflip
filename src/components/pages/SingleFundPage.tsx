@@ -102,6 +102,20 @@ const formatAUM = (value: string) => {
   return `$${numValue.toFixed(2)}`;
 };
 
+// Constants as specified
+const WAD = 1_000_000_000_000_000_000;
+const SECONDS_PER_YEAR = 31556926;
+
+// Updated calculation using the exact formula
+const calculateApy = (aprValue: string | number) => {
+  if (!aprValue) return 0;
+  const apr = Number(aprValue);
+  
+  // APY = (1 + APR / WAD) ^ SPR - 1
+  const apy = (Math.pow(1 + apr / WAD, SECONDS_PER_YEAR) - 1) * 100;
+  return apy;
+};
+
 export const SingleFundPage = ({ address }: SingleFundPageProps) => {
   const { details, isLoading, error } = useGetLiquidFundDetails(address);
 
@@ -244,22 +258,23 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
             className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10
                      hover:border-white/20 transition-all duration-300
                      shadow-[0_8px_32px_rgba(0,0,0,0.12)]
-                     flex flex-col min-h-[400px] lg:h-[600px] order-last lg:order-first"
+                     flex flex-col h-auto lg:h-auto"
           >
             <div className="p-4 sm:p-8">
               <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-8">Fund Composition</h2>
-              <div className="space-y-2 overflow-y-auto max-h-[350px] lg:max-h-[480px] pr-2">
+              <div className="space-y-2">
                 {details.tokens.map((token, index) => (
                   <motion.div
                     key={token.identifier}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="bg-black/40 backdrop-blur-xl rounded-xl p-4 border border-white/10
+                    className="bg-black/40 backdrop-blur-xl rounded-xl p-3 border border-white/10
                               hover:border-primary/50 transition-all duration-300
-                              flex items-center justify-between"
+                              flex items-center justify-between gap-4"
                   >
-                    <div className="flex items-center gap-4">
+                    {/* Left: Token Info */}
+                    <div className="flex items-center gap-4 flex-1">
                       <Image
                         src={getTokenIconUrl(token.identifier)}
                         alt={token.identifier}
@@ -272,17 +287,49 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
                           {token.identifier.split('-')[0]}
                         </div>
                         <div className="text-white/60 font-mono text-xs">
-                          {token.identifier}
+                          {formatBalance(token.balance, token.decimals)}
+                          &nbsp;
+                          {token.identifier.split('-')[0]}
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-white mb-0.5">
+
+                    {/* Middle: Weight */}
+                    <div className="text-center px-6 border-x border-white/10">
+                      <div className="text-2xl font-bold text-white">
                         {token.weight}%
                       </div>
                       <div className="text-white/60 text-sm">
-                        {formatBalance(token.balance, token.decimals)}
+                        Allocation
                       </div>
+                    </div>
+
+                    {/* Right: APY with trending icon */}
+                    <div className="bg-emerald-500/10 backdrop-blur-sm rounded-xl px-6 py-3 flex items-center gap-3">
+                      <div>
+                        <div className="text-2xl font-bold text-emerald-500">
+                          {calculateApy(token.apr) >= 100 
+                            ? calculateApy(token.apr).toFixed(1) + '%'
+                            : calculateApy(token.apr).toFixed(2) + '%'
+                          }
+                        </div>
+                        <div className="text-emerald-400 text-sm flex items-center gap-1.5">
+                          APY
+                          
+                        </div>
+                      </div>
+                      <div className="w-px h-8 bg-emerald-500/20" />
+                      <motion.div
+                        initial={{ rotate: -45 }}
+                        animate={{ rotate: 0 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 260,
+                          damping: 20
+                        }}
+                      >
+                        <TrendingUp className="w-6 h-6 text-emerald-500" />
+                      </motion.div>
                     </div>
                   </motion.div>
                 ))}
