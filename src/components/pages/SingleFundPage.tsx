@@ -164,75 +164,91 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
         <div className="absolute inset-0 opacity-20 bg-[url('/grain.png')] animate-grain" />
       </div>
 
-      {/* Main content - Updated spacing and styling */}
-      <div className="relative z-10 container mx-auto px-8 pt-24 pb-16">
-        {/* Header Section with Back Button */}
-        <div className="mb-12">
+      {/* Main content - Updated for mobile */}
+      <div className="relative z-10 container mx-auto px-4 sm:px-8 pt-16 sm:pt-24 pb-16">
+        {/* Header Section */}
+        <div className="mb-8 sm:mb-12">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-8 mb-8"
+            className="flex items-center gap-4 sm:gap-8 mb-6 sm:mb-8"
           >
             <Link 
               href="/liquid-funds"
               className="group flex items-center gap-2 text-white/60 hover:text-white transition-colors"
             >
-              <div className="relative w-10 h-10 flex items-center justify-center">
+              <div className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
                 <div className="absolute inset-0 bg-white/5 rounded-xl group-hover:bg-white/10 transition-colors" />
-                <ArrowLeft className="h-5 w-5 relative z-10" />
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 relative z-10" />
               </div>
-              <span className="font-medium">Back to Funds</span>
+              <span className="font-medium text-sm sm:text-base">Back to Funds</span>
             </Link>
           </motion.div>
 
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-7xl font-bold bg-gradient-to-r from-white via-white to-primary/50 bg-clip-text text-transparent"
+            className="text-4xl sm:text-7xl font-bold bg-gradient-to-r from-white via-white to-primary/50 bg-clip-text text-transparent"
           >
             {details.name}
           </motion.h1>
         </div>
 
-        {/* Stats Row - Enhanced glassmorphism */}
-        <div className="grid grid-cols-4 gap-6 mb-16">
+        {/* Stats Row - Mobile responsive grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-16">
           {stats.map((stat, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10
+              className="bg-white/5 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/10
                        hover:border-white/20 transition-all duration-300
-                       shadow-[0_8px_32px_rgba(0,0,0,0.12)]
-                       hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+                       shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
             >
-              <div className="flex items-center gap-4 mb-4">
-                {stat.icon}
-                <span className="text-white/60">{stat.label}</span>
+              <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
+                <div className="sm:hidden">{React.cloneElement(stat.icon as React.ReactElement, { className: 'h-5 w-5' })}</div>
+                <div className="hidden sm:block">{stat.icon}</div>
+                <span className="text-white/60 text-xs sm:text-sm">{stat.label}</span>
               </div>
-              <div className={`text-4xl font-bold ${stat.customStyle || 'text-white'}`}>
+              <div className={`text-xl sm:text-4xl font-bold ${stat.customStyle || 'text-white'}`}>
                 {stat.value}
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* Main Grid - Updated for consistent heights */}
-        <div className="grid grid-cols-2 gap-8 mb-16">
+        {/* Main Grid - Stack on mobile with reordered sections */}
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 mb-8 sm:mb-16">
+          {/* Trading Interface - Moved first for mobile */}
+          <motion.section
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="min-h-[400px] lg:h-[600px] order-first lg:order-last"
+          >
+            <SharesExchangeForm 
+              sharePrice={details.price}
+              fundAddress={address}
+              fundTokenId={details.fundTokenId}
+              buyFee={details.fees.protocol.buy}
+              sellFee={details.fees.protocol.withdraw}
+            />
+          </motion.section>
+
           {/* Fund Composition */}
           <motion.section 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
             className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10
-                       hover:border-white/20 transition-all duration-300
-                       shadow-[0_8px_32px_rgba(0,0,0,0.12)]
-                       flex flex-col h-[600px]" // Fixed height
+                     hover:border-white/20 transition-all duration-300
+                     shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+                     flex flex-col min-h-[400px] lg:h-[600px] order-last lg:order-first"
           >
-            <div className="p-8">
-              <h2 className="text-3xl font-bold text-white mb-8">Fund Composition</h2>
-              <div className="space-y-2 overflow-y-auto max-h-[480px] pr-2">
+            <div className="p-4 sm:p-8">
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-8">Fund Composition</h2>
+              <div className="space-y-2 overflow-y-auto max-h-[350px] lg:max-h-[480px] pr-2">
                 {details.tokens.map((token, index) => (
                   <motion.div
                     key={token.identifier}
@@ -273,37 +289,20 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
               </div>
             </div>
           </motion.section>
-
-          {/* Trading Interface - Matched height */}
-          <motion.section
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="h-[600px]" // Fixed height
-          >
-            <SharesExchangeForm 
-              sharePrice={details.price}
-              fundAddress={address}
-              fundTokenId={details.fundTokenId}
-              buyFee={details.fees.protocol.buy}
-              sellFee={details.fees.protocol.withdraw}
-            />
-          </motion.section>
         </div>
 
-        {/* Bottom Grid - Enhanced styling */}
-        <div className="grid grid-cols-2 gap-8">
-          {/* Token Details & Fee Structure */}
+        {/* Bottom Grid - Stack on mobile */}
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8">
+          {/* Token Details */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10
+            className="bg-white/5 backdrop-blur-xl rounded-3xl p-4 sm:p-8 border border-white/10
                      hover:border-white/20 transition-all duration-300
-                     shadow-[0_8px_32px_rgba(0,0,0,0.12)]
-                     hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+                     shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
           >
-            <h3 className="text-2xl font-bold text-white mb-6">Token Details</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Token Details</h3>
             <div className="space-y-6">
               <div>
                 <div className="text-white/60 mb-2">Fund Token ID</div>
@@ -343,17 +342,15 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10
+            className="bg-white/5 backdrop-blur-xl rounded-3xl p-4 sm:p-8 border border-white/10
                      hover:border-white/20 transition-all duration-300
-                     shadow-[0_8px_32px_rgba(0,0,0,0.12)]
-                     hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+                     shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
           >
-            <h3 className="text-2xl font-bold text-white mb-6">Fee Structure</h3>
-            <div className="space-y-8">
-              {/* Protocol Fees */}
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Fee Structure</h3>
+            <div className="space-y-6 sm:space-y-8">
               <div>
-                <div className="text-xl text-white/80 mb-4">Protocol Fees</div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="text-lg sm:text-xl text-white/80 mb-3 sm:mb-4">Protocol Fees</div>
+                <div className="grid grid-cols-3 gap-2 sm:gap-4">
                   {[
                     { label: "Buy", value: details.fees.protocol.buy },
                     { label: "Sell", value: details.fees.protocol.withdraw },
@@ -367,10 +364,9 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
                 </div>
               </div>
 
-              {/* Manager Fees */}
               <div>
-                <div className="text-xl text-white/80 mb-4">Manager Fees</div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="text-lg sm:text-xl text-white/80 mb-3 sm:mb-4">Manager Fees</div>
+                <div className="grid grid-cols-3 gap-2 sm:gap-4">
                   {[
                     { label: "Buy", value: details.fees.manager.buy },
                     { label: "Sell", value: details.fees.manager.withdraw },
