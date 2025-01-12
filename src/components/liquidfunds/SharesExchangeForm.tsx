@@ -21,6 +21,17 @@ interface SharesExchangeFormProps {
 const USDC_IDENTIFIER = 'USDC-350c4e';
 const USDC_DECIMALS = 6;
 
+type PaymentToken = {
+  id: 'USDC-c76f1f' | 'EGLD';
+  name: string;
+  decimals: number;
+};
+
+const PAYMENT_TOKENS: PaymentToken[] = [
+  { id: 'USDC-c76f1f', name: 'USDC', decimals: 6 },
+  { id: 'EGLD', name: 'EGLD', decimals: 18 }
+];
+
 // Helper function to ensure even hex length
 const toEvenHex = (value: bigint) => {
   const hex = value.toString(16);
@@ -43,6 +54,9 @@ export const SharesExchangeForm = ({
   const [usdcBalance, setUsdcBalance] = useState('0');
   const [usdcTokenIcon, setUsdcTokenIcon] = useState<string | null>(null);
   const [fundTokenIcon, setFundTokenIcon] = useState<string | null>(null);
+  const [selectedPaymentToken, setSelectedPaymentToken] = useState(PAYMENT_TOKENS[0]);
+  const [egldTokenIcon, setEgldTokenIcon] = useState<string | null>(null);
+  const [egldBalance, setEgldBalance] = useState('0');
 
   // Fetch user's balance only
   useEffect(() => {
@@ -51,6 +65,13 @@ export const SharesExchangeForm = ({
       console.log('Fetching balances for:', { address, fundTokenId });
 
       try {
+        // Fetch EGLD balance using SDK
+        const proxy = new ProxyNetworkProvider('https://devnet-gateway.multiversx.com');
+        const account = await proxy.getAccount(new Address(address));
+        const egldBalance = account.balance.toString();
+        console.log('EGLD balance:', egldBalance); // Debug log
+        setEgldBalance((Number(egldBalance) / Math.pow(10, 18)).toFixed(4));
+
         // Fetch USDC balance and icon
         const usdcResponse = await fetch(
           `https://devnet-api.multiversx.com/accounts/${address}/tokens/${USDC_IDENTIFIER}`
@@ -80,6 +101,37 @@ export const SharesExchangeForm = ({
     fetchBalances();
   }, [address, fundTokenId]);
 
+  useEffect(() => {
+    const fetchTokenData = async () => {
+      try {
+        // Fetch USDC token data
+        const usdcResponse = await fetch(
+          `https://devnet-api.multiversx.com/tokens/${PAYMENT_TOKENS[0].id}`
+        );
+        const usdcData = await usdcResponse.json();
+        if (usdcData.assets?.pngUrl) {
+          setUsdcTokenIcon(usdcData.assets.pngUrl);
+        }
+
+        // Set EGLD icon directly from cryptologos
+        setEgldTokenIcon('https://cryptologos.cc/logos/multiversx-egld-egld-logo.png');
+
+        // Fetch fund token data
+        const fundTokenResponse = await fetch(
+          `https://devnet-api.multiversx.com/tokens/${fundTokenId}`
+        );
+        const fundTokenData = await fundTokenResponse.json();
+        if (fundTokenData.assets?.pngUrl) {
+          setFundTokenIcon(fundTokenData.assets.pngUrl);
+        }
+      } catch (error) {
+        console.error('Error fetching token data:', error);
+      }
+    };
+
+    fetchTokenData();
+  }, [fundTokenId]);
+
   const calculateShares = () => {
     if (!amount || amount === '0') return '0';
     return activeTab === 'buy' 
@@ -93,21 +145,38 @@ export const SharesExchangeForm = ({
     try {
       setIsSubmitting(true);
 
-      const amountWithDecimals = (Number(amount) * Math.pow(10, USDC_DECIMALS)).toString();
-      const tokenIdHex = Buffer.from(USDC_IDENTIFIER).toString('hex');
-      const amountHex = toEvenHex(BigInt(amountWithDecimals));
-      const buyFunctionName = Buffer.from('buy').toString('hex');
-      const data = `ESDTTransfer@${tokenIdHex}@${amountHex}@${buyFunctionName}`;
+      let transaction;
+      
+      if (selectedPaymentToken.id === 'EGLD') {
+        // EGLD transaction
+        transaction = {
+          value: (Number(amount) * Math.pow(10, 18)).toString(),
+          data: 'buy',
+          receiver: fundAddress,
+          gasLimit: 500000000,
+          chainID: 'D',
+          version: 1,
+        };
+      } else {
+        // USDC transaction
+        const amountWithDecimals = (Number(amount) * Math.pow(10, selectedPaymentToken.decimals)).toString();
+        const tokenIdHex = Buffer.from(selectedPaymentToken.id).toString('hex');
+        const amountHex = toEvenHex(BigInt(amountWithDecimals));
+        const buyFunctionName = Buffer.from('buy').toString('hex');
+        const data = `ESDTTransfer@${tokenIdHex}@${amountHex}@${buyFunctionName}`;
 
-      const { sessionId, error } = await sendTransactions({
-        transactions: [{
+        transaction = {
           value: '0',
           data: data,
           receiver: fundAddress,
           gasLimit: 500000000,
           chainID: 'D',
           version: 1,
-        }],
+        };
+      }
+
+      const { sessionId, error } = await sendTransactions({
+        transactions: [transaction],
         transactionsDisplayInfo: {
           processingMessage: 'Processing buy transaction',
           errorMessage: 'An error occurred during the buy transaction',
@@ -121,7 +190,7 @@ export const SharesExchangeForm = ({
       }
 
       setSessionId(sessionId);
-      console.log('Transaction sent:', { sessionId, data });
+      console.log('Transaction sent:', { sessionId, transaction });
 
     } catch (error) {
       console.error('Buy transaction error:', error);
@@ -214,60 +283,54 @@ export const SharesExchangeForm = ({
       </div>
 
       <div className="space-y-6">
-        {/* Input Section - Enhanced styling */}
+        {/* Input Section */}
         <div>
-          <div className="text-white/60 mb-2 text-sm font-medium">
-            {activeTab === 'buy' ? 'YOU PAY' : 'YOU SELL'}
+          <div className="flex justify-between mb-2">
+            <span className="text-white/60 text-sm font-medium">
+              {activeTab === 'buy' ? 'YOU PAY' : 'YOU SELL'}
+            </span>
+            <span className="text-white/60 text-sm">
+              Balance: {activeTab === 'buy' 
+                ? (selectedPaymentToken.id === 'EGLD' ? egldBalance : usdcBalance) 
+                : fundTokenBalance}
+            </span>
           </div>
           <div className="bg-black/60 hover:bg-black/80 transition-colors rounded-xl p-6 flex items-center gap-4 border border-white/5">
-            <div className="flex items-center gap-2">
+            <div className="relative group">
               {activeTab === 'buy' ? (
-                <>
-                  {usdcTokenIcon ? (
-                    <Image 
-                      src={usdcTokenIcon}
-                      alt="USDC"
+                <button 
+                  className="flex items-center gap-2 hover:bg-white/5 p-2 rounded-lg transition-colors"
+                  onClick={() => (document.getElementById('token-selector') as HTMLDialogElement)?.showModal()}
+                >
+                  <div className="w-8 h-8 rounded-full bg-black/50 border border-white/10 overflow-hidden">
+                    <Image
+                      src={selectedPaymentToken.id === 'EGLD' ? egldTokenIcon || '/placeholder.png' : usdcTokenIcon || '/placeholder.png'}
+                      alt={selectedPaymentToken.name}
                       width={32}
                       height={32}
+                      className="w-full h-full object-cover"
                     />
-                  ) : (
-                    <Image 
-                      src="/tokens/usdc.png"
-                      alt="USDC"
-                      width={32}
-                      height={32}
-                    />
-                  )}
-                  <div className="flex flex-col">
-                    <span className="text-white font-semibold">WrappedUSDC</span>
-                    <span className="text-sm text-white/60">
-                      Balance: {Number(usdcBalance).toFixed(6)}
-                    </span>
                   </div>
-                </>
+                  <div className="font-medium">
+                    {selectedPaymentToken.name}
+                  </div>
+                  <svg className="w-4 h-4 text-white/60" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M7 10l5 5 5-5H7z"/>
+                  </svg>
+                </button>
               ) : (
-                <>
-                  {fundTokenIcon ? (
-                    <Image 
-                      src={fundTokenIcon}
+                <div className="flex items-center gap-2 p-2">
+                  <div className="w-8 h-8 rounded-full bg-black/50 border border-white/10 overflow-hidden">
+                    <Image
+                      src={fundTokenIcon || '/placeholder.png'}
                       alt="Fund Token"
                       width={32}
                       height={32}
-                      className="rounded-full"
+                      className="w-full h-full object-cover"
                     />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-primary/20" />
-                  )}
-                  <div className="flex flex-col">
-                    <span className="text-white font-semibold">Fund Shares</span>
-                    <span className="text-white/60 font-mono text-xs">
-                      {fundTokenId}
-                    </span>
-                    <span className="text-sm text-white/60">
-                      Balance: {Number(fundTokenBalance).toFixed(4)}
-                    </span>
                   </div>
-                </>
+                  <div className="font-medium">Shares</div>
+                </div>
               )}
             </div>
             <input
@@ -302,46 +365,20 @@ export const SharesExchangeForm = ({
           </div>
           <div className="bg-black/60 hover:bg-black/80 transition-colors rounded-xl p-6 flex items-center gap-4 border border-white/5">
             <div className="flex items-center gap-2">
-              {activeTab === 'buy' ? (
-                <>
-                  {fundTokenIcon ? (
-                    <Image 
-                      src={fundTokenIcon}
-                      alt="Fund Token"
-                      width={32}
-                      height={32}
-                      className="rounded-full"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-primary/20" />
-                  )}
-                  <div className="flex flex-col">
-                    <span className="text-white font-semibold">Shares</span>
-                    <span className="text-white/60 font-mono text-xs">
-                      {fundTokenId}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {usdcTokenIcon ? (
-                    <Image 
-                      src={usdcTokenIcon}
-                      alt="USDC"
-                      width={32}
-                      height={32}
-                    />
-                  ) : (
-                    <Image 
-                      src="/tokens/usdc.png"
-                      alt="USDC"
-                      width={32}
-                      height={32}
-                    />
-                  )}
-                  <span className="text-white font-semibold">WrappedUSDC</span>
-                </>
-              )}
+              <div className="w-8 h-8 rounded-full bg-black/50 border border-white/10 overflow-hidden">
+                <Image
+                  src={activeTab === 'buy' 
+                    ? (selectedPaymentToken.id === 'EGLD' ? egldTokenIcon || '/placeholder.png' : usdcTokenIcon || '/placeholder.png') 
+                    : fundTokenIcon || '/placeholder.png'}
+                  alt={activeTab === 'buy' ? selectedPaymentToken.name : 'Fund Token'}
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="font-medium">
+                {activeTab === 'buy' ? 'Shares' : 'USDC'}
+              </div>
             </div>
             <div className="text-white text-right flex-1 font-mono text-lg">
               <span className="text-white/60 mr-1">≈</span>
@@ -365,10 +402,46 @@ export const SharesExchangeForm = ({
             : isSubmitting 
               ? 'Processing...' 
               : activeTab === 'buy'
-                ? `Buy ${amount} USDC`
+                ? `Buy ${amount} ${selectedPaymentToken.name}`
                 : `Sell ${amount} Shares`}
         </button>
       </div>
+
+      {/* Add Token Selector Modal */}
+      <dialog 
+        id="token-selector" 
+        className="modal bg-black/90 backdrop-blur-xl rounded-3xl border border-white/10 p-6"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            (e.target as HTMLDialogElement).close();
+          }
+        }}
+      >
+        <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
+          <h3 className="text-lg font-bold text-white">Select Token</h3>
+          <div className="space-y-2">
+            {PAYMENT_TOKENS.map((token) => (
+              <button
+                key={token.id}
+                onClick={() => {
+                  setSelectedPaymentToken(token);
+                  (document.getElementById('token-selector') as HTMLDialogElement)?.close();
+                }}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
+              >
+                <Image
+                  src={token.id === 'EGLD' ? egldTokenIcon || '/placeholder.png' : usdcTokenIcon || '/placeholder.png'}
+                  alt={token.name}
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+                <span className="font-medium text-white">{token.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </dialog>
     </div>
   );
 }; 
