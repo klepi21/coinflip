@@ -1,42 +1,39 @@
 'use client'
 
 import { useWallet } from '@/context/WalletContext';
-import { Wallet } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { WalletConnectModal } from './WalletConnectModal';
 
-interface WalletButtonProps {
-  className?: string;
-}
-
-export const WalletButton = ({ className = '' }: WalletButtonProps) => {
+export const WalletButton = ({ className = '' }: { className?: string }) => {
   const { isLoggedIn, address, openModal } = useWallet();
+  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
 
   if (isLoggedIn) {
     return (
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className={`flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 
-                   text-white rounded-lg transition-colors ${className}`}
+      <button
         onClick={openModal}
+        className={`px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl 
+                   text-white font-medium transition-colors ${className}`}
       >
-        <div className="w-2 h-2 rounded-full bg-green-500" />
-        <span className="font-mono">
-          {`${address.slice(0, 6)}...${address.slice(-4)}`}
-        </span>
-      </motion.button>
+        {address?.slice(0, 6)}...{address?.slice(-4)}
+      </button>
     );
   }
 
   return (
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={openModal}
-      className={`px-4 py-2 border border-white text-white hover:bg-white/10 
-                 rounded-lg transition-colors ${className}`}
-    >
-      Connect Wallet
-    </motion.button>
+    <>
+      <button
+        onClick={() => setIsConnectModalOpen(true)}
+        className={`px-4 py-2 bg-primary hover:bg-primary/90 rounded-xl 
+                   text-white font-medium transition-colors ${className}`}
+      >
+        Connect Wallet
+      </button>
+
+      <WalletConnectModal 
+        isOpen={isConnectModalOpen}
+        onClose={() => setIsConnectModalOpen(false)}
+      />
+    </>
   );
 }; 
