@@ -295,7 +295,7 @@ export const SharesExchangeForm = ({
           </div>
         </div>
 
-        {/* Output Section - Updated with USDC icon in sell mode */}
+        {/* Output Section - Updated to show token ID in buy mode */}
         <div>
           <div className="text-white/60 mb-2 text-sm font-medium">
             {activeTab === 'buy' ? 'YOU RECEIVE' : 'YOU RECEIVE'}
@@ -315,7 +315,12 @@ export const SharesExchangeForm = ({
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-primary/20" />
                   )}
-                  <span className="text-white font-semibold">Shares</span>
+                  <div className="flex flex-col">
+                    <span className="text-white font-semibold">Shares</span>
+                    <span className="text-white/60 font-mono text-xs">
+                      {fundTokenId}
+                    </span>
+                  </div>
                 </>
               ) : (
                 <>
@@ -339,6 +344,7 @@ export const SharesExchangeForm = ({
               )}
             </div>
             <div className="text-white text-right flex-1 font-mono text-lg">
+              <span className="text-white/60 mr-1">≈</span>
               {calculateShares()}
             </div>
           </div>
