@@ -1184,6 +1184,10 @@
                 {
                     "name": "base_token_equivalent",
                     "type": "BigUint"
+                },
+                {
+                    "name": "base_token_decimals",
+                    "type": "u32"
                 }
             ]
         }

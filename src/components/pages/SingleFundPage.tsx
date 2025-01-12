@@ -55,23 +55,22 @@ const formatBalance = (balance: string, decimals: number) => {
   try {
     if (!balance) return '0';
     
-    // Handle scientific notation
-    if (balance.includes('e')) {
-      const [mantissa, exponent] = balance.split('e');
-      const expandedNumber = Number(mantissa) * Math.pow(10, Number(exponent));
-      balance = expandedNumber.toString().split('.')[0]; // Remove any decimals
-    }
+    // Handle scientific notation and convert to a number without the power of 10
+    const number = balance.includes('e') ? 
+      Number(balance.split('e')[0]) * Math.pow(10, Number(balance.split('e')[1])) : 
+      Number(balance);
     
     // Convert to BigInt safely
-    const bigIntValue = BigInt(balance);
+    const bigIntValue = BigInt(number);
     const divisor = BigInt(10 ** decimals);
     
     // Convert to number after division
     const result = Number(bigIntValue) / Number(divisor);
     
+    // Ensure the final result has 2 decimals
     return result.toLocaleString(undefined, {
       minimumFractionDigits: 2,
-      maximumFractionDigits: Math.min(decimals, 6)
+      maximumFractionDigits: 2
     });
   } catch (err) {
     console.error('Error formatting balance:', err, { balance, decimals });
@@ -245,33 +244,17 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
           ))}
         </div>
 
-        {/* Main Grid - Stack on mobile with reordered sections */}
-        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 mb-8 sm:mb-16">
-          {/* Trading Interface - Moved first for mobile */}
-          <motion.section
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="min-h-[400px] lg:h-[600px] order-first lg:order-last"
-          >
-            <SharesExchangeForm 
-              sharePrice={details.price}
-              fundAddress={address}
-              fundTokenId={details.fundTokenId}
-              buyFee={details.fees.protocol.buy}
-              sellFee={details.fees.protocol.withdraw}
-            />
-          </motion.section>
-
-          {/* Fund Composition */}
+        {/* Main Grid - Adjusted ratio to 2.5/1.5 */}
+        <div className="flex flex-col lg:grid lg:grid-cols-8 gap-8 mb-8 sm:mb-16">
+          {/* Fund Composition - Takes 5 columns (2.5/4) */}
           <motion.section 
+            className="lg:col-span-5 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10
+                       hover:border-white/20 transition-all duration-300
+                       shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+                       flex flex-col h-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10
-                     hover:border-white/20 transition-all duration-300
-                     shadow-[0_8px_32px_rgba(0,0,0,0.12)]
-                     flex flex-col h-auto"
           >
             <div className="p-4 sm:p-8">
               <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-8">Fund Composition</h2>
@@ -308,7 +291,7 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
                                 {formatBalance(token.balance, token.decimals)}
                               </div>
                               <div className="text-2xl font-bold text-primary-500 mt-1 animate-pulse">
-                                {token.base_token_equivalent / Math.pow(10, token.decimals)}
+                                {formatBalance(token.base_token_equivalent.toString(), token.base_token_decimals)}
                                 &nbsp;{token.identifier.split('-')[0].replace(/^H/, '')}
                               </div>
                             </div>
@@ -360,7 +343,7 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
                               {token.identifier.split('-')[0].replace(/^H/, '')}
                             </div>
                             <div className="text-lg font-bold text-primary-500 mt-1 animate-pulse">
-                            {token.base_token_equivalent / Math.pow(10, token.decimals)}
+                              {formatBalance(token.base_token_equivalent.toString(), token.base_token_decimals)}
                               &nbsp;{token.identifier.split('-')[0].replace(/^H/, '')}
                             </div>
                           </div>
@@ -409,92 +392,127 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
               </div>
             </div>
           </motion.section>
+
+          {/* Trading Interface - Takes 3 columns (1.5/4) */}
+          <motion.section
+            className="lg:col-span-3 h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <SharesExchangeForm 
+              sharePrice={details.price}
+              fundAddress={address}
+              fundTokenId={details.fundTokenId}
+              buyFee={details.fees.protocol.buy}
+              sellFee={details.fees.protocol.withdraw}
+            />
+          </motion.section>
         </div>
 
         {/* Bottom Grid - Stack on mobile */}
         <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8">
-          {/* Token Details */}
+          {/* Token Details - Updated design */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-white/5 backdrop-blur-xl rounded-3xl p-4 sm:p-8 border border-white/10
-                     hover:border-white/20 transition-all duration-300
-                     shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
+            className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10
+                       hover:border-white/20 transition-all duration-300
+                       shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
           >
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Token Details</h3>
-            <div className="space-y-6">
-              <div>
-                <div className="text-white/60 mb-2">Fund Token ID</div>
-                <div className="flex items-center justify-between bg-white/5 rounded-xl p-4">
-                  <code className="text-white font-mono">{details.fundTokenId}</code>
-                  <div className="flex gap-2">
-                    <button className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                      <ClipboardCopy className="h-5 w-5 text-white/60" />
-                    </button>
-                    <button className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                      <ExternalLink className="h-5 w-5 text-white/60" />
-                    </button>
+            <div className="p-6 border-b border-white/10 bg-gradient-to-r from-white/5 to-white/[0.02]">
+              <h3 className="text-2xl font-bold text-white">Token Details</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-4">
+                <div className="group hover:bg-white/[0.02] rounded-xl p-4 transition-all duration-300">
+                  <div className="text-white/60 text-sm mb-2">Fund Token ID</div>
+                  <div className="flex items-center justify-between bg-black/20 rounded-lg p-3">
+                    <code className="text-white/90 font-mono text-sm">{details.fundTokenId}</code>
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
+                        <ClipboardCopy className="h-4 w-4 text-white/60" />
+                      </button>
+                      <button className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
+                        <ExternalLink className="h-4 w-4 text-white/60" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div>
-                <div className="text-white/60 mb-2">Smart Contract</div>
-                <div className="flex items-center justify-between bg-white/5 rounded-xl p-4">
-                  <code className="text-white font-mono">
-                    {`${address.slice(0, 8)}...${address.slice(-8)}`}
-                  </code>
-                  <div className="flex gap-2">
-                    <button className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                      <ClipboardCopy className="h-5 w-5 text-white/60" />
-                    </button>
-                    <button className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                      <ExternalLink className="h-5 w-5 text-white/60" />
-                    </button>
+
+                <div className="group hover:bg-white/[0.02] rounded-xl p-4 transition-all duration-300">
+                  <div className="text-white/60 text-sm mb-2">Smart Contract</div>
+                  <div className="flex items-center justify-between bg-black/20 rounded-lg p-3">
+                    <code className="text-white/90 font-mono text-sm">
+                      {`${address.slice(0, 8)}...${address.slice(-8)}`}
+                    </code>
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
+                        <ClipboardCopy className="h-4 w-4 text-white/60" />
+                      </button>
+                      <button className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
+                        <ExternalLink className="h-4 w-4 text-white/60" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </motion.div>
 
-          {/* Fee Structure */}
+          {/* Fee Structure - Updated design */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-white/5 backdrop-blur-xl rounded-3xl p-4 sm:p-8 border border-white/10
-                     hover:border-white/20 transition-all duration-300
-                     shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
+            className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10
+                       hover:border-white/20 transition-all duration-300
+                       shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
           >
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Fee Structure</h3>
-            <div className="space-y-6 sm:space-y-8">
-              <div>
-                <div className="text-lg sm:text-xl text-white/80 mb-3 sm:mb-4">Protocol Fees</div>
-                <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="p-6 border-b border-white/10 bg-gradient-to-r from-white/5 to-white/[0.02]">
+              <h3 className="text-2xl font-bold text-white">Fee Structure</h3>
+            </div>
+            <div className="p-6 space-y-8">
+              {/* Protocol Fees */}
+              <div className="space-y-4">
+                <div className="text-lg text-white/80">Protocol Fees</div>
+                <div className="grid grid-cols-3 gap-3">
                   {[
                     { label: "Buy", value: details.fees.protocol.buy },
                     { label: "Sell", value: details.fees.protocol.withdraw },
                     { label: "Performance", value: details.fees.protocol.performance }
                   ].map((fee, index) => (
-                    <div key={index} className="bg-white/5 rounded-xl p-4">
-                      <div className="text-white/60 mb-1">{fee.label}</div>
-                      <div className="text-2xl font-bold text-white">{fee.value}%</div>
+                    <div key={index} 
+                         className="bg-white/[0.02] hover:bg-white/[0.04] rounded-xl p-4 
+                                   transition-all duration-300 group"
+                    >
+                      <div className="text-white/60 text-sm mb-1">{fee.label}</div>
+                      <div className="text-xl font-bold text-white group-hover:text-primary transition-colors">
+                        {fee.value}%
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div>
-                <div className="text-lg sm:text-xl text-white/80 mb-3 sm:mb-4">Manager Fees</div>
-                <div className="grid grid-cols-3 gap-2 sm:gap-4">
+              {/* Manager Fees */}
+              <div className="space-y-4">
+                <div className="text-lg text-white/80">Manager Fees</div>
+                <div className="grid grid-cols-3 gap-3">
                   {[
                     { label: "Buy", value: details.fees.manager.buy },
                     { label: "Sell", value: details.fees.manager.withdraw },
                     { label: "Performance", value: details.fees.manager.performance }
                   ].map((fee, index) => (
-                    <div key={index} className="bg-white/5 rounded-xl p-4">
-                      <div className="text-white/60 mb-1">{fee.label}</div>
-                      <div className="text-2xl font-bold text-white">{fee.value}%</div>
+                    <div key={index} 
+                         className="bg-white/[0.02] hover:bg-white/[0.04] rounded-xl p-4 
+                                   transition-all duration-300 group"
+                    >
+                      <div className="text-white/60 text-sm mb-1">{fee.label}</div>
+                      <div className="text-xl font-bold text-white group-hover:text-primary transition-colors">
+                        {fee.value}%
+                      </div>
                     </div>
                   ))}
                 </div>

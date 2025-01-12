@@ -18,6 +18,8 @@ interface TokenInfo {
   decimals: number;
   apr: string;
   base_token_equivalent: number;
+  base_token_decimals: number;
+  
 }
 
 interface FundDetails {
@@ -41,6 +43,7 @@ interface TokenStructure {
   balance: { toString: () => string };
   apr: { toString: () => string };
   base_token_equivalent: { valueOf: () => number };
+  base_token_decimals: { valueOf: () => number };
 }
 
 // Add type for query response
@@ -76,9 +79,10 @@ const parseFundDetails = (values: any, priceValue: any, supplyValue: any): FundD
         weight: Number(structure.weight.valueOf()) / 100,
         balance: structure.balance.toString(),
         apr: structure.apr.toString(),
-        base_token_equivalent: structure.base_token_equivalent.valueOf()
+        base_token_equivalent: structure.base_token_equivalent.valueOf(),
+        base_token_decimals: Number(structure.base_token_decimals.valueOf())
       };
-     // console.log('Mapped token:', token);
+      console.log('Mapped token:', token);
       return token;
     }),
     fees: {

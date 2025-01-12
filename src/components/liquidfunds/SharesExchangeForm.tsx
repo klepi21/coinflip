@@ -9,6 +9,7 @@ import { TokenTransfer, Address } from "@multiversx/sdk-core";
 import { useTrackTransactionStatus } from "@multiversx/sdk-dapp/hooks/transactions";
 import { toast } from 'sonner';
 import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
+import { Loader2 } from 'lucide-react';
 
 interface SharesExchangeFormProps {
   sharePrice: string;
@@ -153,7 +154,7 @@ export const SharesExchangeForm = ({
       const tx = {
         value: selectedPaymentToken.id === 'EGLD' ? paymentAmount.toString() : '0',
         data: selectedPaymentToken.id === 'EGLD' 
-          ? `${buyFunctionName}`
+          ? `buy`
           : `ESDTTransfer@${Buffer.from(paymentTokenId).toString('hex')}@${toEvenHex(paymentAmount)}@${buyFunctionName}`,
         receiver: fundAddress,
         gasLimit: 500000000,
@@ -238,199 +239,168 @@ export const SharesExchangeForm = ({
     },
   });
 
+  const calculateTotal = () => {
+    if (!amount || Number(amount) <= 0) return '0.00';
+    
+    const fee = activeTab === 'buy' ? buyFee : sellFee;
+    const baseAmount = Number(amount);
+    const feeAmount = baseAmount * (fee / 100);
+    const total = activeTab === 'buy' 
+      ? baseAmount + feeAmount 
+      : baseAmount - feeAmount;
+      
+    return total.toFixed(2);
+  };
+
   return (
-    <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-8 h-full
-                    hover:border-white/20 transition-all duration-300
-                    shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
-      {/* Buy/Sell Tabs - Updated styling */}
-      <div className="flex gap-2 p-1 bg-black/40 rounded-xl mb-8">
-        <button
-          onClick={() => setActiveTab('buy')}
-          className={`flex-1 py-3 px-6 rounded-lg font-bold transition-all duration-200 ${
-            activeTab === 'buy' 
-              ? 'bg-primary text-white shadow-lg' 
-              : 'text-white/60 hover:text-white/80'
-          }`}
-        >
-          Buy
-        </button>
-        <button
-          onClick={() => setActiveTab('sell')}
-          className={`flex-1 py-3 px-6 rounded-lg font-bold transition-all duration-200 ${
-            activeTab === 'sell' 
-              ? 'bg-red-500 text-white shadow-lg' 
-              : 'text-white/60 hover:text-white/80'
-          }`}
-        >
-          Sell
-        </button>
+    <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 
+                hover:border-white/20 transition-all duration-300
+                shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+                h-full flex flex-col">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-white/5 to-white/[0.02] p-6 border-b border-white/10">
+        <h2 className="text-2xl font-bold text-white">
+          {activeTab === 'buy' ? 'Buy Fund Shares' : 'Sell Fund Shares'}
+        </h2>
+        <div className="flex items-center gap-4 mt-4">
+          <button
+            onClick={() => setActiveTab('buy')}
+            className={`flex-1 py-3 rounded-xl font-medium transition-all duration-300
+                       ${activeTab === 'buy' 
+                         ? 'bg-white/10 text-white shadow-inner' 
+                         : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+          >
+            Buy
+          </button>
+          <button
+            onClick={() => setActiveTab('sell')}
+            className={`flex-1 py-3 rounded-xl font-medium transition-all duration-300
+                       ${activeTab === 'sell' 
+                         ? 'bg-white/10 text-white shadow-inner' 
+                         : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+          >
+            Sell
+          </button>
+        </div>
       </div>
 
-      <div className="space-y-6">
-        {/* Input Section */}
-        <div>
-          <div className="flex justify-between mb-2">
-            <span className="text-white/60 text-sm font-medium">
-              {activeTab === 'buy' ? 'YOU PAY' : 'YOU SELL'}
-            </span>
-            <span className="text-white/60 text-sm truncate ml-2">
-              Balance: {activeTab === 'buy' 
-                ? (selectedPaymentToken.id === 'EGLD' ? egldBalance : usdcBalance) 
-                : fundTokenBalance}
-            </span>
-          </div>
-          <div className="bg-black/60 hover:bg-black/80 transition-colors rounded-xl p-3 sm:p-6 
-                          flex flex-col sm:flex-row sm:items-center gap-3 border border-white/5">
-            {/* Token selector - Mobile optimized */}
-            <div className="flex-shrink-0">
-              {activeTab === 'buy' ? (
-                <button 
-                  className="flex items-center gap-2 hover:bg-white/5 p-2 rounded-lg transition-colors"
-                  onClick={() => (document.getElementById('token-selector') as HTMLDialogElement)?.showModal()}
-                >
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/50 border border-white/10 overflow-hidden flex-shrink-0">
-                    <Image
-                      src={selectedPaymentToken.id === 'EGLD' ? egldTokenIcon || '/placeholder.png' : usdcTokenIcon || '/placeholder.png'}
-                      alt={selectedPaymentToken.name}
-                      width={32}
-                      height={32}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="font-medium text-sm sm:text-base whitespace-nowrap">
-                    {selectedPaymentToken.name}
-                  </div>
-                  <svg className="w-4 h-4 text-white/60" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M7 10l5 5 5-5H7z"/>
-                  </svg>
-                </button>
-              ) : (
-                <div className="flex items-center gap-2 p-2">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/50 border border-white/10 overflow-hidden flex-shrink-0">
-                    <Image
-                      src={fundTokenIcon || '/placeholder.png'}
-                      alt="Fund Token"
-                      width={32}
-                      height={32}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="font-medium text-sm sm:text-base">Shares</div>
-                </div>
-              )}
-            </div>
-
-            {/* Input field - Mobile optimized */}
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="bg-transparent text-white text-right flex-1 outline-none text-base sm:text-lg w-full"
-              placeholder="0"
-              max={activeTab === 'sell' ? fundTokenBalance : undefined}
-            />
-          </div>
-        </div>
-
-        {/* Price and Fees - Now with dynamic fees */}
-        <div className="bg-black/40 rounded-xl p-4 space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-white/80 font-medium">Share Price</span>
-            <span className="text-white font-mono">${Number(sharePrice).toFixed(6)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-white/80 font-medium">Fees</span>
-            <span className="text-primary font-mono">
-              {activeTab === 'buy' ? `${buyFee}%` : `${sellFee}%`}
-            </span>
-          </div>
-        </div>
-
-        {/* Output Section - Updated to show token ID in buy mode */}
-        <div>
-          <div className="text-white/60 mb-2 text-sm font-medium">
-            {activeTab === 'buy' ? 'YOU RECEIVE' : 'YOU RECEIVE'}
-          </div>
-          <div className="bg-black/60 hover:bg-black/80 transition-colors rounded-xl p-3 sm:p-6 
-                          flex flex-col sm:flex-row sm:items-center gap-3 border border-white/5">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/50 border border-white/10 overflow-hidden flex-shrink-0">
-                <Image
-                  src={activeTab === 'buy' 
-                    ? (fundTokenIcon || '/placeholder.png')
-                    : (selectedPaymentToken.id === 'EGLD' ? egldTokenIcon || '/placeholder.png' : usdcTokenIcon || '/placeholder.png')}
-                  alt={activeTab === 'buy' ? 'Fund Token' : selectedPaymentToken.name}
-                  width={32}
-                  height={32}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="font-medium text-sm sm:text-base">
-                {activeTab === 'buy' ? 'Shares' : 'USDC'}
-              </div>
-            </div>
-            <div className="text-white text-right flex-1 font-mono text-base sm:text-lg">
-              <span className="text-white/60 mr-1">≈</span>
-              {calculateShares()}
-            </div>
-          </div>
-        </div>
-
-        {/* Action Button - Updated styling and text */}
-        <button
-          disabled={!isLoggedIn || amount === '0' || isSubmitting}
-          onClick={activeTab === 'buy' ? handleBuy : handleSell}
-          className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200
-                     ${activeTab === 'buy' 
-                       ? 'bg-primary hover:bg-primary/90 disabled:bg-primary/50' 
-                       : 'bg-red-500 hover:bg-red-600 disabled:bg-red-500/50'}
-                     text-white shadow-lg disabled:shadow-none`}
-        >
-          {!isLoggedIn 
-            ? 'Connect Wallet' 
-            : isSubmitting 
-              ? 'Processing...' 
-              : activeTab === 'buy'
-                ? `Buy ${amount} ${selectedPaymentToken.name}`
-                : `Sell ${amount} Shares`}
-        </button>
-      </div>
-
-      {/* Add Token Selector Modal */}
-      <dialog 
-        id="token-selector" 
-        className="modal bg-black/90 backdrop-blur-xl rounded-3xl border border-white/10 p-6"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            (e.target as HTMLDialogElement).close();
-          }
-        }}
-      >
-        <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
-          <h3 className="text-lg font-bold text-white">Select Token</h3>
+      {/* Main content takes remaining height */}
+      <div className="p-6 space-y-6 flex-1 flex flex-col justify-between">
+        <div className="space-y-6">
+          {/* Token Selection - Show different options based on active tab */}
           <div className="space-y-2">
-            {PAYMENT_TOKENS.map((token) => (
-              <button
-                key={token.id}
-                onClick={() => {
-                  setSelectedPaymentToken(token);
-                  (document.getElementById('token-selector') as HTMLDialogElement)?.close();
-                }}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors"
-              >
-                <Image
-                  src={token.id === 'EGLD' ? egldTokenIcon || '/placeholder.png' : usdcTokenIcon || '/placeholder.png'}
-                  alt={token.name}
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
-                <span className="font-medium text-white">{token.name}</span>
-              </button>
-            ))}
+            {activeTab === 'buy' ? (
+              <>
+                <label className="text-white/60 text-sm">Pay with</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {PAYMENT_TOKENS.map((token) => (
+                    <button
+                      key={token.id}
+                      onClick={() => setSelectedPaymentToken(token)}
+                      className={`flex items-center gap-2 p-3 rounded-xl border transition-all duration-300
+                                 ${selectedPaymentToken.id === token.id
+                                   ? 'border-white/20 bg-white/10'
+                                   : 'border-white/5 bg-white/[0.02] hover:bg-white/5'}`}
+                    >
+                      {(token.id === 'EGLD' ? egldTokenIcon : usdcTokenIcon) ? (
+                        <Image
+                          src={token.id === 'EGLD' ? egldTokenIcon! : usdcTokenIcon!}
+                          alt={token.name}
+                          width={24}
+                          height={24}
+                          className="rounded-full"
+                        />
+                      ) : (
+                        <div className="w-6 h-6 bg-white/10 rounded-full" />
+                      )}
+                      <span className="text-white font-medium">{token.name}</span>
+                      <span className="ml-auto text-white/60">
+                        {token.id === 'EGLD' ? egldBalance : usdcBalance}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <label className="text-white/60 text-sm">Available Fund Shares</label>
+                <div className="flex items-center gap-2 p-3 rounded-xl border border-white/10 bg-white/[0.02]">
+                  {fundTokenIcon ? (
+                    <Image
+                      src={fundTokenIcon}
+                      alt="Fund Token"
+                      width={24}
+                      height={24}
+                      className="rounded-full"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 bg-white/10 rounded-full" />
+                  )}
+                  <span className="text-white font-medium">{fundTokenId}</span>
+                  <span className="ml-auto text-white/60">{fundTokenBalance}</span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Amount Input */}
+          <div className="space-y-2">
+            <label className="text-white/60 text-sm">
+              {activeTab === 'buy' ? 'Amount' : 'Shares to Sell'}
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-white
+                           placeholder-white/40 focus:outline-none focus:border-white/20
+                           transition-all duration-300"
+                placeholder="0.00"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60">
+                {activeTab === 'buy' ? selectedPaymentToken.name : 'Shares'}
+              </div>
+            </div>
+          </div>
+
+          {/* Transaction Details */}
+          <div className="bg-white/[0.02] rounded-xl p-4 space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-white/60">You'll receive</span>
+              <span className="text-white font-medium">{calculateShares()} Shares</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-white/60">Share Price</span>
+              <span className="text-white font-medium">${sharePrice}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-white/60">Fee</span>
+              <span className="text-white font-medium">{activeTab === 'buy' ? buyFee : sellFee}%</span>
+            </div>
+            <div className="border-t border-white/10 pt-3 flex justify-between">
+              <span className="text-white/80">Total</span>
+              <span className="text-white font-bold">${calculateTotal()}</span>
+            </div>
           </div>
         </div>
-      </dialog>
+        
+        {/* Action Button at bottom */}
+        <button
+          onClick={activeTab === 'buy' ? handleBuy : handleSell}
+          disabled={!isLoggedIn || isSubmitting}
+          className="w-full bg-white/10 hover:bg-white/15 
+                     py-4 px-6 rounded-xl text-white font-medium
+                     disabled:opacity-50 disabled:cursor-not-allowed
+                     transition-all duration-300"
+        >
+          {isSubmitting ? (
+            <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+          ) : (
+            activeTab === 'buy' ? 'Buy Shares' : 'Sell Shares'
+          )}
+        </button>
+      </div>
     </div>
   );
 }; 
