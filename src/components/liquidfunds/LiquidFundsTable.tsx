@@ -2,10 +2,8 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { useGetLiquidFunds } from '@/hooks/useGetLiquidFunds';
 import { Loader2 } from 'lucide-react';
-import { getTokenIconUrl } from '@/utils/tokens';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
@@ -13,6 +11,17 @@ import { ArrowRight } from 'lucide-react';
 export const LiquidFundsTable = () => {
   const router = useRouter();
   const { funds, isLoading, error } = useGetLiquidFunds();
+
+  // Helper function to safely format numbers
+  const formatNumber = (value: string, decimals: number, suffix: string = '') => {
+    try {
+      if (!value || value === '0') return `0.00${suffix}`;
+      return `${(Number(value) / Math.pow(10, decimals)).toFixed(decimals === 6 ? 6 : 2)}${suffix}`;
+    } catch (err) {
+      console.error('Error formatting number:', err);
+      return `0.00${suffix}`;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -60,13 +69,13 @@ export const LiquidFundsTable = () => {
                     </div>
                   </td>
                   <td className="py-4 px-4 text-right font-mono text-white">
-                    ${Number(fund.price).toFixed(6)}
+                    ${formatNumber(fund.price, 6)}
                   </td>
                   <td className="py-4 px-4 text-right font-mono text-white">
-                    ${(Number(fund.nav) / Math.pow(10, 6)).toFixed(2)}M
+                    ${formatNumber(fund.nav, 6, 'M')}
                   </td>
                   <td className="py-4 px-4 text-right font-mono text-white">
-                    {(Number(fund.supply) / Math.pow(10, 18)).toFixed(4)}
+                    {formatNumber(fund.supply, 18)}
                   </td>
                   <td className="py-4 px-4 text-right">
                     <span className={`px-3 py-1 rounded-full text-sm font-medium

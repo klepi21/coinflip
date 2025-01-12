@@ -1,8 +1,11 @@
 'use client'
 
 import { motion } from 'framer-motion';
-import { ArrowRight, Code2, Shield, Zap } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { SparklesCore } from '@/components/ui/sparkles';
+import { GooeyText } from '@/components/ui/gooey-text-morphing';
+import { ButtonCta } from '@/components/ui/button-shiny';
 
 export default function Home() {
   return (
@@ -11,83 +14,52 @@ export default function Home() {
       <div className="fixed inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-purple-500/5" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0)_0%,rgba(0,0,0,0.7)_100%)]" />
+        
+        {/* Full page sparkles */}
+        <SparklesCore
+          id="tsparticlesfullpage"
+          background="transparent"
+          minSize={0.6}
+          maxSize={1.4}
+          particleDensity={100}
+          className="w-full h-full"
+          particleColor="#FFFFFF"
+          speed={0.5}
+        />
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-24">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-7xl mx-auto"
-        >
-          <div className="text-center mb-16">
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-7xl font-bold bg-gradient-to-r from-white via-white to-primary/50 bg-clip-text text-transparent mb-6"
-            >
-              MultiversX
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-xl text-white/60 mb-8"
-            >
-              Welcome to the future of decentralized finance
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Link 
-                href="/liquid-funds"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 
-                         text-white rounded-lg transition-colors"
-              >
-                Explore Funds
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-            </motion.div>
+        <div className="h-[40rem] w-full flex flex-col items-center justify-center">
+          <div className="h-40"> {/* Increased height for larger text */}
+            <GooeyText
+              texts={["Cryptomurmura 2.0", "Liquid Funds"]}
+              morphTime={3.0}
+              cooldownTime={1.5}
+              className="font-bold text-white scale-150"
+              textClassName="text-3xl md:text-4xl lg:text-5xl"
+            />
+          </div>
+
+          <div className="w-[40rem] relative"> {/* Increased margin-top */}
+            {/* Gradients */}
+            <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-[2px] w-3/4 blur-sm" />
+            <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-px w-3/4" />
+            <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-sky-500 to-transparent h-[5px] w-1/4 blur-sm" />
+            <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-sky-500 to-transparent h-px w-1/4" />
           </div>
 
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-center mt-12"
           >
-            {[
-              {
-                icon: <Shield className="h-6 w-6" />,
-                title: "Secure by Default",
-                description: "Built with security best practices and integrated with trusted MultiversX SDKs."
-              },
-              {
-                icon: <Zap className="h-6 w-6" />,
-                title: "High Performance",
-                description: "Optimized for speed and efficiency with the latest blockchain technology."
-              },
-              {
-                icon: <Code2 className="h-6 w-6" />,
-                title: "Developer Ready",
-                description: "Everything you need to start building your dApp immediately."
-              }
-            ].map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + index * 0.1 }}
-                className="bg-black/40 backdrop-blur-xl rounded-3xl p-6 border border-white/10"
-              >
-                <div className="text-primary mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-white/60">{feature.description}</p>
-              </motion.div>
-            ))}
+            <ButtonCta
+              label="Explore Funds"
+              className="w-fit text-sm"
+            />
           </motion.div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

@@ -29,11 +29,10 @@ export const WalletButton = () => {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={openModal}
-      className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 
-                 text-white rounded-lg transition-colors"
+      className="px-4 py-2 border border-white text-white hover:bg-white/10 
+                 rounded-lg transition-colors"
     >
-      <Wallet className="h-5 w-5" />
-      <span>Connect</span>
+      Connect Wallet
     </motion.button>
   );
 }; 
