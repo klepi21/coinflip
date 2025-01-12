@@ -1,6 +1,7 @@
 'use client'
 
 import { DappProvider } from '@multiversx/sdk-dapp/wrappers';
+import { SignTransactionsModals } from '@multiversx/sdk-dapp/UI/SignTransactionsModals';
 import { mvxConfig } from '@/config/config';
 import { Navbar } from '@/components/layout/Navbar';
 import { WalletProvider } from '@/context/WalletContext';
@@ -33,6 +34,7 @@ export default function RootLayout({
               {children}
             </main>
             <WalletModal />
+            <SignTransactionsModals />
           </WalletProvider>
         </DappProvider>
       </body>

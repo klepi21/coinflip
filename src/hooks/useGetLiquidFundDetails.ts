@@ -185,6 +185,7 @@ export const useGetLiquidFundDetails = (address: string) => {
         ).values[0];
 
         const parsedDetails = parseFundDetails(values, priceValue, supplyValue);
+        console.log('Parsed Details:', parsedDetails);
         setDetails(parsedDetails);
 
       } catch (err) {
