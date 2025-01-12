@@ -22,13 +22,13 @@ const USDC_IDENTIFIER = 'USDC-350c4e';
 const USDC_DECIMALS = 6;
 
 type PaymentToken = {
-  id: 'USDC-c76f1f' | 'EGLD';
+  id: 'USDC-350c4e' | 'EGLD';
   name: string;
   decimals: number;
 };
 
 const PAYMENT_TOKENS: PaymentToken[] = [
-  { id: 'USDC-c76f1f', name: 'USDC', decimals: 6 },
+  { id: 'USDC-350c4e', name: 'USDC', decimals: 6 },
   { id: 'EGLD', name: 'EGLD', decimals: 18 }
 ];
 
@@ -144,57 +144,41 @@ export const SharesExchangeForm = ({
     
     try {
       setIsSubmitting(true);
-
-      let transaction;
       
-      if (selectedPaymentToken.id === 'EGLD') {
-        // EGLD transaction
-        transaction = {
-          value: (Number(amount) * Math.pow(10, 18)).toString(),
-          data: 'buy',
-          receiver: fundAddress,
-          gasLimit: 500000000,
-          chainID: 'D',
-          version: 1,
-        };
-      } else {
-        // USDC transaction
-        const amountWithDecimals = (Number(amount) * Math.pow(10, selectedPaymentToken.decimals)).toString();
-        const tokenIdHex = Buffer.from(selectedPaymentToken.id).toString('hex');
-        const amountHex = toEvenHex(BigInt(amountWithDecimals));
-        const buyFunctionName = Buffer.from('buy').toString('hex');
-        const data = `ESDTTransfer@${tokenIdHex}@${amountHex}@${buyFunctionName}`;
+      const paymentTokenId = selectedPaymentToken.id;
+      const paymentAmount = BigInt(Math.floor(Number(amount) * Math.pow(10, selectedPaymentToken.decimals)));
+      const buyFunctionName = Buffer.from('buy').toString('hex');
 
-        transaction = {
-          value: '0',
-          data: data,
-          receiver: fundAddress,
-          gasLimit: 500000000,
-          chainID: 'D',
-          version: 1,
-        };
-      }
+      // Build the transaction
+      const tx = {
+        value: selectedPaymentToken.id === 'EGLD' ? paymentAmount.toString() : '0',
+        data: selectedPaymentToken.id === 'EGLD' 
+          ? `${buyFunctionName}`
+          : `ESDTTransfer@${Buffer.from(paymentTokenId).toString('hex')}@${toEvenHex(paymentAmount)}@${buyFunctionName}`,
+        receiver: fundAddress,
+        gasLimit: 500000000,
+      };
 
-      const { sessionId, error } = await sendTransactions({
-        transactions: [transaction],
-        transactionsDisplayInfo: {
-          processingMessage: 'Processing buy transaction',
-          errorMessage: 'An error occurred during the buy transaction',
-          successMessage: 'Buy transaction successful',
-        },
-        redirectAfterSign: false,
+      console.log('Buy transaction:', {
+        paymentTokenId,
+        paymentAmount: paymentAmount.toString(),
+        txData: tx.data,
+        buyFunctionHex: buyFunctionName
       });
 
-      if (error) {
-        throw new Error(error);
-      }
+      const { sessionId } = await sendTransactions({
+        transactions: [tx],
+        transactionsDisplayInfo: {
+          processingMessage: 'Processing buy shares transaction',
+          errorMessage: 'An error occurred during the buy shares transaction',
+          successMessage: 'Buy shares transaction successful'
+        },
+      });
 
       setSessionId(sessionId);
-      console.log('Transaction sent:', { sessionId, transaction });
-
     } catch (error) {
-      console.error('Buy transaction error:', error);
-      toast.error('Failed to process buy transaction');
+      console.error('Buy error:', error);
+      toast.error('Failed to buy shares');
     } finally {
       setIsSubmitting(false);
     }

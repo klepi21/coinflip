@@ -75,7 +75,7 @@ const parseFundDetails = (values: any, priceValue: any, supplyValue: any): FundD
         balance: structure.balance.toString(),
         apr: structure.apr.toString()
       };
-      console.log('Mapped token:', token);
+     // console.log('Mapped token:', token);
       return token;
     }),
     fees: {
@@ -144,12 +144,12 @@ export const useGetLiquidFundDetails = (address: string) => {
         );
 
         // Add these logs
-        console.log('=== DETAILS HOOK LOGS ===');
-        console.log('Raw values[10]:', values[10]?.valueOf());
-        console.log('Token structures before mapping:', values[10]?.valueOf()?.map((t: any) => ({
-          identifier: t.token_identifier?.toString(),
-          apr: t.apr?.toString()
-        })));
+        //console.log('=== DETAILS HOOK LOGS ===');
+        //console.log('Raw values[10]:', values[10]?.valueOf());
+        //console.log('Token structures before mapping:', values[10]?.valueOf()?.map((t: any) => ({
+        //  identifier: t.token_identifier?.toString(),
+          //apr: t.apr?.toString()
+        //})));
 
         // Get fund decimals from the response
         const fundDecimals = Number(values[4].valueOf());
@@ -171,7 +171,7 @@ export const useGetLiquidFundDetails = (address: string) => {
         setDetails(parsedDetails);
 
         // Also log the final parsed details
-        console.log('Final parsed details:', parsedDetails);
+        //e.log('Final parsed details:', parsedDetails);
 
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to fetch fund details'));

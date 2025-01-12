@@ -52,43 +52,11 @@ export const SingleFundView = ({ params }: { params: { address: string } }) => {
     address: params.address 
   });
 
-  console.log('SingleFundView rendered with address:', params.address);
   
   const { data: fundInfo, isLoading, error } = useGetLiquidFundInfo(params.address);
   const { details: fundDetails, isLoading: detailsLoading } = useGetLiquidFundDetails(params.address);
 
-  useEffect(() => {
-    console.error('FORCE LOG:', { 
-      fundInfo,
-      hasData: !!fundInfo,
-      address: params.address
-    });
-  }, [fundInfo, params.address]);
-
-  useEffect(() => {
-    console.log('SingleFundView useEffect triggered');
-    console.log('fundInfo:', fundInfo);
-    if (fundInfo) {
-      console.log('=== Debug Logs ===');
-      console.log('Full fundInfo:', fundInfo);
-      console.log('Tokens array:', fundInfo.tokens);
-      console.log('First token:', fundInfo.tokens?.[0]);
-      console.log('APR values:', fundInfo.tokens?.map((t: any) => t.apr));
-      console.log('=================');
-    }
-  }, [fundInfo]);
-
-  useEffect(() => {
-    if (fundDetails) {
-      console.log('Fund Details:', fundDetails);
-    }
-  }, [fundDetails]);
-
-  useEffect(() => {
-    console.log('=== COMPONENT DATA ===');
-    console.log('Fund Details:', fundDetails);
-    console.log('Tokens from details:', fundDetails?.tokens);
-  }, [fundDetails]);
+ 
 
   // Wait for both data sources to be loaded
   if (isLoading || detailsLoading) return (
