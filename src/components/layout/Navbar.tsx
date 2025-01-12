@@ -5,13 +5,17 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WalletButton } from '../wallet/WalletButton';
 import { NavBar } from '../ui/tubelight-navbar';
-import { Home, Coins, Menu, X } from 'lucide-react';
+import { Home, Coins, Menu, X, User } from 'lucide-react';
 import { HyperText } from '../ui/hyper-text';
 import Link from 'next/link';
+import { WalletModal } from '../wallet/WalletModal';
+import { useWallet } from '@/context/WalletContext';
 
 export const Navbar = () => {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { isLoggedIn, address } = useWallet();
 
   const navItems = [
     { name: 'Home', url: '/', icon: Home },
@@ -44,6 +48,16 @@ export const Navbar = () => {
 
           <div className="hidden md:flex items-center gap-4">
             <WalletButton />
+            {isLoggedIn && (
+              <button
+                onClick={() => setIsProfileOpen(true)}
+                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors
+                          border border-white/10"
+                aria-label="Open Wallet"
+              >
+                <User className="w-5 h-5 text-white/80" />
+              </button>
+            )}
           </div>
 
           <button
@@ -56,6 +70,12 @@ export const Navbar = () => {
               <Menu className="h-6 w-6 text-white" />
             )}
           </button>
+
+          {/* Profile Sidebar */}
+          <WalletModal
+            isOpen={isProfileOpen}
+            onClose={() => setIsProfileOpen(false)}
+          />
         </div>
       </div>
 

@@ -37,20 +37,23 @@ export const useGetLiquidFunds = () => {
           queryContract('getIsScPaused', [], ['bool'], liquidFundAbi, address),
         ]);
 
-        const decodeName = name.returnData[0] ? 
-          Buffer.from(name.returnData[0], 'base64').toString() : 'Unknown';
-        
-        const decodeTokens = tokens.returnData.map((token: string) => 
-          Buffer.from(token, 'base64').toString()
-        );
+        // Decode base64 values
+        const decodeBase64 = (str: string) => {
+          try {
+            return Buffer.from(str, 'base64').toString('hex');
+          } catch (err) {
+            console.error('Error decoding base64:', err);
+            return '0';
+          }
+        };
 
         return {
           address,
-          name: decodeName,
-          tokens: decodeTokens,
-          supply: supply.returnData[0] || '0',
-          nav: nav.returnData[0] || '0',
-          price: price.returnData[0] || '0',
+          name: name.returnData[0] ? Buffer.from(name.returnData[0], 'base64').toString() : 'Unknown',
+          tokens: tokens.returnData.map((token: string) => Buffer.from(token, 'base64').toString()),
+          supply: decodeBase64(supply.returnData[0] || ''),
+          nav: decodeBase64(nav.returnData[0] || ''),
+          price: decodeBase64(price.returnData[0] || ''),
           isPaused: Boolean(isPaused.returnData[0])
         };
       } catch (err) {

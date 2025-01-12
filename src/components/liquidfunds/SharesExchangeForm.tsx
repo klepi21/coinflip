@@ -273,20 +273,22 @@ export const SharesExchangeForm = ({
             <span className="text-white/60 text-sm font-medium">
               {activeTab === 'buy' ? 'YOU PAY' : 'YOU SELL'}
             </span>
-            <span className="text-white/60 text-sm">
+            <span className="text-white/60 text-sm truncate ml-2">
               Balance: {activeTab === 'buy' 
                 ? (selectedPaymentToken.id === 'EGLD' ? egldBalance : usdcBalance) 
                 : fundTokenBalance}
             </span>
           </div>
-          <div className="bg-black/60 hover:bg-black/80 transition-colors rounded-xl p-6 flex items-center gap-4 border border-white/5">
-            <div className="relative group">
+          <div className="bg-black/60 hover:bg-black/80 transition-colors rounded-xl p-3 sm:p-6 
+                          flex flex-col sm:flex-row sm:items-center gap-3 border border-white/5">
+            {/* Token selector - Mobile optimized */}
+            <div className="flex-shrink-0">
               {activeTab === 'buy' ? (
                 <button 
                   className="flex items-center gap-2 hover:bg-white/5 p-2 rounded-lg transition-colors"
                   onClick={() => (document.getElementById('token-selector') as HTMLDialogElement)?.showModal()}
                 >
-                  <div className="w-8 h-8 rounded-full bg-black/50 border border-white/10 overflow-hidden">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/50 border border-white/10 overflow-hidden flex-shrink-0">
                     <Image
                       src={selectedPaymentToken.id === 'EGLD' ? egldTokenIcon || '/placeholder.png' : usdcTokenIcon || '/placeholder.png'}
                       alt={selectedPaymentToken.name}
@@ -295,7 +297,7 @@ export const SharesExchangeForm = ({
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="font-medium">
+                  <div className="font-medium text-sm sm:text-base whitespace-nowrap">
                     {selectedPaymentToken.name}
                   </div>
                   <svg className="w-4 h-4 text-white/60" viewBox="0 0 24 24">
@@ -304,7 +306,7 @@ export const SharesExchangeForm = ({
                 </button>
               ) : (
                 <div className="flex items-center gap-2 p-2">
-                  <div className="w-8 h-8 rounded-full bg-black/50 border border-white/10 overflow-hidden">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/50 border border-white/10 overflow-hidden flex-shrink-0">
                     <Image
                       src={fundTokenIcon || '/placeholder.png'}
                       alt="Fund Token"
@@ -313,15 +315,17 @@ export const SharesExchangeForm = ({
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="font-medium">Shares</div>
+                  <div className="font-medium text-sm sm:text-base">Shares</div>
                 </div>
               )}
             </div>
+
+            {/* Input field - Mobile optimized */}
             <input
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="bg-transparent text-white text-right flex-1 outline-none"
+              className="bg-transparent text-white text-right flex-1 outline-none text-base sm:text-lg w-full"
               placeholder="0"
               max={activeTab === 'sell' ? fundTokenBalance : undefined}
             />
@@ -347,24 +351,25 @@ export const SharesExchangeForm = ({
           <div className="text-white/60 mb-2 text-sm font-medium">
             {activeTab === 'buy' ? 'YOU RECEIVE' : 'YOU RECEIVE'}
           </div>
-          <div className="bg-black/60 hover:bg-black/80 transition-colors rounded-xl p-6 flex items-center gap-4 border border-white/5">
+          <div className="bg-black/60 hover:bg-black/80 transition-colors rounded-xl p-3 sm:p-6 
+                          flex flex-col sm:flex-row sm:items-center gap-3 border border-white/5">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-black/50 border border-white/10 overflow-hidden">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/50 border border-white/10 overflow-hidden flex-shrink-0">
                 <Image
                   src={activeTab === 'buy' 
-                    ? (selectedPaymentToken.id === 'EGLD' ? egldTokenIcon || '/placeholder.png' : usdcTokenIcon || '/placeholder.png') 
-                    : fundTokenIcon || '/placeholder.png'}
-                  alt={activeTab === 'buy' ? selectedPaymentToken.name : 'Fund Token'}
+                    ? (fundTokenIcon || '/placeholder.png')
+                    : (selectedPaymentToken.id === 'EGLD' ? egldTokenIcon || '/placeholder.png' : usdcTokenIcon || '/placeholder.png')}
+                  alt={activeTab === 'buy' ? 'Fund Token' : selectedPaymentToken.name}
                   width={32}
                   height={32}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="font-medium">
+              <div className="font-medium text-sm sm:text-base">
                 {activeTab === 'buy' ? 'Shares' : 'USDC'}
               </div>
             </div>
-            <div className="text-white text-right flex-1 font-mono text-lg">
+            <div className="text-white text-right flex-1 font-mono text-base sm:text-lg">
               <span className="text-white/60 mr-1">≈</span>
               {calculateShares()}
             </div>
