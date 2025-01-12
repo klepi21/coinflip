@@ -17,6 +17,7 @@ interface TokenInfo {
   balance: string;
   decimals: number;
   apr: string;
+  base_token_equivalent: number;
 }
 
 interface FundDetails {
@@ -39,6 +40,7 @@ interface TokenStructure {
   weight: { valueOf: () => number };
   balance: { toString: () => string };
   apr: { toString: () => string };
+  base_token_equivalent: { valueOf: () => number };
 }
 
 // Add type for query response
@@ -73,7 +75,8 @@ const parseFundDetails = (values: any, priceValue: any, supplyValue: any): FundD
         decimals: Number(structure.decimals.valueOf()),
         weight: Number(structure.weight.valueOf()) / 100,
         balance: structure.balance.toString(),
-        apr: structure.apr.toString()
+        apr: structure.apr.toString(),
+        base_token_equivalent: structure.base_token_equivalent.valueOf()
       };
      // console.log('Mapped token:', token);
       return token;
@@ -98,91 +101,99 @@ export const useGetLiquidFundDetails = (address: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    const fetchDetails = async () => {
-      try {
+  const fetchDetails = async () => {
+    try {
+      // Don't set loading state on refresh
+      if (!details) {
         setIsLoading(true);
-
-        const provider = new ProxyNetworkProvider('https://devnet-gateway.multiversx.com');
-        const abiRegistry = AbiRegistry.create(liquidFundAbi);
-        const contract = new SmartContract({
-          address: new Address(address),
-          abi: abiRegistry
-        });
-
-        // Get fund info
-        const fundInfoQuery = contract.createQuery({
-          func: new ContractFunction('getIndexFundInfo'),
-          args: []
-        });
-
-        // Get price
-        const priceQuery = contract.createQuery({
-          func: new ContractFunction('getIndexFundPrice'),
-          args: []
-        });
-
-        // Get supply
-        const supplyQuery = contract.createQuery({
-          func: new ContractFunction('getFundSupply'),
-          args: []
-        });
-
-        // Execute all queries
-        const [fundInfoResponse, priceResponse, supplyResponse] = await Promise.all([
-          provider.queryContract(fundInfoQuery),
-          provider.queryContract(priceQuery),
-          provider.queryContract(supplyQuery)
-        ]);
-
-        const resultsParser = new ResultsParser();
-
-        // Parse fund info
-        const { values } = resultsParser.parseQueryResponse(
-          fundInfoResponse, 
-          contract.getEndpoint('getIndexFundInfo')
-        );
-
-        // Add these logs
-        //console.log('=== DETAILS HOOK LOGS ===');
-        //console.log('Raw values[10]:', values[10]?.valueOf());
-        //console.log('Token structures before mapping:', values[10]?.valueOf()?.map((t: any) => ({
-        //  identifier: t.token_identifier?.toString(),
-          //apr: t.apr?.toString()
-        //})));
-
-        // Get fund decimals from the response
-        const fundDecimals = Number(values[4].valueOf());
-
-        // Parse price
-        const priceValue = resultsParser.parseQueryResponse(
-          priceResponse,
-          contract.getEndpoint('getIndexFundPrice')
-        ).values[0];
-
-        // Parse supply
-        const supplyValue = resultsParser.parseQueryResponse(
-          supplyResponse,
-          contract.getEndpoint('getFundSupply')
-        ).values[0];
-
-        const parsedDetails = parseFundDetails(values, priceValue, supplyValue);
-        //console.log('Parsed Details:', parsedDetails);
-        setDetails(parsedDetails);
-
-        // Also log the final parsed details
-        //e.log('Final parsed details:', parsedDetails);
-
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch fund details'));
-      } finally {
-        setIsLoading(false);
       }
-    };
 
-    if (address) {
-      fetchDetails();
+      const provider = new ProxyNetworkProvider('https://devnet-gateway.multiversx.com');
+      const abiRegistry = AbiRegistry.create(liquidFundAbi);
+      const contract = new SmartContract({
+        address: new Address(address),
+        abi: abiRegistry
+      });
+
+      // Get fund info
+      const fundInfoQuery = contract.createQuery({
+        func: new ContractFunction('getIndexFundInfo'),
+        args: []
+      });
+
+      // Get price
+      const priceQuery = contract.createQuery({
+        func: new ContractFunction('getIndexFundPrice'),
+        args: []
+      });
+
+      // Get supply
+      const supplyQuery = contract.createQuery({
+        func: new ContractFunction('getFundSupply'),
+        args: []
+      });
+
+      // Execute all queries
+      const [fundInfoResponse, priceResponse, supplyResponse] = await Promise.all([
+        provider.queryContract(fundInfoQuery),
+        provider.queryContract(priceQuery),
+        provider.queryContract(supplyQuery)
+      ]);
+
+      const resultsParser = new ResultsParser();
+
+      // Parse fund info
+      const { values } = resultsParser.parseQueryResponse(
+        fundInfoResponse, 
+        contract.getEndpoint('getIndexFundInfo')
+      );
+
+      // Add these logs
+      //console.log('=== DETAILS HOOK LOGS ===');
+      //console.log('Raw values[10]:', values[10]?.valueOf());
+      //console.log('Token structures before mapping:', values[10]?.valueOf()?.map((t: any) => ({
+      //  identifier: t.token_identifier?.toString(),
+        //apr: t.apr?.toString()
+      //})));
+
+      // Get fund decimals from the response
+      const fundDecimals = Number(values[4].valueOf());
+
+      // Parse price
+      const priceValue = resultsParser.parseQueryResponse(
+        priceResponse,
+        contract.getEndpoint('getIndexFundPrice')
+      ).values[0];
+
+      // Parse supply
+      const supplyValue = resultsParser.parseQueryResponse(
+        supplyResponse,
+        contract.getEndpoint('getFundSupply')
+      ).values[0];
+
+      const parsedDetails = parseFundDetails(values, priceValue, supplyValue);
+      
+      // Smooth state update
+      setDetails(prev => {
+        if (!prev) return parsedDetails;
+        return {
+          ...parsedDetails,
+          // Preserve any UI-specific state if needed
+        };
+      });
+
+      // Also log the final parsed details
+      //e.log('Final parsed details:', parsedDetails);
+
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch fund details'));
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchDetails();
   }, [address]);
 
   return { details, isLoading, error };

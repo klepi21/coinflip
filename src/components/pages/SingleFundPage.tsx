@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGetLiquidFundDetails } from '@/hooks/useGetLiquidFundDetails';
 import { Card } from '@/components/ui/Card';
 import { 
@@ -52,18 +52,31 @@ const FeeCard = ({ label, value }: FeeCardProps) => (
 );
 
 const formatBalance = (balance: string, decimals: number) => {
-  if (!balance) return '0';
-  
-  // Ensure decimals is within valid range (0-20)
-  const maxDecimals = Math.min(decimals, 20);
-  
-  const balanceValue = 
-    Number(BigInt(balance)) / Math.pow(10, decimals);
-
-  return balanceValue.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: maxDecimals
-  });
+  try {
+    if (!balance) return '0';
+    
+    // Handle scientific notation
+    if (balance.includes('e')) {
+      const [mantissa, exponent] = balance.split('e');
+      const expandedNumber = Number(mantissa) * Math.pow(10, Number(exponent));
+      balance = expandedNumber.toString().split('.')[0]; // Remove any decimals
+    }
+    
+    // Convert to BigInt safely
+    const bigIntValue = BigInt(balance);
+    const divisor = BigInt(10 ** decimals);
+    
+    // Convert to number after division
+    const result = Number(bigIntValue) / Number(divisor);
+    
+    return result.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: Math.min(decimals, 6)
+    });
+  } catch (err) {
+    console.error('Error formatting balance:', err, { balance, decimals });
+    return '0.00';
+  }
 };
 
 // First, let's add some unique motion variants
@@ -263,123 +276,136 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
             <div className="p-4 sm:p-8">
               <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-8">Fund Composition</h2>
               <div className="space-y-2">
-                {details.tokens.map((token, index) => (
-                  <motion.div
-                    key={token.identifier}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-black/40 backdrop-blur-xl rounded-xl p-3 sm:p-4 border border-white/10
-                              hover:border-primary/50 transition-all duration-300"
-                  >
-                    {/* Mobile Layout */}
-                    <div className="block sm:hidden">
-                      <div className="flex items-center justify-between mb-3">
+                {details.tokens.map((token, index) => {
+  
+                  
+                  return (
+                    <motion.div
+                      key={token.identifier}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-black/40 backdrop-blur-xl rounded-xl p-3 sm:p-4 border border-white/10
+                                hover:border-primary/50 transition-all duration-300"
+                    >
+                      {/* Mobile Layout */}
+                      <div className="block sm:hidden">
+                        <div className="flex items-center justify-between mb-3">
+                          {/* Token Info */}
+                          <div className="flex items-center gap-2">
+                            <Image
+                              src={getTokenIconUrl(token.identifier)}
+                              alt={token.identifier}
+                              width={32}
+                              height={32}
+                              className="rounded-full"
+                            />
+                            <div>
+                              <div className="text-base font-bold text-white">
+                                {token.identifier}
+                              </div>
+                              <div className="text-white/60 text-xs">
+                                {formatBalance(token.balance, token.decimals)}
+                              </div>
+                              <div className="text-2xl font-bold text-primary-500 mt-1 animate-pulse">
+                                {token.base_token_equivalent / Math.pow(10, token.decimals)}
+                                &nbsp;{token.identifier.split('-')[0].replace(/^H/, '')}
+                              </div>
+                            </div>
+                          </div>
+                          {/* Weight */}
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-white">
+                              {token.weight}%
+                            </div>
+                            <div className="text-white/60 text-xs">
+                              Allocation
+                            </div>
+                          </div>
+                        </div>
+                        {/* APY Section for Mobile */}
+                        <div className="bg-emerald-500/10 backdrop-blur-sm rounded-lg p-2 flex items-center justify-between">
+                          <div>
+                            <div className="text-lg font-bold text-emerald-500">
+                              {calculateApy(token.apr) >= 100 
+                                ? calculateApy(token.apr).toFixed(1) + '%'
+                                : calculateApy(token.apr).toFixed(2) + '%'
+                              }
+                            </div>
+                            <div className="text-emerald-400 text-xs">APY</div>
+                          </div>
+                          <TrendingUp className="w-5 h-5 text-emerald-500" />
+                          
+                        </div>
+                      </div>
+
+                      {/* Desktop Layout */}
+                      <div className="hidden sm:flex items-center justify-between gap-4">
                         {/* Token Info */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-4 flex-1">
                           <Image
                             src={getTokenIconUrl(token.identifier)}
                             alt={token.identifier}
-                            width={32}
-                            height={32}
+                            width={40}
+                            height={40}
                             className="rounded-full"
                           />
                           <div>
-                            <div className="text-base font-bold text-white">
-                              {token.identifier.split('-')[0]}
+                            <div className="text-lg font-bold text-white">
+                              {token.identifier}
                             </div>
-                            <div className="text-white/60 text-xs">
+                            <div className="text-white/60 font-mono text-xs">
                               {formatBalance(token.balance, token.decimals)}
+                              &nbsp;
+                              {token.identifier.split('-')[0].replace(/^H/, '')}
+                            </div>
+                            <div className="text-lg font-bold text-primary-500 mt-1 animate-pulse">
+                            {token.base_token_equivalent / Math.pow(10, token.decimals)}
+                              &nbsp;{token.identifier.split('-')[0].replace(/^H/, '')}
                             </div>
                           </div>
                         </div>
+
                         {/* Weight */}
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-white">
+                        <div className="text-center px-6 border-x border-white/10">
+                          <div className="text-2xl font-bold text-white">
                             {token.weight}%
                           </div>
-                          <div className="text-white/60 text-xs">
+                          <div className="text-white/60 text-sm">
                             Allocation
                           </div>
                         </div>
-                      </div>
-                      {/* APY Section for Mobile */}
-                      <div className="bg-emerald-500/10 backdrop-blur-sm rounded-lg p-2 flex items-center justify-between">
-                        <div>
-                          <div className="text-lg font-bold text-emerald-500">
-                            {calculateApy(token.apr) >= 100 
-                              ? calculateApy(token.apr).toFixed(1) + '%'
-                              : calculateApy(token.apr).toFixed(2) + '%'
-                            }
-                          </div>
-                          <div className="text-emerald-400 text-xs">APY</div>
-                        </div>
-                        <TrendingUp className="w-5 h-5 text-emerald-500" />
-                      </div>
-                    </div>
 
-                    {/* Desktop Layout */}
-                    <div className="hidden sm:flex items-center justify-between gap-4">
-                      {/* Token Info */}
-                      <div className="flex items-center gap-4 flex-1">
-                        <Image
-                          src={getTokenIconUrl(token.identifier)}
-                          alt={token.identifier}
-                          width={40}
-                          height={40}
-                          className="rounded-full"
-                        />
-                        <div>
-                          <div className="text-lg font-bold text-white">
-                            {token.identifier.split('-')[0]}
+                        {/* APY with trending icon */}
+                        <div className="bg-emerald-500/10 backdrop-blur-sm rounded-xl px-6 py-3 flex items-center gap-3">
+                          <div>
+                            <div className="text-2xl font-bold text-emerald-500">
+                              {calculateApy(token.apr) >= 100 
+                                ? calculateApy(token.apr).toFixed(1) + '%'
+                                : calculateApy(token.apr).toFixed(2) + '%'
+                              }
+                            </div>
+                            <div className="text-emerald-400 text-sm flex items-center gap-1.5">
+                              APY
+                            </div>
                           </div>
-                          <div className="text-white/60 font-mono text-xs">
-                            {formatBalance(token.balance, token.decimals)}
-                            &nbsp;
-                            {token.identifier.split('-')[0]}
-                          </div>
+                          <div className="w-px h-8 bg-emerald-500/20" />
+                          <motion.div
+                            initial={{ rotate: -45 }}
+                            animate={{ rotate: 0 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 260,
+                              damping: 20
+                            }}
+                          >
+                            <TrendingUp className="w-6 h-6 text-emerald-500" />
+                          </motion.div>
                         </div>
                       </div>
-
-                      {/* Weight */}
-                      <div className="text-center px-6 border-x border-white/10">
-                        <div className="text-2xl font-bold text-white">
-                          {token.weight}%
-                        </div>
-                        <div className="text-white/60 text-sm">
-                          Allocation
-                        </div>
-                      </div>
-
-                      {/* APY with trending icon */}
-                      <div className="bg-emerald-500/10 backdrop-blur-sm rounded-xl px-6 py-3 flex items-center gap-3">
-                        <div>
-                          <div className="text-2xl font-bold text-emerald-500">
-                            {calculateApy(token.apr) >= 100 
-                              ? calculateApy(token.apr).toFixed(1) + '%'
-                              : calculateApy(token.apr).toFixed(2) + '%'
-                            }
-                          </div>
-                          <div className="text-emerald-400 text-sm flex items-center gap-1.5">
-                            APY
-                          </div>
-                        </div>
-                        <div className="w-px h-8 bg-emerald-500/20" />
-                        <motion.div
-                          initial={{ rotate: -45 }}
-                          animate={{ rotate: 0 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 260,
-                            damping: 20
-                          }}
-                        >
-                          <TrendingUp className="w-6 h-6 text-emerald-500" />
-                        </motion.div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           </motion.section>
