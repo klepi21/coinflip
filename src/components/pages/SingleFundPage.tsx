@@ -11,6 +11,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getTokenIconUrl } from '@/utils/tokens';
 import { motion } from 'framer-motion';
+import { SharesExchangeForm } from '../liquidfunds/SharesExchangeForm';
 
 interface SingleFundPageProps {
   address: string;
@@ -129,16 +130,42 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
 
   if (!details) return null;
 
+  const stats = [
+    {
+      label: "Price",
+      value: `$${Number(details.price).toFixed(6)}`,
+      icon: <DollarSign className="h-8 w-8 text-primary" />
+    },
+    {
+      label: "Assets Under Management",
+      value: formatAUM(details.nav),
+      icon: <BarChart3 className="h-8 w-8 text-emerald-500" />
+    },
+    {
+      label: "Total Supply",
+      value: (Number(details.supply) / Math.pow(10, 18)).toFixed(4),
+      icon: <Users className="h-8 w-8 text-blue-500" />
+    },
+    {
+      label: "Status",
+      value: details.isPaused ? "Paused" : "Active",
+      icon: <Activity className="h-8 w-8 text-rose-500" />,
+      customStyle: details.isPaused ? "text-red-400" : "text-green-400"
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-[#0A0A0A] overflow-hidden">
-      {/* Animated gradient background */}
+      {/* Enhanced gradient background */}
       <div className="fixed inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-purple-500/5" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0)_0%,rgba(0,0,0,0.7)_100%)]" />
+        {/* Add subtle animated grain effect */}
+        <div className="absolute inset-0 opacity-20 bg-[url('/grain.png')] animate-grain" />
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 container mx-auto px-8 pt-32 pb-16">
+      {/* Main content - Updated spacing and styling */}
+      <div className="relative z-10 container mx-auto px-8 pt-24 pb-16">
         {/* Header Section with Back Button */}
         <div className="mb-12">
           <motion.div
@@ -167,38 +194,18 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
           </motion.h1>
         </div>
 
-        {/* Key Stats Row */}
-        <div className="grid grid-cols-4 gap-6">
-          {[
-            {
-              label: "Price",
-              value: `$${Number(details.price).toFixed(6)}`,
-              icon: <DollarSign className="h-8 w-8 text-primary" />
-            },
-            {
-              label: "Assets Under Management",
-              value: formatAUM(details.nav),
-              icon: <BarChart3 className="h-8 w-8 text-emerald-500" />
-            },
-            {
-              label: "Total Supply",
-              value: (Number(details.supply) / Math.pow(10, 18)).toFixed(4),
-              icon: <Users className="h-8 w-8 text-blue-500" />
-            },
-            {
-              label: "Status",
-              value: details.isPaused ? "Paused" : "Active",
-              icon: <Activity className="h-8 w-8 text-rose-500" />,
-              customStyle: details.isPaused ? "text-red-400" : "text-green-400"
-            }
-          ].map((stat, index) => (
+        {/* Stats Row - Enhanced glassmorphism */}
+        <div className="grid grid-cols-4 gap-6 mb-16">
+          {stats.map((stat, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-black/40 backdrop-blur-xl rounded-3xl p-6 border border-white/10
-                         hover:border-white/20 transition-all duration-300"
+              className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10
+                       hover:border-white/20 transition-all duration-300
+                       shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+                       hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
             >
               <div className="flex items-center gap-4 mb-4">
                 {stat.icon}
@@ -211,174 +218,90 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
           ))}
         </div>
 
-        {/* Fund Composition */}
-        <motion.section 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="mb-16"
-        >
-          <h2 className="text-3xl font-bold text-white mb-8">Fund Composition</h2>
-          <div className="grid grid-cols-2 gap-8">
-            {/* Token List */}
-            <div className="space-y-4">
-              {details.tokens.map((token, index) => (
-                <motion.div
-                  key={token.identifier}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-black/40 backdrop-blur-xl rounded-2xl p-6 border border-white/10
-                            hover:border-primary/50 transition-all duration-300
-                            flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-6">
-                    <Image
-                      src={getTokenIconUrl(token.identifier)}
-                      alt={token.identifier}
-                      width={64}
-                      height={64}
-                      className="rounded-full"
-                    />
-                    <div>
-                      <div className="text-2xl font-bold text-white">
-                        {token.identifier.split('-')[0]}
-                      </div>
-                      <div className="text-white/60 font-mono text-sm">
-                        {token.identifier}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold text-white mb-1">
-                      {token.weight}%
-                    </div>
-                    <div className="text-white/60">
-                      {formatBalance(token.balance, token.decimals)}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Token Distribution Visualization */}
-            <div className="bg-black/40 backdrop-blur-xl rounded-3xl p-8 border border-white/10">
-              <div className="flex gap-4 mb-8">
-                <button 
-                  className="flex-1 py-3 text-lg font-semibold text-white border-b-2 border-primary"
-                >
-                  Buy
-                </button>
-                <button 
-                  className="flex-1 py-3 text-lg font-semibold text-white/60 hover:text-white transition-colors"
-                >
-                  Sell
-                </button>
-              </div>
-
-              {/* Input Section */}
-              <div className="space-y-6">
-                <div>
-                  <div className="text-white/60 mb-2">YOU PAY</div>
-                  <div className="bg-white/5 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <Image
-                            src="https://tools.multiversx.com/assets-cdn/devnet/tokens/USDC-350c4e/icon.svg"
-                            alt="USDC"
-                            width={32}
-                            height={32}
-                            className="rounded-full"
-                          />
-                          <div className="absolute -bottom-1 -right-1 bg-[#2775CA] rounded-full w-4 h-4 flex items-center justify-center">
-                            <DollarSign className="h-3 w-3 text-white" />
-                          </div>
-                        </div>
-                        <span className="text-white font-semibold">WrappedUSDC</span>
-                      </div>
-                      <input 
-                        type="number"
-                        placeholder="0"
-                        className="bg-transparent text-right text-2xl font-bold text-white outline-none w-1/2"
+        {/* Main Grid - Updated for consistent heights */}
+        <div className="grid grid-cols-2 gap-8 mb-16">
+          {/* Fund Composition */}
+          <motion.section 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10
+                       hover:border-white/20 transition-all duration-300
+                       shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+                       flex flex-col h-[600px]" // Fixed height
+          >
+            <div className="p-8">
+              <h2 className="text-3xl font-bold text-white mb-8">Fund Composition</h2>
+              <div className="space-y-2 overflow-y-auto max-h-[480px] pr-2">
+                {details.tokens.map((token, index) => (
+                  <motion.div
+                    key={token.identifier}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-black/40 backdrop-blur-xl rounded-xl p-4 border border-white/10
+                              hover:border-primary/50 transition-all duration-300
+                              flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-4">
+                      <Image
+                        src={getTokenIconUrl(token.identifier)}
+                        alt={token.identifier}
+                        width={40}
+                        height={40}
+                        className="rounded-full"
                       />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Exchange Rate Info */}
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/60">Share Price</span>
-                  <span className="text-white font-semibold">${Number(details.price).toFixed(6)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/60">Fees</span>
-                  <span className="text-primary font-semibold">${details.fees.protocol.buy}%</span>
-                </div>
-
-                {/* Shares You Receive */}
-                <div>
-                  <div className="text-white/60 mb-2">YOU RECEIVE</div>
-                  <div className="bg-white/5 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Image
-                          src={getTokenIconUrl(details.fundTokenId)}
-                          alt={details.name}
-                          width={32}
-                          height={32}
-                          className="rounded-full"
-                        />
-                        <div>
-                          <div className="text-white font-semibold">Shares</div>
-                          <div className="text-white/60 text-sm">How many shares you will receive</div>
+                      <div>
+                        <div className="text-lg font-bold text-white">
+                          {token.identifier.split('-')[0]}
+                        </div>
+                        <div className="text-white/60 font-mono text-xs">
+                          {token.identifier}
                         </div>
                       </div>
-                      <div className="text-2xl font-bold text-white">0</div>
                     </div>
-                  </div>
-                </div>
-
-                {/* Action Button */}
-                <button 
-                  className="w-full bg-primary hover:bg-primary/90 text-white py-4 rounded-xl font-semibold text-lg
-                             transition-all duration-300 flex items-center justify-center gap-2"
-                >
-                  {isLoggedIn ? (
-                    <>
-                      Buy
-                      <DollarSign className="h-5 w-5" />
-                    </>
-                  ) : (
-                    <>
-                      Login to Buy
-                      <ChevronRight className="h-5 w-5" />
-                    </>
-                  )}
-                </button>
-
-                {/* Exchange Link */}
-                <div className="text-center">
-                  <div className="text-white/60 text-sm mb-2">
-                    Need more? Try exchanging some of your other tokens to get what you need.
-                  </div>
-                  <button className="text-primary hover:text-primary/80 font-semibold transition-colors">
-                    Exchange
-                  </button>
-                </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-white mb-0.5">
+                        {token.weight}%
+                      </div>
+                      <div className="text-white/60 text-sm">
+                        {formatBalance(token.balance, token.decimals)}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             </div>
-          </div>
-        </motion.section>
+          </motion.section>
 
-        {/* Bottom Grid: Token Details & Fee Structure */}
+          {/* Trading Interface - Matched height */}
+          <motion.section
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="h-[600px]" // Fixed height
+          >
+            <SharesExchangeForm 
+              sharePrice={details.price}
+              fundAddress={address}
+              fundTokenId={details.fundTokenId}
+              buyFee={details.fees.protocol.buy}
+              sellFee={details.fees.protocol.withdraw}
+            />
+          </motion.section>
+        </div>
+
+        {/* Bottom Grid - Enhanced styling */}
         <div className="grid grid-cols-2 gap-8">
-          {/* Token Details */}
+          {/* Token Details & Fee Structure */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-black/40 backdrop-blur-xl rounded-3xl p-8 border border-white/10"
+            className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10
+                     hover:border-white/20 transition-all duration-300
+                     shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+                     hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
           >
             <h3 className="text-2xl font-bold text-white mb-6">Token Details</h3>
             <div className="space-y-6">
@@ -420,7 +343,10 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-black/40 backdrop-blur-xl rounded-3xl p-8 border border-white/10"
+            className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10
+                     hover:border-white/20 transition-all duration-300
+                     shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+                     hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
           >
             <h3 className="text-2xl font-bold text-white mb-6">Fee Structure</h3>
             <div className="space-y-8">
