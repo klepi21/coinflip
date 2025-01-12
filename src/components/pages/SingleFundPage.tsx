@@ -340,7 +340,7 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
                             <div className="text-white/60 font-mono text-xs">
                               {formatBalance(token.balance, token.decimals)}
                               &nbsp;
-                              {token.identifier.split('-')[0].replace(/^H/, '')}
+                              {token.identifier}
                             </div>
                             <div className="text-lg font-bold text-primary-500 mt-1 animate-pulse">
                               {formatBalance(token.base_token_equivalent.toString(), token.base_token_decimals)}
