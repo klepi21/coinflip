@@ -35,7 +35,10 @@ export default function RootLayout({
               <main>
                 {children}
               </main>
-              <WalletModal />
+              <WalletModal 
+                isOpen={false}
+                onClose={() => {}}
+              />
               <SignTransactionsModals />
             </WalletProvider>
           </DappProvider>

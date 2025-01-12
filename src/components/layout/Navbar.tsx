@@ -8,8 +8,8 @@ import { NavBar } from '../ui/tubelight-navbar';
 import { Home, Coins, Menu, X, User } from 'lucide-react';
 import { HyperText } from '../ui/hyper-text';
 import Link from 'next/link';
-import { WalletModal } from '../wallet/WalletModal';
 import { useWallet } from '@/context/WalletContext';
+import { WalletModal } from '../wallet/WalletModal';
 
 export const Navbar = () => {
   const pathname = usePathname();
