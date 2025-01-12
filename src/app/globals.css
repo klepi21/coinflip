@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Override MultiversX SDK button styles */
+.extension-login-button,
+.walletconnect-login-button,
+.webwallet-login-button {
+  all: unset !important;
+  width: 100% !important;
+  cursor: pointer !important;
+  display: block !important;
+}
+
+.extension-login-button > div,
+.walletconnect-login-button > div,
+.webwallet-login-button > div {
+  all: unset !important;
+  width: 100% !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: none !important;
+  display: block !important;
+}
+
+/* Hide default SDK button content */
+.extension-login-button img,
+.walletconnect-login-button img,
+.webwallet-login-button img,
+.extension-login-button > div > div,
+.walletconnect-login-button > div > div,
+.webwallet-login-button > div > div {
+  display: none !important;
+}
+
+/* Custom button styles */
+.wallet-button {
+  @apply w-full px-6 py-4 rounded-lg 
+    bg-stone-50 hover:bg-stone-100 
+    border border-stone-200 
+    text-stone-700 hover:text-stone-900
+    transition-all duration-200 ease-in-out
+    shadow-sm hover:shadow-md
+    focus:outline-none focus:ring-2 focus:ring-stone-300 focus:ring-offset-2;
+}
+
+.wallet-button-content {
+  @apply flex items-center justify-center gap-3 text-sm font-medium;
+}

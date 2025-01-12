@@ -1,0 +1,948 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.80.1",
+            "commitHash": "3f5fd8dd41153bc5fdca9427e9e05be2c767ba23",
+            "commitDate": "2024-08-06",
+            "channel": "Stable",
+            "short": "rustc 1.80.1 (3f5fd8dd4 2024-08-06)"
+        },
+        "contractCrate": {
+            "name": "valoro_proxy_sc",
+            "version": "0.0.0"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.54.6"
+        }
+    },
+    "docs": [
+        "1. Standard and Liquid Fund Template SCs must have been deployed already and passed to the `init` before the deployment of this SC.",
+        "1. After the deployment of Fees SC, set its address in the `feesScAddress` mapper.",
+        "1. Finally, set the decimals of the tokens that are about to be used for new Index Funds using the `setTokenDecimals` endpoint and then WL them.",
+        "1. Similarly, set the liquid token pairs for the new Index Funds using the `setLiquidTokens` endpoint and WL them too."
+    ],
+    "name": "ValoroProxySc",
+    "constructor": {
+        "inputs": [
+            {
+                "name": "standard_index_fund_template_address",
+                "type": "Address"
+            },
+            {
+                "name": "liquid_index_fund_template_address",
+                "type": "Address"
+            }
+        ],
+        "outputs": []
+    },
+    "upgradeConstructor": {
+        "inputs": [],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "name": "pauseSc",
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "resumeSc",
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "addAdmins",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "admins",
+                    "type": "variadic<Address>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "removeAdmins",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "admins",
+                    "type": "variadic<Address>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setDebugMode",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "debug_mode",
+                    "type": "bool"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "getIsScPaused",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "getAdmins",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<Address>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getDebugMode",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "setIndexFundTemplateAddress",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "index_fund_sc_type",
+                    "type": "IndexFundScType"
+                },
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "upgradeIndexFundSc",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setTokenDecimals",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "token_decimals_pairs",
+                    "type": "variadic<multi<TokenIdentifier,u32>>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "clearTokenDecimals",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "tokens",
+                    "type": "variadic<TokenIdentifier>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setLiquidTokens",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "token_pairs",
+                    "type": "variadic<multi<EgldOrEsdtTokenIdentifier,TokenIdentifier>>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "clearLiquidTokens",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "token_pairs",
+                    "type": "variadic<multi<EgldOrEsdtTokenIdentifier,TokenIdentifier>>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setWhitelistedFundPaymentTokens",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "tokens",
+                    "type": "variadic<EgldOrEsdtTokenIdentifier>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "clearWhitelistedFundPaymentTokens",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "tokens",
+                    "type": "variadic<EgldOrEsdtTokenIdentifier>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setWhitelistedFundTokens",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "tokens",
+                    "type": "variadic<TokenIdentifier>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "clearWhitelistedFundTokens",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "tokens",
+                    "type": "variadic<TokenIdentifier>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setMinimumAmountAccepted",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "resetIndexFund",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "index_fund_sc_type",
+                    "type": "IndexFundScType"
+                },
+                {
+                    "name": "index_token_id",
+                    "type": "TokenIdentifier"
+                },
+                {
+                    "name": "index_token_address",
+                    "type": "Address"
+                },
+                {
+                    "name": "opt_to_re_initialize",
+                    "type": "optional<bool>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "eraseIndexFundSc",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "index_token_address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "clearLatestIndexFundSc",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "getTotalNetAssetsValue",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "getIndexFundScsInfo",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<multi<Address,TokenIdentifier,BigUint>>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getWhitelistedFundTokens",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<TokenIdentifier>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getIndexFundScs",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<Address>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getIndexFundTScType",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "IndexFundScType"
+                }
+            ]
+        },
+        {
+            "name": "getUserLatestSc",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "getStandardIndexFundTemplateAddress",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "getLiquidIndexFundTemplateAddress",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "getTokenDecimals",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "TokenIdentifier"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "getLiquidToken",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "base_token",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "TokenIdentifier"
+                }
+            ]
+        },
+        {
+            "name": "getBaseToken",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "liquid_token",
+                    "type": "TokenIdentifier"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "EgldOrEsdtTokenIdentifier"
+                }
+            ]
+        },
+        {
+            "name": "getWhitelistedFundPaymentTokens",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<EgldOrEsdtTokenIdentifier>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getMinimumAmountAccepted",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "registerIndexFundSc",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "index_fund_sc_type",
+                    "type": "IndexFundScType"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "createIndexFund",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "EGLD"
+            ],
+            "inputs": [
+                {
+                    "name": "token_ticker",
+                    "type": "bytes"
+                },
+                {
+                    "name": "token_display_name",
+                    "type": "bytes"
+                },
+                {
+                    "name": "manager_buy_fee_percentage",
+                    "type": "u64"
+                },
+                {
+                    "name": "manager_sell_fee_percentage",
+                    "type": "u64"
+                },
+                {
+                    "name": "manager_performance_fee_percentage",
+                    "type": "u64"
+                },
+                {
+                    "name": "fund_tokens",
+                    "type": "variadic<multi<TokenIdentifier,u64>>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "initializeIndexFund",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [
+                {
+                    "name": "opt_slippage",
+                    "type": "optional<u64>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setFeesScAddress",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setDefaultProtocolBuyFeePercentage",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "percentage",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setDefaultProtocolSellFeePercentage",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "percentage",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setIndexFundProtocolBuyFeePercentage",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "index_token_address",
+                    "type": "Address"
+                },
+                {
+                    "name": "percentage",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setIndexFundProtocolSellFeePercentage",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "index_token_address",
+                    "type": "Address"
+                },
+                {
+                    "name": "percentage",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "getFeesScAddress",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "getDefaultProtocolBuyFeePercentage",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getDefaultProtocolSellFeePercentage",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getDefaultProtocolPerformanceFeePercentage",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "addFundManagers",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "addresses",
+                    "type": "variadic<Address>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "removeFundManagers",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "addresses",
+                    "type": "variadic<Address>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "getAllowedFundManagers",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<Address>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getIndexFundManager",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        }
+    ],
+    "events": [
+        {
+            "identifier": "pause_sc",
+            "inputs": []
+        },
+        {
+            "identifier": "resume_sc",
+            "inputs": []
+        },
+        {
+            "identifier": "add_admins",
+            "inputs": [
+                {
+                    "name": "admins",
+                    "type": "variadic<Address>",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "remove_admins",
+            "inputs": [
+                {
+                    "name": "admins",
+                    "type": "variadic<Address>",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "set_token_decimals",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "TokenIdentifier",
+                    "indexed": true
+                },
+                {
+                    "name": "decimals",
+                    "type": "u32",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "clear_token_decimals",
+            "inputs": [
+                {
+                    "name": "tokens",
+                    "type": "variadic<TokenIdentifier>",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "set_liquid_tokens",
+            "inputs": [
+                {
+                    "name": "token_pairs",
+                    "type": "variadic<multi<EgldOrEsdtTokenIdentifier,TokenIdentifier>>",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "clear_liquid_tokens",
+            "inputs": [
+                {
+                    "name": "token_pairs",
+                    "type": "variadic<multi<EgldOrEsdtTokenIdentifier,TokenIdentifier>>",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "reset_index_fund",
+            "inputs": [
+                {
+                    "name": "index_fund_sc_type",
+                    "type": "IndexFundScType",
+                    "indexed": true
+                },
+                {
+                    "name": "index_token_id",
+                    "type": "TokenIdentifier",
+                    "indexed": true
+                },
+                {
+                    "name": "index_token_address",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "to_re_initialize",
+                    "type": "bool",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "set_whitelisted_fund_payment_tokens",
+            "inputs": [
+                {
+                    "name": "tokens",
+                    "type": "variadic<EgldOrEsdtTokenIdentifier>",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "clear_whitelisted_fund_payment_tokens",
+            "inputs": [
+                {
+                    "name": "tokens",
+                    "type": "variadic<EgldOrEsdtTokenIdentifier>",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "set_whitelisted_fund_tokens",
+            "inputs": [
+                {
+                    "name": "tokens",
+                    "type": "variadic<TokenIdentifier>",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "clear_whitelisted_fund_tokens",
+            "inputs": [
+                {
+                    "name": "tokens",
+                    "type": "variadic<TokenIdentifier>",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "set_minimum_amount_accepted",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "EgldOrEsdtTokenIdentifier",
+                    "indexed": true
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "erase_index_fund_sc",
+            "inputs": [
+                {
+                    "name": "index_token_address",
+                    "type": "Address",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "register_index_fund_sc",
+            "inputs": [
+                {
+                    "name": "index_fund_type",
+                    "type": "IndexFundScType",
+                    "indexed": true
+                },
+                {
+                    "name": "index_fund_manager",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "index_fund_sc_address",
+                    "type": "Address",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "set_default_protocol_buy_fee_percentage",
+            "inputs": [
+                {
+                    "name": "percentage",
+                    "type": "u64",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "set_default_protocol_sell_fee_percentage",
+            "inputs": [
+                {
+                    "name": "percentage",
+                    "type": "u64",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "add_fund_managers",
+            "inputs": [
+                {
+                    "name": "addresses",
+                    "type": "variadic<Address>",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "remove_fund_managers",
+            "inputs": [
+                {
+                    "name": "addresses",
+                    "type": "variadic<Address>",
+                    "indexed": true
+                }
+            ]
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": false,
+    "types": {
+        "IndexFundScType": {
+            "type": "enum",
+            "variants": [
+                {
+                    "name": "Standard",
+                    "discriminant": 1
+                },
+                {
+                    "name": "Liquid",
+                    "discriminant": 2
+                }
+            ]
+        }
+    }
+}
