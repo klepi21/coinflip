@@ -91,6 +91,16 @@ const staggerContainer = {
 // Add isLoggedIn state (you'll need to get this from your wallet context)
 const isLoggedIn = true; // Replace with actual wallet connection state
 
+// Add a helper function to format the AUM value
+const formatAUM = (value: string) => {
+  const numValue = Number(value) / Math.pow(10, 6); // Convert to millions
+  if (numValue >= 1) {
+    return `$${numValue.toFixed(2)}`;
+  }
+  // If less than 1 million, show the regular dollar amount
+  return `$${numValue.toFixed(2)}`;
+};
+
 export const SingleFundPage = ({ address }: SingleFundPageProps) => {
   const { details, isLoading, error } = useGetLiquidFundDetails(address);
 
@@ -167,7 +177,7 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
             },
             {
               label: "Assets Under Management",
-              value: `$${(Number(details.nav) / Math.pow(10, 6)).toFixed(2)}M`,
+              value: formatAUM(details.nav),
               icon: <BarChart3 className="h-8 w-8 text-emerald-500" />
             },
             {
