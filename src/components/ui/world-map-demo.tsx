@@ -3,6 +3,7 @@ import { WorldMap } from "@/components/ui/world-map";
 import { motion } from "framer-motion";
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { GradualSpacing } from "@/components/ui/gradual-spacing";
 
 export function WorldMapDemo() {
   return (
@@ -56,6 +57,17 @@ export function WorldMapDemo() {
             <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
+      </div>
+      
+      <div className="absolute top-[70%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-full">
+        <GradualSpacing
+          className="font-display text-center text-2xl font-bold text-white/90 md:text-4xl md:leading-[3rem]"
+          text="Two Kostas, infinite possibilities."
+          framerProps={{
+            hidden: { opacity: 0, y: 20 },
+            visible: { opacity: 1, y: 0 },
+          }}
+        />
       </div>
       
       <WorldMap
