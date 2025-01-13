@@ -48,3 +48,231 @@
 .wallet-button-content {
   @apply flex items-center justify-center gap-3 text-sm font-medium;
 }
+
+/* Add these styles for wallet connect modal */
+:root {
+  --color-xportalteal: #23f7dd;
+  --color-card: #1a1b1f;
+  --color-xaliasblue: #4c6ef5;
+  --color-metamaskorange: #f6851b;
+  --color-muted: #9ba1a6;
+}
+
+.login-button {
+  background-color: transparent !important;
+  color: var(--color-xportalteal) !important;
+  padding: 14px !important;
+  border: 0px solid var(--color-xportalteal)  !important;
+  border-radius: 16px !important;
+  width: full !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 0 !important;
+
+  &:hover {
+    background-color: var(--color-xportalteal) !important;
+    color: var(--color-card) !important;
+  }
+
+  &:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 0 !important;
+  }
+
+  &:active {
+    background-color: var(--color-xportalteal) !important;
+    color: var(--color-card) !important;
+  }
+}
+
+.xalias-login-button {
+  background-color: var(--color-card) !important;
+  color: var(--color-xaliasblue) !important;
+  padding: 14px !important;
+  border: 0px solid var(--color-xaliasblue) !important;
+  border-radius: 16px !important;
+  width: full !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 0 !important;
+
+  &:hover {
+    background-color: var(--color-xaliasblue) !important;
+    color: var(--color-card) !important;
+  }
+
+  &:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 0 !important;
+  }
+
+  &:active {
+    background-color: var(--color-xaliasblue) !important;
+    color: var(--color-card) !important;
+  }
+}
+
+.metamask-login-button {
+  background-color: var(--color-card) !important;
+  color: var(--color-metamaskorange) !important;
+  padding: 14px !important;
+  border: 0px solid var(--color-metamaskorange) !important;
+  border-radius: 16px !important;
+  width: full !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 0 !important;
+
+  &:hover {
+    background-color: var(--color-metamaskorange) !important;
+    color: var(--color-card) !important;
+  }
+
+  &:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 0 !important;
+  }
+
+  &:active {
+    background-color: var(--color-metamaskorange) !important;
+    color: var(--color-card) !important;
+  }
+}
+
+.xportal-login-button {
+  padding: 10px !important;
+  border: none !important;
+  border-radius: 12px !important;
+  width: 70% !important;
+  font-weight: 500 !important;
+  align-self: center !important;
+  background-color: var(--color-xportalteal) !important;
+  color: var(--color-card) !important;
+  display: flex !important;
+  justify-content: flex-center !important;
+  align-items: center !important;
+  outline: none !important;
+  box-shadow: 0 0 0 0 !important;
+  margin-top: 24px !important;
+  margin-bottom: -5px !important;
+}
+
+.xportal-content {
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+  margin-top: -24px !important;
+  margin-bottom: -32px !important;
+}
+
+.xportal-qr-code {
+  margin: 0px auto !important;
+  margin-bottom: -10px !important;
+  padding: 0px !important;
+  width: 60% !important;
+}
+
+.xportal-error-message {
+  margin-top: -10px !important;
+  margin-bottom: 6px !important;
+  background-color: transparent !important;
+}
+
+.xportal-loader {
+  scale: 0.7 !important;
+  padding: 0px !important;
+  margin: 0px !important;
+}
+
+.xportal-pairing-list-lead {
+  font-weight: 500 !important;
+  font-size: 0.9rem !important;
+  margin-top: -10px !important;
+  margin-bottom: 4px !important;
+}
+
+.xportal-pairing-list-wrapper {
+  padding: 0px !important;
+  margin: 0px !important;
+  background-color: var(--color-card) !important;
+  border-radius: 16px !important;
+  transform: scale(0.9) !important;
+}
+
+.xportal-pairing-list-details > :nth-child(2) {
+  display: none !important;
+}
+
+.xportal-pairing-list-button {
+  font-size: 0.7rem !important;
+  padding: 4px !important;
+  border-radius: 16px !important;
+  background-color: var(--color-card) !important;
+}
+
+.xportal-pairing-list-remove {
+  font-size: 1rem !important;
+  padding-right: 10px !important;
+}
+
+.xportal-pairing-list-icon {
+  padding: 5px !important;
+  border-radius: 12px !important;
+}
+
+.ledger-login-modal {
+  * {
+    background-color: var(--color-card) !important;
+    border-radius: 16px !important;
+    color: var(--color-muted) !important;
+  }
+  
+  button {
+    background-color: transparent;
+    color: var(--color-xportalteal);
+    outline: none !important;
+    box-shadow: 0 0 0 0 !important;
+    border: none !important;
+
+    &:hover {
+      background-color: var(--color-card);
+      color: var(--color-xportalteal);
+    }
+  }
+}
+
+.ledger-modal-icon {
+  stroke: var(--color-xportalteal) !important;
+}
+
+.ledger-modal-button {
+  background-color: var(--color-xportalteal) !important;
+  color: var(--color-card) !important;
+  border: 1px solid var(--color-xportalteal) !important;
+  border-radius: 12px !important;
+  font-weight: 500 !important;
+  min-width: 40% !important;
+  outline: none !important;
+  box-shadow: 0 0 0 0 !important;
+  margin-top: 24px !important;
+  margin-bottom: -20px !important;
+}
+
+.addresses-ledger-modal-button {
+  background-color: var(--color-xportalteal) !important;
+  color: var(--color-card) !important;
+  border: 1px solid var(--color-xportalteal) !important;
+  border-radius: 12px !important;
+  font-weight: 500 !important;
+  min-width: 40% !important;
+  outline: none !important;
+  box-shadow: 0 0 0 0 !important;
+  margin-top: 24px !important;
+  margin-bottom: -20px !important;
+}
+
+.ledger-modal-footer-link {
+  display: none !important;
+}

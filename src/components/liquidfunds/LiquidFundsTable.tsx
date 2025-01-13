@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, TrendingUp, Users, DollarSign, Loader2 } from 'lucide-react';
 import { useGetLiquidFunds } from '@/hooks/useGetLiquidFunds';
 import Image from 'next/image';
+import { Meteors } from '@/components/ui/meteors';
 
 const WAD = BigInt('1000000000000000000');
 const SECONDS_PER_YEAR = 31556926;
@@ -89,16 +90,13 @@ export const LiquidFundsTable = () => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {funds?.filter(fund => {
         try {
-          // Check if values exist and are not empty
           if (!fund.nav || !fund.supply || fund.nav === '0' || fund.supply === '0') {
             return false;
           }
           
-          // Convert hex values to numbers for comparison
           const navValue = Number(BigInt('0x' + fund.nav)) / Math.pow(10, 6);
           const supplyValue = Number(BigInt('0x' + fund.supply)) / Math.pow(10, 18);
           
-          // Only show funds with NAV and supply greater than 1
           return navValue > 1 && supplyValue > 1;
         } catch (err) {
           console.error('Error filtering fund:', err);
@@ -111,73 +109,91 @@ export const LiquidFundsTable = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
           onClick={() => router.push(`/liquid-funds/${fund.address}`)}
-          className="group bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10
-                   hover:border-white/20 transition-all duration-300 cursor-pointer
-                   shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+          className="group relative p-8 rounded-3xl cursor-pointer
+                     before:absolute before:inset-0 before:rounded-3xl before:bg-gradient-to-b 
+                     before:from-white/10 before:to-white/5 before:backdrop-blur-xl
+                     hover:before:from-white/20 hover:before:to-white/10
+                     after:absolute after:inset-0 after:rounded-3xl after:border after:border-white/10
+                     hover:after:border-white/20 after:transition-colors
+                     overflow-hidden"
         >
-          {/* Fund Name */}
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-white">{fund.name}</h3>
-            <ArrowRight className="h-5 w-5 text-white/40 group-hover:text-white/80 
-                                 group-hover:translate-x-1 transition-all" />
-          </div>
+          {/* Glow effect */}
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/30 via-white/10 to-primary/30 
+                          opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500" />
+          
+          {/* Add Meteors here */}
+          <Meteors number={10} /> {/* Reduced number for better performance */}
 
-          {/* Token List */}
-          <div className="flex -space-x-2 mb-6">
-            {fund.tokens?.map((tokenId: string, i: number) => (
-              <div
-                key={tokenId}
-                className="relative w-8 h-8 rounded-full border-2 border-black/50 bg-black/50
-                         first:ml-0 hover:z-10 transition-transform hover:scale-110"
-                title={tokenId}
-              >
-                <Image
-                  src={getTokenIconUrl(tokenId)}
-                  alt={tokenId}
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Key Metrics */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-white/60">
-                <DollarSign className="h-4 w-4" />
-                <span className="text-xs">Price</span>
-              </div>
-              <p className="text-sm font-mono text-white">
-                ${formatNumber(fund.price, 6)}
-              </p>
+          {/* Content container */}
+          <div className="relative">
+            {/* Fund Name */}
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-bold text-white group-hover:text-primary transition-colors">
+                {fund.name}
+              </h3>
+              <ArrowRight className="h-5 w-5 text-white/40 group-hover:text-primary 
+                            group-hover:translate-x-1 transition-all duration-300" />
             </div>
 
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-white/60">
-                <TrendingUp className="h-4 w-4" />
-                <span className="text-xs">NAV</span>
-              </div>
-              <p className="text-sm font-mono text-white">
-                ${formatNumber(fund.nav, 6, 'nav')}
-              </p>
+            {/* Token List */}
+            <div className="flex -space-x-3 mb-8">
+              {fund.tokens?.map((tokenId: string, i: number) => (
+                <div
+                  key={tokenId}
+                  className="relative w-10 h-10 rounded-full ring-2 ring-black/50 bg-black/50
+                             first:ml-0 hover:z-10 transition-all duration-300
+                             hover:scale-110 hover:ring-primary/50"
+                  title={tokenId}
+                >
+                  <Image
+                    src={getTokenIconUrl(tokenId)}
+                    alt={tokenId}
+                    width={40}
+                    height={40}
+                    className="rounded-full"
+                  />
+                </div>
+              ))}
             </div>
 
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-white/60">
-                <Users className="h-4 w-4" />
-                <span className="text-xs">Supply</span>
+            {/* Key Metrics */}
+            <div className="grid grid-cols-3 gap-6">
+              <div className="space-y-2 group/item">
+                <div className="flex items-center gap-2 text-white/60 group-hover/item:text-primary/60 transition-colors">
+                  <DollarSign className="h-4 w-4" />
+                  <span className="text-xs font-medium">Price</span>
+                </div>
+                <p className="text-sm font-mono text-white group-hover/item:text-primary transition-colors">
+                  ${formatNumber(fund.price, 6)}
+                </p>
               </div>
-              <p className="text-sm font-mono text-white">
-                {formatNumber(fund.supply, 18, 'supply')}
-              </p>
+
+              <div className="space-y-2 group/item">
+                <div className="flex items-center gap-2 text-white/60 group-hover/item:text-primary/60 transition-colors">
+                  <TrendingUp className="h-4 w-4" />
+                  <span className="text-xs font-medium">NAV</span>
+                </div>
+                <p className="text-sm font-mono text-white group-hover/item:text-primary transition-colors">
+                  ${formatNumber(fund.nav, 6, 'nav')}
+                </p>
+              </div>
+
+              <div className="space-y-2 group/item">
+                <div className="flex items-center gap-2 text-white/60 group-hover/item:text-primary/60 transition-colors">
+                  <Users className="h-4 w-4" />
+                  <span className="text-xs font-medium">Supply</span>
+                </div>
+                <p className="text-sm font-mono text-white group-hover/item:text-primary transition-colors">
+                  {formatNumber(fund.supply, 18, 'supply')}
+                </p>
+              </div>
             </div>
+
+            {/* Hover line indicator */}
+            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent 
+                            translate-y-8 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 
+                            transition-all duration-500" />
           </div>
-
-          {/* Hover Indicator */}
-          <div className="h-1 w-0 group-hover:w-full bg-primary mt-6 
-                         transition-all duration-300 rounded-full" />
         </motion.div>
       ))}
     </div>
