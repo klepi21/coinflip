@@ -12,6 +12,9 @@ import Image from 'next/image';
 import { getTokenIconUrl } from '@/utils/tokens';
 import { motion } from 'framer-motion';
 import { SharesExchangeForm } from '../liquidfunds/SharesExchangeForm';
+import { UserPosition } from '../liquidfunds/UserPosition';
+import { useWallet } from '@/context/WalletContext';
+import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
 
 interface SingleFundPageProps {
   address: string;
@@ -130,6 +133,31 @@ const calculateApy = (aprValue: string | number) => {
 
 export const SingleFundPage = ({ address }: SingleFundPageProps) => {
   const { details, isLoading, error } = useGetLiquidFundDetails(address);
+  const { address: userAddress } = useWallet();
+  const [userFundBalance, setUserFundBalance] = useState('0');
+
+  // Add this useEffect to fetch user's fund token balance
+  useEffect(() => {
+    const fetchUserBalance = async () => {
+      if (!userAddress || !details?.fundTokenId) return;
+
+      try {
+        const response = await fetch(
+          `https://devnet-api.multiversx.com/accounts/${userAddress}/tokens/${details.fundTokenId}`
+        );
+        const data = await response.json();
+        
+        if (data.balance) {
+          setUserFundBalance((Number(data.balance) / Math.pow(10, data.decimals)).toString());
+        }
+      } catch (error) {
+        console.error('Error fetching user fund balance:', error);
+        setUserFundBalance('0');
+      }
+    };
+
+    fetchUserBalance();
+  }, [userAddress, details?.fundTokenId]);
 
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
@@ -243,6 +271,19 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
             </motion.div>
           ))}
         </div>
+
+        {/* Add before the main grid */}
+        {userAddress && (
+          <div className="mb-8">
+            <UserPosition
+              fundTokenId={details.fundTokenId}
+              fundTokenBalance={userFundBalance}
+              fundPrice={details.price}
+              totalFundSupply={details.supply}
+              fundTokens={details.tokens}
+            />
+          </div>
+        )}
 
         {/* Main Grid - Adjusted ratio to 2.5/1.5 */}
         <div className="flex flex-col lg:grid lg:grid-cols-8 gap-8 mb-8 sm:mb-16">
