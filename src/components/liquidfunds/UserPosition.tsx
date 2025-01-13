@@ -53,22 +53,17 @@ const calculateTokenBalance = (
   totalFundSupply: string
 ) => {
   try {
-    // Convert fund token balance and total supply to BigInt with 18 decimals
-    const userFundTokensBig = BigInt(Math.floor(Number(fundTokenBalance) * 1e18));
-    const totalFundSupplyBig = BigInt(totalFundSupply);
-    
-    // Calculate user's share as a ratio (maintaining precision)
-    const userShare = Number(userFundTokensBig) / Number(totalFundSupplyBig);
-    
-    // Convert token balance to number with proper decimals
-    const tokenTotalBalance = BigInt(tokenBalance);
-    const tokenDecimalsDivisor = BigInt(10 ** tokenDecimals);
-    const tokenBalanceFormatted = Number(tokenTotalBalance) / Number(tokenDecimalsDivisor);
+    // Convert values to numbers first to avoid BigInt precision issues
+    const userBalance = Number(fundTokenBalance);
+    const totalSupply = Number(totalFundSupply) / 1e18; // Adjust for 18 decimals
+    const tokenTotal = Number(tokenBalance) / Math.pow(10, tokenDecimals);
+
+    // Calculate user's share of the fund
+    const userShare = userBalance / totalSupply;
     
     // Calculate user's portion of the token
-    const userTokenBalance = tokenBalanceFormatted * userShare;
+    const userTokenBalance = tokenTotal * userShare;
     
-    // Format with 2 decimal places
     return userTokenBalance.toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
