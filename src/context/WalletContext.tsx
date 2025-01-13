@@ -11,6 +11,7 @@ interface WalletContextType {
   handleLogout: () => void;
   isLoggedIn: boolean;
   address: string;
+  isLoading: boolean;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -36,7 +37,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         closeModal, 
         handleLogout,
         isLoggedIn,
-        address
+        address,
+        isLoading: false
       }}
     >
       {children}

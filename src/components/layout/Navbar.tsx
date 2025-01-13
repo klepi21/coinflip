@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WalletButton } from '../wallet/WalletButton';
 import { NavBar } from '../ui/tubelight-navbar';
-import { Home, Coins, Menu, X, User } from 'lucide-react';
+import { Home, Coins, Menu, X, User, Shield } from 'lucide-react';
 import { HyperText } from '../ui/hyper-text';
 import Link from 'next/link';
 import { useWallet } from '@/context/WalletContext';
@@ -19,7 +19,13 @@ export const Navbar = () => {
 
   const navItems = [
     { name: 'Home', url: '/', icon: Home },
-    { name: 'Liquid Funds', url: '/liquid-funds', icon: Coins }
+    { name: 'Liquid Funds', url: '/liquid-funds', icon: Coins },
+    {
+      name: 'Supervision',
+      url: '/supervision',
+      icon: Shield,
+      requiresAuth: true
+    }
   ];
 
   return (
