@@ -15,6 +15,8 @@ interface UserPositionProps {
     decimals: number;
     weight: number;
     apr: string | number;
+    base_token_equivalent: string | number;
+    base_token_decimals: number;
   }[];
 }
 
@@ -207,6 +209,15 @@ export const UserPosition = ({
                       totalFundSupply
                     );
                     
+                    // Calculate base token equivalent
+                    const userBaseTokenBalance = calculateTokenBalance(
+                      fundTokenBalance,
+                      token.base_token_equivalent.toString(),
+                      token.weight,
+                      token.base_token_decimals,
+                      totalFundSupply
+                    );
+                    
                     return (
                       <div key={token.identifier} className="flex items-center gap-4">
                         <Image
@@ -228,7 +239,10 @@ export const UserPosition = ({
                           <div className="text-white font-medium">
                             {userTokenBalance}
                           </div>
-                          <div className="text-white/60 text-sm">
+                          <div className="text-primary-500 text-sm font-medium animate-pulse">
+                            {userBaseTokenBalance} {token.identifier.split('-')[0].replace(/^H/, '')}
+                          </div>
+                          <div className="text-white/60 text-xs">
                             estimated balance
                           </div>
                         </div>
