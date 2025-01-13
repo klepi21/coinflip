@@ -117,6 +117,7 @@ export const SharesExchangeForm = ({
   const [egldTokenIcon, setEgldTokenIcon] = useState<string | null>(null);
   const [egldBalance, setEgldBalance] = useState('0');
   const [transactionStatus, setTransactionStatus] = useState<TransactionStatus | null>(null);
+  const [egldPrice, setEgldPrice] = useState<number>(0);
 
   const searchParams = useSearchParams();
 
@@ -227,11 +228,31 @@ export const SharesExchangeForm = ({
     fetchTokenData();
   }, [fundTokenId]);
 
+  useEffect(() => {
+    const fetchEgldPrice = async () => {
+      try {
+        const response = await fetch('https://api.multiversx.com/economics');
+        const data = await response.json();
+        setEgldPrice(data.price);
+      } catch (error) {
+        console.error('Error fetching EGLD price:', error);
+      }
+    };
+    fetchEgldPrice();
+  }, []);
+
   const calculateShares = () => {
     if (!amount || amount === '0') return '0';
-    return activeTab === 'buy' 
-      ? (Number(amount) / Number(sharePrice)).toFixed(4)
-      : (Number(amount) * Number(sharePrice)).toFixed(6);
+    const inputAmount = Number(amount);
+    
+    if (activeTab === 'buy') {
+      if (selectedPaymentToken.id === 'EGLD') {
+        const usdValue = inputAmount * egldPrice;
+        return (usdValue / Number(sharePrice)).toFixed(4);
+      }
+      return (inputAmount / Number(sharePrice)).toFixed(4);
+    }
+    return (inputAmount * Number(sharePrice)).toFixed(6);
   };
 
   const handleBuy = async () => {
@@ -429,7 +450,7 @@ export const SharesExchangeForm = ({
         <h2 className="text-2xl font-bold text-white">
           {activeTab === 'buy' ? 'Buy Fund Shares' : 'Sell Fund Shares'}
         </h2>
-        <div className="flex items-center gap-4 mt-4">
+        <div className="flex items-center gap-4 mt-4 p-1 bg-white/5 rounded-lg border border-white/10">
           <button
             onClick={() => setActiveTab('buy')}
             className={`flex-1 py-3 rounded-xl font-medium transition-all duration-300 relative
@@ -513,7 +534,7 @@ export const SharesExchangeForm = ({
                       className="rounded-full"
                     />
                   ) : (
-                    <div className="w-6 h-6 bg-white/10 rounded-full" />
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/50 to-primary/20" />
                   )}
                   <span className="text-white font-medium">{fundTokenId}</span>
                   <span className="ml-auto text-white/60">{fundTokenBalance}</span>
@@ -530,11 +551,13 @@ export const SharesExchangeForm = ({
             <div className="relative">
               <input
                 type="number"
-                value={amount}
+                value={amount === '0' ? '' : amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-white
                            placeholder-white/40 focus:outline-none focus:border-white/20
-                           transition-all duration-300"
+                           transition-all duration-300 [appearance:textfield] 
+                           [&::-webkit-outer-spin-button]:appearance-none 
+                           [&::-webkit-inner-spin-button]:appearance-none"
                 placeholder="0.00"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60">
@@ -547,7 +570,7 @@ export const SharesExchangeForm = ({
           <div className="bg-white/[0.02] rounded-xl p-4 space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-white/60">You'll receive</span>
-              <span className="text-white font-medium">{calculateShares()} Shares</span>
+              <span className="text-white font-medium">≈ {calculateShares()} Shares</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-white/60">Share Price</span>

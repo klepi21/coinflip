@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowRight, TrendingUp, Users, DollarSign, Loader2 } from 'lucide-react';
+import { ArrowRight, TrendingUp, Users, DollarSign, Loader2, Coins, LineChart } from 'lucide-react';
 import { useGetLiquidFunds } from '@/hooks/useGetLiquidFunds';
 import Image from 'next/image';
 import { Meteors } from '@/components/ui/meteors';
@@ -156,34 +156,37 @@ export const LiquidFundsTable = () => {
               ))}
             </div>
 
-            {/* Key Metrics */}
-            <div className="grid grid-cols-3 gap-6">
-              <div className="space-y-2 group/item">
-                <div className="flex items-center gap-2 text-white/60 group-hover/item:text-primary/60 transition-colors">
-                  <DollarSign className="h-4 w-4" />
-                  <span className="text-xs font-medium">Price</span>
+            {/* Key Metrics - Compact Stack */}
+            <div className="flex flex-col gap-2 mt-6">
+              {/* Price Box */}
+              <div className="group/metric flex items-center justify-between py-2.5 px-4 bg-black/10 rounded-lg border border-white/5 hover:bg-black/20 transition-all">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-primary/80" />
+                  <span className="text-sm text-white/50">Price</span>
                 </div>
-                <p className="text-sm font-mono text-white group-hover/item:text-primary transition-colors">
+                <p className="font-mono text-white/90">
                   ${formatNumber(fund.price, 6)}
                 </p>
               </div>
 
-              <div className="space-y-2 group/item">
-                <div className="flex items-center gap-2 text-white/60 group-hover/item:text-primary/60 transition-colors">
-                  <TrendingUp className="h-4 w-4" />
-                  <span className="text-xs font-medium">NAV</span>
+              {/* AUM Box */}
+              <div className="group/metric flex items-center justify-between py-2.5 px-4 bg-black/10 rounded-lg border border-white/5 hover:bg-black/20 transition-all">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-primary/80" />
+                  <span className="text-sm text-white/50">AUM</span>
                 </div>
-                <p className="text-sm font-mono text-white group-hover/item:text-primary transition-colors">
+                <p className="font-mono text-white/90">
                   ${formatNumber(fund.nav, 6, 'nav')}
                 </p>
               </div>
 
-              <div className="space-y-2 group/item">
-                <div className="flex items-center gap-2 text-white/60 group-hover/item:text-primary/60 transition-colors">
-                  <Users className="h-4 w-4" />
-                  <span className="text-xs font-medium">Supply</span>
+              {/* Supply Box */}
+              <div className="group/metric flex items-center justify-between py-2.5 px-4 bg-black/10 rounded-lg border border-white/5 hover:bg-black/20 transition-all">
+                <div className="flex items-center gap-2">
+                  <Coins className="h-4 w-4 text-primary/80" />
+                  <span className="text-sm text-white/50">Supply</span>
                 </div>
-                <p className="text-sm font-mono text-white group-hover/item:text-primary transition-colors">
+                <p className="font-mono text-white/90">
                   {formatNumber(fund.supply, 18, 'supply')}
                 </p>
               </div>
