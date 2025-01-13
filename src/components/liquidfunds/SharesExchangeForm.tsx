@@ -166,14 +166,14 @@ export const SharesExchangeForm = ({
         const account = await proxy.getAccount(new Address(address));
         const egldBalance = account.balance.toString();
         //console.log('EGLD balance:', egldBalance); // Debug log
-        setEgldBalance((Number(egldBalance) / Math.pow(10, 18)).toFixed(4));
+        setEgldBalance((Number(egldBalance) / Math.pow(10, 18)).toFixed(2));
 
         // Fetch USDC balance and icon
         const usdcResponse = await fetch(
           `https://devnet-api.multiversx.com/accounts/${address}/tokens/${USDC_IDENTIFIER}`
         );
         const usdcData = await usdcResponse.json();
-        setUsdcBalance((Number(usdcData.balance) / Math.pow(10, usdcData.decimals)).toString());
+        setUsdcBalance((Number(usdcData.balance) / Math.pow(10, usdcData.decimals)).toFixed(2));
         if (usdcData.assets?.pngUrl) {
           setUsdcTokenIcon(usdcData.assets.pngUrl);
         }

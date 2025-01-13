@@ -5,7 +5,8 @@ import { useGetLiquidFundDetails } from '@/hooks/useGetLiquidFundDetails';
 import { Card } from '@/components/ui/Card';
 import { 
   Loader2, ArrowLeft, DollarSign, BarChart3, 
-  Users, Activity, Percent, TrendingUp, ChevronRight, ClipboardCopy, ExternalLink 
+  Users, Activity, Percent, TrendingUp, ChevronRight, ClipboardCopy, ExternalLink, Calculator, 
+  Coins, History, Trophy, FileText, Settings 
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -15,6 +16,11 @@ import { SharesExchangeForm } from '../liquidfunds/SharesExchangeForm';
 import { UserPosition } from '../liquidfunds/UserPosition';
 import { useWallet } from '@/context/WalletContext';
 import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
+import { ReturnsCalculator } from '../liquidfunds/ReturnsCalculator';
+import { RecentTransactions } from '../liquidfunds/RecentTransactions';
+import { TopHolders } from '../liquidfunds/TopHolders';
+import { CalculatorModal } from '../liquidfunds/CalculatorModal';
+import { AnalyticsCarousel } from '../liquidfunds/AnalyticsCarousel';
 
 interface SingleFundPageProps {
   address: string;
@@ -131,10 +137,23 @@ const calculateApy = (aprValue: string | number) => {
   return apy;
 };
 
+const calculateAverageApy = (tokens: any[]) => {
+  if (!tokens?.length) return 0;
+  const weightedApys = tokens.map(token => {
+    const apy = calculateApy(token.apr);
+    return (apy * token.weight) / 100;
+  });
+  return weightedApys.reduce((sum, apy) => sum + apy, 0);
+};
+
 export const SingleFundPage = ({ address }: SingleFundPageProps) => {
   const { details, isLoading, error } = useGetLiquidFundDetails(address);
   const { address: userAddress } = useWallet();
   const [userFundBalance, setUserFundBalance] = useState('0');
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [leftActiveTab, setLeftActiveTab] = useState<'tokens' | 'fees'>('tokens');
+  const [rightActiveTab, setRightActiveTab] = useState<'transactions' | 'holders'>('transactions');
+  const [totalInvestors, setTotalInvestors] = useState<number>(0);
 
   // Add this useEffect to fetch user's fund token balance
   useEffect(() => {
@@ -158,6 +177,25 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
 
     fetchUserBalance();
   }, [userAddress, details?.fundTokenId]);
+
+  // Add useEffect to fetch total investors
+  useEffect(() => {
+    const fetchTotalInvestors = async () => {
+      if (!details?.fundTokenId) return;
+      try {
+        const response = await fetch(
+          `https://devnet-api.multiversx.com/tokens/${details.fundTokenId}/accounts/count`
+        );
+        const count = await response.json();
+        setTotalInvestors(count);
+      } catch (error) {
+        console.error('Error fetching total investors:', error);
+        setTotalInvestors(0);
+      }
+    };
+
+    fetchTotalInvestors();
+  }, [details?.fundTokenId]);
 
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
@@ -201,10 +239,9 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
       icon: <Users className="h-8 w-8 text-blue-500" />
     },
     {
-      label: "Status",
-      value: details.isPaused ? "Paused" : "Active",
-      icon: <Activity className="h-8 w-8 text-rose-500" />,
-      customStyle: details.isPaused ? "text-red-400" : "text-green-400"
+      label: "Total Investors",
+      value: totalInvestors.toString(),
+      icon: <Activity className="h-8 w-8 text-purple-500" />,
     }
   ];
 
@@ -265,7 +302,7 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
                 <div className="hidden sm:block">{stat.icon}</div>
                 <span className="text-white/60 text-xs sm:text-sm">{stat.label}</span>
               </div>
-              <div className={`text-xl sm:text-4xl font-bold ${stat.customStyle || 'text-white'}`}>
+              <div className="text-xl sm:text-4xl font-bold text-white">
                 {stat.value}
               </div>
             </motion.div>
@@ -298,7 +335,17 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
             transition={{ delay: 0.3 }}
           >
             <div className="p-4 sm:p-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-8">Fund Composition</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white">Fund Composition</h2>
+                <button
+                  onClick={() => setIsCalculatorOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 
+                             border border-white/10 hover:border-white/20 transition-all duration-300"
+                >
+                  <Calculator className="w-5 h-5 text-primary" />
+                  <span className="text-sm text-white/60">Profit Calculator</span>
+                </button>
+              </div>
               <div className="space-y-2">
                 {details.tokens.map((token, index) => {
   
@@ -453,114 +500,111 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
 
         {/* Bottom Grid - Stack on mobile */}
         <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8">
-          {/* Token Details - Updated design */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10
-                       hover:border-white/20 transition-all duration-300
-                       shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
-          >
-            <div className="p-6 border-b border-white/10 bg-gradient-to-r from-white/5 to-white/[0.02]">
-              <h3 className="text-2xl font-bold text-white">Token Details</h3>
+          {/* Left Box with Token Details and Fee Structure */}
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 h-[420px]">
+            <div className="flex gap-2 mb-6">
+              <button
+                onClick={() => setLeftActiveTab('tokens')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                  leftActiveTab === 'tokens'
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                <FileText className="w-4 h-4" />
+                Token Details
+              </button>
+              <button
+                onClick={() => setLeftActiveTab('fees')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                  leftActiveTab === 'fees'
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                <Settings className="w-4 h-4" />
+                Fee Structure
+              </button>
             </div>
-            <div className="p-6 space-y-4">
-              <div className="space-y-4">
-                <div className="group hover:bg-white/[0.02] rounded-xl p-4 transition-all duration-300">
-                  <div className="text-white/60 text-sm mb-2">Fund Token ID</div>
-                  <div className="flex items-center justify-between bg-black/20 rounded-lg p-3">
-                    <code className="text-white/90 font-mono text-sm">{details.fundTokenId}</code>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
-                        <ClipboardCopy className="h-4 w-4 text-white/60" />
-                      </button>
-                      <button className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
-                        <ExternalLink className="h-4 w-4 text-white/60" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="group hover:bg-white/[0.02] rounded-xl p-4 transition-all duration-300">
-                  <div className="text-white/60 text-sm mb-2">Smart Contract</div>
-                  <div className="flex items-center justify-between bg-black/20 rounded-lg p-3">
-                    <code className="text-white/90 font-mono text-sm">
-                      {`${address.slice(0, 8)}...${address.slice(-8)}`}
-                    </code>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
-                        <ClipboardCopy className="h-4 w-4 text-white/60" />
-                      </button>
-                      <button className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
-                        <ExternalLink className="h-4 w-4 text-white/60" />
-                      </button>
-                    </div>
+            <div className="space-y-4">
+              {leftActiveTab === 'tokens' ? (
+                <>
+                  <div className="bg-black/20 rounded-xl p-4">
+                    <div className="text-sm text-white/60 mb-2">Fund Token ID</div>
+                    <div className="text-white font-mono">{details.fundTokenId}</div>
                   </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Fee Structure - Updated design */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10
-                       hover:border-white/20 transition-all duration-300
-                       shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
-          >
-            <div className="p-6 border-b border-white/10 bg-gradient-to-r from-white/5 to-white/[0.02]">
-              <h3 className="text-2xl font-bold text-white">Fee Structure</h3>
-            </div>
-            <div className="p-6 space-y-8">
-              {/* Protocol Fees */}
-              <div className="space-y-4">
-                <div className="text-lg text-white/80">Protocol Fees</div>
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { label: "Buy", value: details.fees.protocol.buy },
-                    { label: "Sell", value: details.fees.protocol.withdraw },
-                    { label: "Performance", value: details.fees.protocol.performance }
-                  ].map((fee, index) => (
-                    <div key={index} 
-                         className="bg-white/[0.02] hover:bg-white/[0.04] rounded-xl p-4 
-                                   transition-all duration-300 group"
-                    >
-                      <div className="text-white/60 text-sm mb-1">{fee.label}</div>
-                      <div className="text-xl font-bold text-white group-hover:text-primary transition-colors">
-                        {fee.value}%
+                  <div className="bg-black/20 rounded-xl p-4">
+                    <div className="text-sm text-white/60 mb-2">Smart Contract</div>
+                    <div className="text-white font-mono">{address}</div>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-6">
+                  {['protocol', 'manager'].map((feeType) => (
+                    <div key={feeType} className="space-y-2">
+                      <div className="text-white/60">
+                        {feeType.charAt(0).toUpperCase() + feeType.slice(1)} Fees
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {Object.entries(details.fees[feeType as keyof typeof details.fees]).map(([key, value]) => (
+                          <div key={key} className="bg-black/20 rounded-xl p-3">
+                            <div className="text-sm text-white/60">{key}</div>
+                            <div className="text-lg font-bold text-white">{value}%</div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-
-              {/* Manager Fees */}
-              <div className="space-y-4">
-                <div className="text-lg text-white/80">Manager Fees</div>
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { label: "Buy", value: details.fees.manager.buy },
-                    { label: "Sell", value: details.fees.manager.withdraw },
-                    { label: "Performance", value: details.fees.manager.performance }
-                  ].map((fee, index) => (
-                    <div key={index} 
-                         className="bg-white/[0.02] hover:bg-white/[0.04] rounded-xl p-4 
-                                   transition-all duration-300 group"
-                    >
-                      <div className="text-white/60 text-sm mb-1">{fee.label}</div>
-                      <div className="text-xl font-bold text-white group-hover:text-primary transition-colors">
-                        {fee.value}%
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              )}
             </div>
-          </motion.div>
+          </div>
+
+          {/* Right Box with Transactions and Holders */}
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 h-[420px]">
+            <div className="flex gap-2 mb-6">
+              <button
+                onClick={() => setRightActiveTab('transactions')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                  rightActiveTab === 'transactions'
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                <History className="w-4 h-4" />
+                Latest Transactions
+              </button>
+              <button
+                onClick={() => setRightActiveTab('holders')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                  rightActiveTab === 'holders'
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                <Trophy className="w-4 h-4" />
+                Top Holders
+              </button>
+            </div>
+
+            <div>
+              {rightActiveTab === 'transactions' ? (
+                <RecentTransactions fundAddress={address} />
+              ) : (
+                <TopHolders fundAddress={address} fundTokenId={details.fundTokenId} />
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Add calculator modal */}
+        <CalculatorModal
+          isOpen={isCalculatorOpen}
+          onClose={() => setIsCalculatorOpen(false)}
+          sharePrice={details.price}
+          apy={calculateAverageApy(details.tokens)}
+        />
       </div>
     </div>
   );

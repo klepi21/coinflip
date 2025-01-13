@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Wallet, DollarSign, BarChart3, TrendingUp } from 'lucide-react';
 import Image from 'next/image';
 import { getTokenIconUrl } from '@/utils/tokens';
+import { Meteors } from "@/components/ui/meteors";
 
 interface UserPositionProps {
   fundTokenId: string;
@@ -116,140 +117,147 @@ export const UserPosition = ({
   const dollarValue = Number(fundTokenBalance) * Number(fundPrice);
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10
-                 hover:border-white/20 transition-all duration-300
-                 shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
-    >
-      {/* Main Summary - Always Visible */}
-      <div className="p-6 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">Your Position</h2>
-          <motion.button
-            animate={{ rotate: isExpanded ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
-            className="p-2 hover:bg-white/5 rounded-xl transition-colors"
-          >
-            <ChevronDown className="w-5 h-5 text-white/60" />
-          </motion.button>
+    <div className="relative h-full w-full">
+      {/* Main Content */}
+      <div className="relative h-full w-full bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 
+                      hover:border-white/20 transition-all duration-300 
+                      shadow-[0_8px_32px_rgba(0,0,0,0.12)] p-6 overflow-hidden">
+        {/* Meteors with exact same styling as LiquidFundsTable */}
+        <div className="absolute inset-0 h-full w-full">
+          <Meteors number={20} className="opacity-0 group-hover/meteors:opacity-100" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Fund Token Balance */}
-          <div className="bg-white/[0.02] rounded-xl p-4 border border-white/5">
-            <div className="flex items-center gap-2 text-white/60 mb-2">
-              <Wallet className="w-4 h-4" />
-              <span className="text-sm">Balance</span>
+        {/* Rest of content */}
+        <div className="relative z-10">
+          {/* Main Summary - Always Visible */}
+          <div className="p-6 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">Your Position</h2>
+              <motion.button
+                animate={{ rotate: isExpanded ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="p-2 hover:bg-white/5 rounded-xl transition-colors"
+              >
+                <ChevronDown className="w-5 h-5 text-white/60" />
+              </motion.button>
             </div>
-            <div className="text-xl font-bold text-white">
-              {Number(fundTokenBalance).toFixed(4)}
-            </div>
-            <div className="text-sm text-white/40 font-mono mt-1">
-              {fundTokenId}
-            </div>
-          </div>
 
-          {/* Dollar Value */}
-          <div className="bg-white/[0.02] rounded-xl p-4 border border-white/5">
-            <div className="flex items-center gap-2 text-white/60 mb-2">
-              <DollarSign className="w-4 h-4" />
-              <span className="text-sm">Value</span>
-            </div>
-            <div className="text-xl font-bold text-white">
-              ${dollarValue.toFixed(2)}
-            </div>
-            <div className="text-sm text-white/40 mt-1">
-              @ ${Number(fundPrice).toFixed(6)} per share
-            </div>
-          </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Fund Token Balance */}
+              <div className="bg-white/[0.02] rounded-xl p-4 border border-white/5">
+                <div className="flex items-center gap-2 text-white/60 mb-2">
+                  <Wallet className="w-4 h-4" />
+                  <span className="text-sm">Balance</span>
+                </div>
+                <div className="text-xl font-bold text-white">
+                  {Number(fundTokenBalance).toFixed(4)}
+                </div>
+                <div className="text-sm text-white/40 font-mono mt-1">
+                  {fundTokenId}
+                </div>
+              </div>
 
-          {/* Average APY */}
-          <div className="bg-white/[0.02] rounded-xl p-4 border border-white/5">
-            <div className="flex items-center gap-2 text-white/60 mb-2">
-              <TrendingUp className="w-4 h-4" />
-              <span className="text-sm">Average APY</span>
-            </div>
-            <div className="text-xl font-bold text-emerald-400">
-              {calculateAverageApy(fundTokens).toFixed(2)}%
-            </div>
-            <div className="text-sm text-white/40 mt-1">
-              weighted average
-            </div>
-          </div>
-        </div>
-      </div>
+              {/* Dollar Value */}
+              <div className="bg-white/[0.02] rounded-xl p-4 border border-white/5">
+                <div className="flex items-center gap-2 text-white/60 mb-2">
+                  <DollarSign className="w-4 h-4" />
+                  <span className="text-sm">Value</span>
+                </div>
+                <div className="text-xl font-bold text-white">
+                  ${dollarValue.toFixed(2)}
+                </div>
+                <div className="text-sm text-white/40 mt-1">
+                  @ ${Number(fundPrice).toFixed(6)} per share
+                </div>
+              </div>
 
-      {/* Expandable Token Breakdown */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="px-6 pb-6">
-              <div className="bg-black/20 rounded-xl p-4">
-                <div className="text-white/60 text-sm mb-4">Estimated Token Allocation</div>
-                <div className="space-y-4">
-                  {fundTokens.map((token) => {
-                    const userTokenBalance = calculateTokenBalance(
-                      fundTokenBalance,
-                      token.balance,
-                      token.weight,
-                      token.decimals,
-                      totalFundSupply
-                    );
-                    
-                    // Calculate base token equivalent
-                    const userBaseTokenBalance = calculateTokenBalance(
-                      fundTokenBalance,
-                      token.base_token_equivalent.toString(),
-                      token.weight,
-                      token.base_token_decimals,
-                      totalFundSupply
-                    );
-                    
-                    return (
-                      <div key={token.identifier} className="flex items-center gap-4">
-                        <Image
-                          src={getTokenIconUrl(token.identifier)}
-                          alt={token.identifier}
-                          width={32}
-                          height={32}
-                          className="rounded-full"
-                        />
-                        <div className="flex-1">
-                          <div className="text-white font-medium">
-                            {token.identifier}
-                          </div>
-                          <div className="text-white/60 text-sm">
-                            {token.weight}% allocation
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-white font-medium">
-                            {userTokenBalance}
-                          </div>
-                          <div className="text-primary-500 text-sm font-medium animate-pulse">
-                            {userBaseTokenBalance} {token.identifier.split('-')[0].replace(/^H/, '')}
-                          </div>
-                          <div className="text-white/60 text-xs">
-                            estimated balance
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+              {/* Average APY */}
+              <div className="bg-white/[0.02] rounded-xl p-4 border border-white/5">
+                <div className="flex items-center gap-2 text-white/60 mb-2">
+                  <TrendingUp className="w-4 h-4" />
+                  <span className="text-sm">Average APY</span>
+                </div>
+                <div className="text-xl font-bold text-emerald-400">
+                  {calculateAverageApy(fundTokens).toFixed(2)}%
+                </div>
+                <div className="text-sm text-white/40 mt-1">
+                  weighted average
                 </div>
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+          </div>
+
+          {/* Expandable Token Breakdown */}
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="px-6 pb-6">
+                  <div className="bg-black/20 rounded-xl p-4">
+                    <div className="text-white/60 text-sm mb-4">Estimated Token Allocation</div>
+                    <div className="space-y-4">
+                      {fundTokens.map((token) => {
+                        const userTokenBalance = calculateTokenBalance(
+                          fundTokenBalance,
+                          token.balance,
+                          token.weight,
+                          token.decimals,
+                          totalFundSupply
+                        );
+                        
+                        // Calculate base token equivalent
+                        const userBaseTokenBalance = calculateTokenBalance(
+                          fundTokenBalance,
+                          token.base_token_equivalent.toString(),
+                          token.weight,
+                          token.base_token_decimals,
+                          totalFundSupply
+                        );
+                        
+                        return (
+                          <div key={token.identifier} className="flex items-center gap-4">
+                            <Image
+                              src={getTokenIconUrl(token.identifier)}
+                              alt={token.identifier}
+                              width={32}
+                              height={32}
+                              className="rounded-full"
+                            />
+                            <div className="flex-1">
+                              <div className="text-white font-medium">
+                                {token.identifier}
+                              </div>
+                              <div className="text-white/60 text-sm">
+                                {token.weight}% allocation
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-white font-medium">
+                                {userTokenBalance}
+                              </div>
+                              <div className="text-primary-500 text-sm font-medium animate-pulse">
+                                {userBaseTokenBalance} {token.identifier.split('-')[0].replace(/^H/, '')}
+                              </div>
+                              <div className="text-white/60 text-xs">
+                                estimated balance
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
   );
 }; 

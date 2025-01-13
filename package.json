@@ -15,6 +15,7 @@
     "@multiversx/sdk-network-providers": "^2.2.1",
     "@multiversx/sdk-wallet": "^4.3.0",
     "@radix-ui/react-slot": "^1.1.1",
+    "@radix-ui/react-tooltip": "^1.1.6",
     "@tailwindcss/typography": "^0.5.10",
     "@tsparticles/engine": "^3.7.1",
     "@tsparticles/react": "^3.0.0",
