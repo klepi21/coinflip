@@ -1,16 +1,18 @@
 'use client';
 
 import { useWallet } from '@/context/WalletContext';
-import { Loader2, ShieldAlert, ArrowRight, CheckCircle2, ArrowDownRight, Settings, Coins, XCircle, Info } from 'lucide-react';
+import { Loader2, ShieldAlert, ArrowRight, CheckCircle2, ArrowDownRight, Settings, Coins, XCircle, Info, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { sendTransactions } from "@multiversx/sdk-dapp/services";
-import { TokenTransfer, Address } from "@multiversx/sdk-core";
+import { TokenTransfer, Address, SmartContract, AbiRegistry, ContractFunction, ResultsParser } from "@multiversx/sdk-core";
 import { useTrackTransactionStatus } from "@multiversx/sdk-dapp/hooks/transactions";
 import { toast } from 'sonner';
 import { Meteors } from "@/components/ui/meteors";
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { Squares } from '@/components/ui/squares-background';
+import { ProxyNetworkProvider } from '@multiversx/sdk-network-providers';
+import proxyAbi from '@/config/valoro_proxy_sc.abi.json';
 
 const AUTHORIZED_ADDRESSES = [
   'erd1s5ufsgtmzwtp6wrlwtmaqzs24t0p9evmp58p33xmukxwetl8u76sa2p9rv',
@@ -18,6 +20,12 @@ const AUTHORIZED_ADDRESSES = [
 ];
 
 const PROXY_SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqd9rvv2n378e27jcts8vfwynpx0gfl5ufz6hqhfy0u0';
+
+const PROXY_PROVIDER = new ProxyNetworkProvider('https://devnet-gateway.multiversx.com');
+const PROXY_CONTRACT = new SmartContract({
+  address: new Address(PROXY_SC_ADDRESS),
+  abi: AbiRegistry.create(proxyAbi)
+});
 
 type Step = 'register' | 'create' | 'initialize';
 
@@ -66,6 +74,7 @@ interface RegisterFormProps {
 interface CreateFormProps {
   onSubmit: (data: CreateFundData) => Promise<void>;
   isSubmitting: boolean;
+  scAddress: string;
 }
 
 interface InitializeFormProps {
@@ -132,7 +141,30 @@ const RegisterForm = ({ onSubmit, isSubmitting }: RegisterFormProps) => (
   </motion.div>
 );
 
-const CreateForm = ({ onSubmit, isSubmitting }: CreateFormProps) => {
+const ScAddressDisplay = ({ address }: { address: string }) => (
+  <motion.div
+    initial={{ opacity: 0, y: -10 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="bg-black/20 backdrop-blur-sm rounded-lg p-3 border border-white/10 mb-6"
+  >
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-white/60">Registered SC Address:</span>
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-mono text-white/80">{address.slice(0, 10)}...{address.slice(-8)}</span>
+        <a
+          href={`https://devnet-explorer.multiversx.com/accounts/${address}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+        >
+          <ExternalLink className="w-4 h-4 text-white/40" />
+        </a>
+      </div>
+    </div>
+  </motion.div>
+);
+
+const CreateForm = ({ onSubmit, isSubmitting, scAddress }: CreateFormProps & { scAddress: string }) => {
   const [formData, setFormData] = useState<CreateFundData>({
     tokenTicker: '',
     tokenDisplayName: '',
@@ -225,6 +257,7 @@ const CreateForm = ({ onSubmit, isSubmitting }: CreateFormProps) => {
       animate={{ opacity: 1, y: 0 }}
       className="bg-black/20 backdrop-blur-xl rounded-2xl border border-white/10 p-6"
     >
+      <ScAddressDisplay address={scAddress} />
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-primary/10 rounded-xl">
           <Coins className="w-5 h-5 text-primary" />
@@ -427,9 +460,10 @@ interface TransactionStatusProps {
   status: 'pending' | 'success' | 'error';
   message: string;
   hash?: string;
+  scAddress?: string;
 }
 
-const TransactionStatus = ({ status, message, hash }: TransactionStatusProps) => (
+const TransactionStatus = ({ status, message, hash, scAddress }: TransactionStatusProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -546,16 +580,14 @@ export const SupervisionPage = () => {
   const [registeredScAddress, setRegisteredScAddress] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState<TransactionStatusProps | null>(null);
+  const [scFetchError, setScFetchError] = useState<string | null>(null);
 
   // Auth checks...
 
   const handleRegisterFund = async () => {
     try {
       setIsSubmitting(true);
-      setTransactionStatus({
-        status: 'pending',
-        message: 'Registering Index Fund SC...'
-      });
+      setScFetchError(null);
       
       const registerData = {
         functionName: 'registerIndexFundSc',
@@ -578,28 +610,57 @@ export const SupervisionPage = () => {
         }
       });
 
-      // Handle success
-      setTransactionStatus({
-        status: 'success',
-        message: 'Smart Contract registered successfully!',
-        hash: sessionId // assuming sessionId is the hash
-      });
-      setCurrentStep('create');
+      // After transaction, get latest SC
+      let retries = 3;
+      let latestSc = '';
+      
+      while (retries > 0) {
+        try {
+          const interaction = PROXY_CONTRACT.methods.getUserLatestSc();
+          const query = interaction.buildQuery();
+          const queryResponse = await PROXY_PROVIDER.queryContract(query);
+          
+          // Simpler parsing of the response
+          if (queryResponse.returnData && queryResponse.returnData.length > 0) {
+            latestSc = Buffer.from(queryResponse.returnData[0], 'base64').toString('hex');
+            if (latestSc) {
+              latestSc = 'erd1' + latestSc.slice(4); // Convert to bech32 address format
+              break;
+            }
+          }
+        } catch (e) {
+          retries--;
+          if (retries === 0) throw e;
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
 
+      if (!latestSc) {
+        throw new Error('Failed to fetch SC address after multiple attempts');
+      }
+
+      setRegisteredScAddress(latestSc);
+      setCurrentStep('create');
+      
     } catch (error) {
+      console.error('Registration error:', error);
+      setScFetchError(error instanceof Error ? error.message : 'Failed to fetch SC address');
       setTransactionStatus({
         status: 'error',
         message: 'Failed to register Smart Contract'
       });
     } finally {
       setIsSubmitting(false);
-      // Clear status after 5 seconds
-      setTimeout(() => setTransactionStatus(null), 5000);
     }
   };
 
   const handleCreateFund = async (data: CreateFundData) => {
     try {
+      if (!registeredScAddress) {
+        toast.error('No registered smart contract found');
+        return;
+      }
+
       setIsSubmitting(true);
 
       const tokenPairs = data.tokens.map(token => 
@@ -678,16 +739,80 @@ export const SupervisionPage = () => {
     }
   };
 
-  // Add form rendering based on current step
+  // Add SC address validation before steps
+  const validateStep = (step: Step): boolean => {
+    switch (step) {
+      case 'create':
+      case 'initialize':
+        if (!registeredScAddress) {
+          toast.error('No registered smart contract found. Please complete the registration step first.');
+          setCurrentStep('register');
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  };
+
+  // Update step change handler
+  const handleStepChange = (newStep: Step) => {
+    if (validateStep(newStep)) {
+      setCurrentStep(newStep);
+    }
+  };
+
+  // Update form rendering with SC address
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 'register':
-        return <RegisterForm onSubmit={handleRegisterFund} isSubmitting={isSubmitting} />;
+        return (
+          <>
+            <RegisterForm onSubmit={handleRegisterFund} isSubmitting={isSubmitting} />
+            {scFetchError && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-4 p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl"
+              >
+                <p className="text-rose-500 text-sm">{scFetchError}</p>
+                <button
+                  onClick={() => handleRegisterFund()}
+                  className="text-sm text-rose-400 hover:text-rose-300 mt-2"
+                >
+                  Retry Registration
+                </button>
+              </motion.div>
+            )}
+          </>
+        );
       case 'create':
-        return <CreateForm onSubmit={handleCreateFund} isSubmitting={isSubmitting} />;
+        return (
+          <CreateForm 
+            onSubmit={handleCreateFund} 
+            isSubmitting={isSubmitting}
+            scAddress={registeredScAddress}
+          />
+        );
       case 'initialize':
-        return <InitializeForm onSubmit={handleInitializeFund} isSubmitting={isSubmitting} />;
+        return (
+          <>
+            <ScAddressDisplay address={registeredScAddress} />
+            <InitializeForm onSubmit={handleInitializeFund} isSubmitting={isSubmitting} />
+          </>
+        );
     }
+  };
+
+  // Add SC address to transaction status for relevant steps
+  const getTransactionStatusWithAddress = (status: TransactionStatusProps): TransactionStatusProps => {
+    if (registeredScAddress && (status.status === 'success' || status.status === 'pending')) {
+      return {
+        ...status,
+        scAddress: registeredScAddress
+      };
+    }
+    return status;
   };
 
   return (
@@ -748,7 +873,7 @@ export const SupervisionPage = () => {
       <AnimatePresence>
         {transactionStatus && (
           <div className="z-50 relative">
-            <TransactionStatus {...transactionStatus} />
+            <TransactionStatus {...getTransactionStatusWithAddress(transactionStatus)} />
           </div>
         )}
       </AnimatePresence>
