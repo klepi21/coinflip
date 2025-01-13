@@ -12,22 +12,38 @@ interface ReturnsCalculatorProps {
 
 export const ReturnsCalculator = ({ sharePrice, apy }: ReturnsCalculatorProps) => {
   const [investment, setInvestment] = useState<string>('1000');
-  const [timeframe, setTimeframe] = useState<'1M' | '3M' | '6M' | '1Y'>('1Y');
+  const [monthlyDeposit, setMonthlyDeposit] = useState<string>('0');
+  const [timeframe, setTimeframe] = useState<'3M' | '6M' | '1Y' | '2Y' | '4Y'>('1Y');
 
   const calculateReturns = () => {
     const principal = Number(investment);
-    const years = timeframe === '1Y' ? 1 : 
+    const monthly = Number(monthlyDeposit);
+    const years = timeframe === '4Y' ? 4 :
+                 timeframe === '2Y' ? 2 :
+                 timeframe === '1Y' ? 1 : 
                  timeframe === '6M' ? 0.5 : 
-                 timeframe === '3M' ? 0.25 : 
-                 0.0833; // 1 month
+                 0.25; // 3M
 
-    const estimatedReturn = principal * Math.pow(1 + (apy / 100), years);
-    const profit = estimatedReturn - principal;
-    
+    const periodsPerYear = 12;
+    const totalPeriods = years * periodsPerYear;
+    const monthlyRate = (apy / 100) / periodsPerYear;
+
+    // Calculate future value of initial investment
+    const initialFV = principal * Math.pow(1 + monthlyRate, totalPeriods);
+
+    // Calculate future value of monthly deposits
+    const monthlyFV = monthly * ((Math.pow(1 + monthlyRate, totalPeriods) - 1) / monthlyRate);
+
+    const totalValue = initialFV + monthlyFV;
+    const totalInvested = principal + (monthly * totalPeriods);
+    const profit = totalValue - totalInvested;
+    const monthlyProfit = profit / totalPeriods;
+
     return {
-      estimatedValue: estimatedReturn.toFixed(2),
+      estimatedValue: totalValue.toFixed(2),
       profit: profit.toFixed(2),
-      shares: (principal / Number(sharePrice)).toFixed(2)
+      monthlyProfit: monthlyProfit.toFixed(2),
+      shares: (totalValue / Number(sharePrice)).toFixed(2)
     };
   };
 
@@ -48,7 +64,8 @@ export const ReturnsCalculator = ({ sharePrice, apy }: ReturnsCalculatorProps) =
             <Tooltip.Portal>
               <Tooltip.Content
                 className="bg-black/90 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white/80
-                         shadow-xl backdrop-blur-xl max-w-xs"
+                         shadow-xl backdrop-blur-xl max-w-xs z-[100] relative"
+                sideOffset={5}
               >
                 Estimate your potential returns based on current APY. 
                 Note: APY is variable and past performance doesn't guarantee future returns.
@@ -60,9 +77,9 @@ export const ReturnsCalculator = ({ sharePrice, apy }: ReturnsCalculatorProps) =
       </div>
 
       <div className="space-y-6">
-        {/* Investment Input */}
+        {/* Initial Investment Input */}
         <div className="space-y-2">
-          <label className="text-sm text-white/60">Investment Amount (USDC)</label>
+          <label className="text-sm text-white/60">Initial Investment (USDC)</label>
           <input
             type="number"
             value={investment}
@@ -73,17 +90,30 @@ export const ReturnsCalculator = ({ sharePrice, apy }: ReturnsCalculatorProps) =
           />
         </div>
 
+        {/* Monthly Deposit Input */}
+        <div className="space-y-2">
+          <label className="text-sm text-white/60">Monthly Deposit (USDC)</label>
+          <input
+            type="number"
+            value={monthlyDeposit}
+            onChange={(e) => setMonthlyDeposit(e.target.value)}
+            className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3
+                     text-white placeholder-white/20 focus:outline-none focus:border-primary/50"
+            placeholder="Enter monthly amount..."
+          />
+        </div>
+
         {/* Timeframe Selection */}
         <div className="space-y-2">
           <label className="text-sm text-white/60">Timeframe</label>
-          <div className="grid grid-cols-4 gap-2">
-            {(['1M', '3M', '6M', '1Y'] as const).map((period) => (
+          <div className="grid grid-cols-5 gap-2">
+            {(['3M', '6M', '1Y', '2Y', '4Y'] as const).map((period) => (
               <button
                 key={period}
                 onClick={() => setTimeframe(period)}
                 className={`py-2 rounded-lg font-medium text-sm transition-all
                           ${timeframe === period 
-                            ? 'bg-primary text-white' 
+                            ? 'bg-primary text-white'
                             : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
               >
                 {period}
@@ -95,15 +125,30 @@ export const ReturnsCalculator = ({ sharePrice, apy }: ReturnsCalculatorProps) =
         {/* Results */}
         <div className="bg-black/20 rounded-xl p-4 space-y-3">
           <div className="flex justify-between items-center">
+            <span className="text-white/60">Total Investment</span>
+            <span className="text-lg font-bold text-white">
+              ${(Number(investment) + (Number(monthlyDeposit) * (timeframe === '4Y' ? 48 :
+                                                        timeframe === '2Y' ? 24 :
+                                                        timeframe === '1Y' ? 12 : 
+                                                        timeframe === '6M' ? 6 : 3))).toFixed(2)}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
             <span className="text-white/60">Estimated Value</span>
             <span className="text-lg font-bold text-white">
               ${results.estimatedValue}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-white/60">Potential Profit</span>
+            <span className="text-white/60">Total Profit</span>
             <span className="text-lg font-bold text-emerald-400">
               +${results.profit}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-white/60">Monthly Profit</span>
+            <span className="text-lg font-bold text-emerald-400">
+              +${results.monthlyProfit}
             </span>
           </div>
           <div className="flex justify-between items-center">

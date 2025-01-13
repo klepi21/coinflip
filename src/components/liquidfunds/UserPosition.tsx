@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Wallet, DollarSign, BarChart3, TrendingUp } from 'lucide-react';
+import { ChevronDown, Wallet, DollarSign, BarChart3, TrendingUp, Briefcase } from 'lucide-react';
 import Image from 'next/image';
 import { getTokenIconUrl } from '@/utils/tokens';
 import { Meteors } from "@/components/ui/meteors";
@@ -132,7 +132,12 @@ export const UserPosition = ({
           {/* Main Summary - Always Visible */}
           <div className="p-6 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">Your Position</h2>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-xl">
+                  <Briefcase className="w-6 h-6 text-primary" />
+                </div>
+                <h2 className="text-2xl font-bold text-white">Your Position</h2>
+              </div>
               <motion.button
                 animate={{ rotate: isExpanded ? 180 : 0 }}
                 transition={{ duration: 0.2 }}

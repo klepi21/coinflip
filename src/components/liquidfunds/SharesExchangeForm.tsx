@@ -17,6 +17,7 @@ import {
   useGetActiveTransactionsStatus, 
   useGetPendingTransactions 
 } from '@multiversx/sdk-dapp/hooks/transactions';
+import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
 
 interface SharesExchangeFormProps {
   sharePrice: string;
@@ -241,18 +242,26 @@ export const SharesExchangeForm = ({
     fetchEgldPrice();
   }, []);
 
-  const calculateShares = () => {
-    if (!amount || amount === '0') return '0';
-    const inputAmount = Number(amount);
+  const calculateOutput = () => {
+    if (!amount || Number(amount) <= 0) return '0.00';
     
     if (activeTab === 'buy') {
+      // When buying, calculate shares received
+      let inputAmountInUSD;
       if (selectedPaymentToken.id === 'EGLD') {
-        const usdValue = inputAmount * egldPrice;
-        return (usdValue / Number(sharePrice)).toFixed(4);
+        // Convert EGLD to USD first
+        inputAmountInUSD = Number(amount) * egldPrice;
+      } else {
+        // USDC is already in USD
+        inputAmountInUSD = Number(amount);
       }
-      return (inputAmount / Number(sharePrice)).toFixed(4);
+      const amountAfterFee = inputAmountInUSD * (1 - buyFee/100);
+      return (amountAfterFee / Number(sharePrice)).toFixed(6);
+    } else {
+      // When selling, calculate USDC received
+      const sharesValue = Number(amount) * Number(sharePrice);
+      return (sharesValue * (1 - sellFee/100)).toFixed(2);
     }
-    return (inputAmount * Number(sharePrice)).toFixed(6);
   };
 
   const handleBuy = async () => {
@@ -447,9 +456,18 @@ export const SharesExchangeForm = ({
                 h-full flex flex-col">
       {/* Header */}
       <div className="bg-gradient-to-r from-white/5 to-white/[0.02] p-6 border-b border-white/10">
-        <h2 className="text-2xl font-bold text-white">
-          {activeTab === 'buy' ? 'Buy Fund Shares' : 'Sell Fund Shares'}
-        </h2>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-xl">
+            {activeTab === 'buy' ? (
+              <ArrowDownRight className="w-6 h-6 text-primary" />
+            ) : (
+              <ArrowUpRight className="w-6 h-6 text-primary" />
+            )}
+          </div>
+          <h2 className="text-2xl font-bold text-white">
+            {activeTab === 'buy' ? 'Buy Fund Shares' : 'Sell Fund Shares'}
+          </h2>
+        </div>
         <div className="flex items-center gap-4 mt-4 p-1 bg-white/5 rounded-lg border border-white/10">
           <button
             onClick={() => setActiveTab('buy')}
@@ -568,17 +586,19 @@ export const SharesExchangeForm = ({
 
           {/* Transaction Details */}
           <div className="bg-white/[0.02] rounded-xl p-4 space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-white/60">You'll receive</span>
-              <span className="text-white font-medium">≈ {calculateShares()} Shares</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-white/60">Share Price</span>
-              <span className="text-white font-medium">${sharePrice}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-white/60">Fee</span>
-              <span className="text-white font-medium">{activeTab === 'buy' ? buyFee : sellFee}%</span>
+            <div className="space-y-2">
+              <div className="flex justify-between text-white/60">
+                <span>You'll receive</span>
+                <span>≈ {calculateOutput()} {activeTab === 'buy' ? 'Shares' : 'USDC'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/60">Share Price</span>
+                <span className="text-white">${Number(sharePrice).toFixed(6)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/60">Fee</span>
+                <span className="text-white">{activeTab === 'buy' ? buyFee : sellFee}%</span>
+              </div>
             </div>
           </div>
         </div>

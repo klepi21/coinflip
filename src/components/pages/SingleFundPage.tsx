@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { 
   Loader2, ArrowLeft, DollarSign, BarChart3, 
   Users, Activity, Percent, TrendingUp, ChevronRight, ClipboardCopy, ExternalLink, Calculator, 
-  Coins, History, Trophy, FileText, Settings 
+  Coins, History, Trophy, FileText, Settings, PieChart, LayoutGrid 
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -21,6 +21,7 @@ import { RecentTransactions } from '../liquidfunds/RecentTransactions';
 import { TopHolders } from '../liquidfunds/TopHolders';
 import { CalculatorModal } from '../liquidfunds/CalculatorModal';
 import { AnalyticsCarousel } from '../liquidfunds/AnalyticsCarousel';
+import { TokenDistributionChart } from '../liquidfunds/TokenDistributionChart';
 
 interface SingleFundPageProps {
   address: string;
@@ -151,7 +152,7 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
   const { address: userAddress } = useWallet();
   const [userFundBalance, setUserFundBalance] = useState('0');
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
-  const [leftActiveTab, setLeftActiveTab] = useState<'tokens' | 'fees'>('tokens');
+  const [leftActiveTab, setLeftActiveTab] = useState<'tokens' | 'fees' | 'distribution'>('tokens');
   const [rightActiveTab, setRightActiveTab] = useState<'transactions' | 'holders'>('transactions');
   const [totalInvestors, setTotalInvestors] = useState<number>(0);
 
@@ -336,7 +337,12 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
           >
             <div className="p-4 sm:p-8">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white">Fund Composition</h2>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-xl">
+                    <LayoutGrid className="w-6 h-6 text-primary" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-white">Fund Composition</h2>
+                </div>
                 <button
                   onClick={() => setIsCalculatorOpen(true)}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 
@@ -346,10 +352,11 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
                   <span className="text-sm text-white/60">Profit Calculator</span>
                 </button>
               </div>
+
               <div className="space-y-2">
                 {details.tokens.map((token, index) => {
   
-                  
+                    
                   return (
                     <motion.div
                       key={token.identifier}
@@ -525,6 +532,17 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
                 <Settings className="w-4 h-4" />
                 Fee Structure
               </button>
+              <button
+                onClick={() => setLeftActiveTab('distribution')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                  leftActiveTab === 'distribution'
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                <PieChart className="w-4 h-4" />
+                Distribution
+              </button>
             </div>
 
             <div className="space-y-4">
@@ -539,7 +557,7 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
                     <div className="text-white font-mono">{address}</div>
                   </div>
                 </>
-              ) : (
+              ) : leftActiveTab === 'fees' ? (
                 <div className="space-y-6">
                   {['protocol', 'manager'].map((feeType) => (
                     <div key={feeType} className="space-y-2">
@@ -556,6 +574,10 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
                       </div>
                     </div>
                   ))}
+                </div>
+              ) : (
+                <div className="h-[300px]">
+                  <TokenDistributionChart tokens={details.tokens} />
                 </div>
               )}
             </div>
