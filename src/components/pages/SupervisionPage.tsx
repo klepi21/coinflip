@@ -14,6 +14,7 @@ import { Squares } from '@/components/ui/squares-background';
 import { ProxyNetworkProvider } from '@multiversx/sdk-network-providers';
 import proxyAbi from '@/config/valoro_proxy_sc.abi.json';
 import { BytesValue, AddressValue } from "@multiversx/sdk-core";
+import { useRouter } from 'next/navigation';
 
 const AUTHORIZED_ADDRESSES = [
   'erd1s5ufsgtmzwtp6wrlwtmaqzs24t0p9evmp58p33xmukxwetl8u76sa2p9rv',
@@ -618,6 +619,10 @@ const toEvenHex = (num: number) => {
 
 export const SupervisionPage = () => {
   const { address, isLoggedIn } = useWallet();
+  const router = useRouter();
+  
+  // All state declarations
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
   const [currentStep, setCurrentStep] = useState<Step>('register');
   const [registeredScAddress, setRegisteredScAddress] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -636,8 +641,26 @@ export const SupervisionPage = () => {
   const [isLoadingSc, setIsLoadingSc] = useState(false);
   const [selectedSc, setSelectedSc] = useState<string>('');
 
+  // Authorization effect
+  useEffect(() => {
+    if (!address) {
+      router.push('/');
+      return;
+    }
+
+    const isUserAuthorized = AUTHORIZED_ADDRESSES.includes(address);
+    setIsAuthorized(isUserAuthorized);
+
+    if (!isUserAuthorized) {
+      router.push('/');
+    }
+  }, [address, router]);
+
+  // Fetch SC effect
   useEffect(() => {
     const fetchLatestSc = async () => {
+      if (!address) return;
+      
       try {
         setIsLoadingSc(true);
         const userAddress = new Address(address);
@@ -661,13 +684,17 @@ export const SupervisionPage = () => {
       }
     };
 
-    if (address) {
-      fetchLatestSc();
-    }
+    fetchLatestSc();
   }, [address]);
 
-  // Auth checks...
+  // Selected SC effect
+  useEffect(() => {
+    if (currentStep === 'create' && selectedSc) {
+      setRegisteredScAddress(selectedSc);
+    }
+  }, [currentStep, selectedSc]);
 
+  // All the handler functions...
   const handleRegisterFund = async () => {
     try {
       setIsSubmitting(true);
@@ -829,12 +856,10 @@ export const SupervisionPage = () => {
     }
   };
 
-  // Add SC address validation before steps
   const validateStep = (step: Step): boolean => {
-    return true; // Allow navigation to any step
+    return true;
   };
 
-  // Add manual SC address handler
   const handleManualScAddress = () => {
     if (!manualScAddress.startsWith('erd1')) {
       toast.error('Invalid smart contract address format');
@@ -845,12 +870,10 @@ export const SupervisionPage = () => {
     setCompletedSteps(prev => new Set([...prev, 'register']));
   };
 
-  // Update step change handler
   const handleStepChange = (newStep: Step) => {
     setCurrentStep(newStep);
   };
 
-  // Validate form
   const validateForm = () => {
     const errors: Partial<RegisterFormData> = {};
     
@@ -870,7 +893,6 @@ export const SupervisionPage = () => {
     return Object.keys(errors).length === 0;
   };
 
-  // Modify the handleRegister function
   const handleRegister = async () => {
     try {
       setIsSubmitting(true);
@@ -935,7 +957,7 @@ export const SupervisionPage = () => {
     }
   };
 
-  // Add this to your render function where appropriate
+  // Render functions
   const renderRegisterForm = () => {
     return (
       <div className="space-y-4 p-6 bg-black/20 rounded-xl border border-white/10 w-full max-w-4xl mx-auto">
@@ -975,7 +997,6 @@ export const SupervisionPage = () => {
     );
   };
 
-  // Add dropdown for SC address selection in the second step
   const renderScDropdown = () => (
     <div className="space-y-4 p-6 bg-black/20 rounded-xl border border-white/10 w-full max-w-4xl mx-auto">
       <h3 className="text-xl font-semibold mb-4">Select SC Address</h3>
@@ -1006,7 +1027,6 @@ export const SupervisionPage = () => {
     </div>
   );
 
-  // Update renderCurrentStep to always display CreateForm
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 'register':
@@ -1032,7 +1052,6 @@ export const SupervisionPage = () => {
     }
   };
 
-  // Add SC address to transaction status for relevant steps
   const getTransactionStatusWithAddress = (status: TransactionStatusProps): TransactionStatusProps => {
     if (registeredScAddress && (status.status === 'success' || status.status === 'pending')) {
       return {
@@ -1043,17 +1062,24 @@ export const SupervisionPage = () => {
     return status;
   };
 
-  useEffect(() => {
-    if (currentStep === 'create' && selectedSc) {
-      setRegisteredScAddress(selectedSc);
-    }
-  }, [currentStep, selectedSc]);
+  // If not authorized, show access denied
+  if (!address || !isAuthorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <ShieldAlert className="w-12 h-12 text-red-500 mx-auto" />
+          <h1 className="text-2xl font-bold text-white">Access Denied</h1>
+          <p className="text-white/60">You are not authorized to access this page.</p>
+        </div>
+      </div>
+    );
+  }
 
+  // Main render
   return (
     <div className="min-h-screen bg-[#060606] pt-24 relative">
       {/* Background */}
       <div className="fixed inset-0">
-        {/* Squares Background */}
         <div className="absolute inset-0 z-0">
           <Squares 
             direction="diagonal"
@@ -1064,7 +1090,6 @@ export const SupervisionPage = () => {
           />
         </div>
         
-        {/* Gradient Overlays */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5 z-10" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0)_0%,rgba(0,0,0,0.7)_100%)] z-20" />
       </div>
@@ -1108,7 +1133,7 @@ export const SupervisionPage = () => {
         </div>
       </div>
       
-      {/* Transaction Status - move to highest z-index */}
+      {/* Transaction Status */}
       <AnimatePresence>
         {transactionStatus && (
           <div className="z-50 relative">
