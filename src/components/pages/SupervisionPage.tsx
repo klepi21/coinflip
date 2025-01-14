@@ -36,8 +36,19 @@ interface StepIndicatorProps {
   isCompleted: boolean;
 }
 
-const StepIndicator = ({ currentStep, step, label, isCompleted }: StepIndicatorProps) => (
-  <div className="flex items-center gap-3">
+interface StepButtonProps {
+  step: Step;
+  currentStep: Step;
+  onClick: () => void;
+  label: string;
+  isCompleted: boolean;
+}
+
+const StepIndicator = ({ currentStep, step, label, isCompleted, onClick }: StepButtonProps) => (
+  <button 
+    onClick={onClick}
+    className="flex items-center gap-3 transition-colors hover:opacity-80"
+  >
     <div 
       className={`w-10 h-10 rounded-full flex items-center justify-center border-2 
                   ${currentStep === step 
@@ -63,7 +74,7 @@ const StepIndicator = ({ currentStep, step, label, isCompleted }: StepIndicatorP
     }`}>
       {label}
     </span>
-  </div>
+  </button>
 );
 
 interface RegisterFormProps {
@@ -581,6 +592,9 @@ export const SupervisionPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState<TransactionStatusProps | null>(null);
   const [scFetchError, setScFetchError] = useState<string | null>(null);
+  const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set());
+  const [manualScAddress, setManualScAddress] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
 
   // Auth checks...
 
@@ -744,15 +758,25 @@ export const SupervisionPage = () => {
     switch (step) {
       case 'create':
       case 'initialize':
-        if (!registeredScAddress) {
-          toast.error('No registered smart contract found. Please complete the registration step first.');
-          setCurrentStep('register');
+        if (!registeredScAddress && !manualScAddress) {
+          toast.error('Please provide a smart contract address');
           return false;
         }
         return true;
       default:
         return true;
     }
+  };
+
+  // Add manual SC address handler
+  const handleManualScAddress = () => {
+    if (!manualScAddress.startsWith('erd1')) {
+      toast.error('Invalid smart contract address format');
+      return;
+    }
+    setRegisteredScAddress(manualScAddress);
+    setShowManualInput(false);
+    setCompletedSteps(prev => new Set([...prev, 'register']));
   };
 
   // Update step change handler
@@ -839,27 +863,68 @@ export const SupervisionPage = () => {
       <div className="relative z-30 container mx-auto px-4 py-8">
         <div className="flex flex-col gap-8">
           {/* Steps Indicator */}
-          <div className="flex items-center justify-between max-w-2xl mx-auto bg-black/20 p-6 rounded-2xl backdrop-blur-sm">
-            <StepIndicator 
-              currentStep={currentStep} 
-              step="register" 
-              label="Register SC" 
-              isCompleted={currentStep !== 'register'}
-            />
-            <ArrowRight className="w-5 h-5 text-white/20" />
-            <StepIndicator 
-              currentStep={currentStep} 
-              step="create" 
-              label="Create Fund" 
-              isCompleted={currentStep === 'initialize'}
-            />
-            <ArrowRight className="w-5 h-5 text-white/20" />
-            <StepIndicator 
-              currentStep={currentStep} 
-              step="initialize" 
-              label="Initialize" 
-              isCompleted={false}
-            />
+          <div className="space-y-6">
+            <div className="flex items-center justify-between max-w-2xl mx-auto bg-black/20 p-6 rounded-2xl backdrop-blur-sm">
+              <StepIndicator 
+                currentStep={currentStep} 
+                step="register" 
+                label="Register SC" 
+                isCompleted={Array.from(completedSteps).includes('register')}
+                onClick={() => handleStepChange('register')}
+              />
+              <ArrowRight className="w-5 h-5 text-white/20" />
+              <StepIndicator 
+                currentStep={currentStep} 
+                step="create" 
+                label="Create Fund" 
+                isCompleted={Array.from(completedSteps).includes('create')}
+                onClick={() => handleStepChange('create')}
+              />
+              <ArrowRight className="w-5 h-5 text-white/20" />
+              <StepIndicator 
+                currentStep={currentStep} 
+                step="initialize" 
+                label="Initialize" 
+                isCompleted={Array.from(completedSteps).includes('initialize')}
+                onClick={() => handleStepChange('initialize')}
+              />
+            </div>
+
+            {/* Manual SC Address Input */}
+            {currentStep === 'register' && (
+              <div className="max-w-2xl mx-auto">
+                <button
+                  onClick={() => setShowManualInput(!showManualInput)}
+                  className="text-primary text-sm hover:text-primary/80 transition-colors"
+                >
+                  {showManualInput ? '← Back to registration' : 'Have a SC address? Enter manually →'}
+                </button>
+                
+                {showManualInput && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-4 space-y-4"
+                  >
+                    <input
+                      type="text"
+                      value={manualScAddress}
+                      onChange={(e) => setManualScAddress(e.target.value)}
+                      placeholder="Enter SC address (erd1...)"
+                      className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3
+                               text-white placeholder-white/20 focus:outline-none focus:border-primary/50"
+                    />
+                    <button
+                      onClick={handleManualScAddress}
+                      className="w-full py-2 px-4 rounded-xl bg-primary/20 text-primary 
+                               hover:bg-primary/30 transition-colors"
+                    >
+                      Continue with this address
+                    </button>
+                  </motion.div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Forms */}
