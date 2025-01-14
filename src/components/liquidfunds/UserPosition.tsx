@@ -136,7 +136,7 @@ export const UserPosition = ({
                 <div className="p-2 bg-primary/10 rounded-xl">
                   <Briefcase className="w-6 h-6 text-primary" />
                 </div>
-                <h2 className="text-2xl font-bold text-white">Your Position</h2>
+                <h2 className="text-lg md:text-2xl font-bold text-white">Your Position</h2>
               </div>
               <motion.button
                 animate={{ rotate: isExpanded ? 180 : 0 }}
@@ -147,7 +147,7 @@ export const UserPosition = ({
               </motion.button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
               {/* Fund Token Balance */}
               <div className="bg-white/[0.02] rounded-xl p-4 border border-white/5">
                 <div className="flex items-center gap-2 text-white/60 mb-2">

@@ -335,11 +335,12 @@ export const SharesExchangeForm = ({
     try {
       setIsSubmitting(true);
 
-      const amountWithDecimals = (Number(amount) * Math.pow(10, 18)).toString();
-      const tokenIdHex = Buffer.from(fundTokenId).toString('hex');
-      const amountHex = toEvenHex(BigInt(amountWithDecimals));
-      const sellFunctionName = Buffer.from('sell').toString('hex');
-      const data = `ESDTTransfer@${tokenIdHex}@${amountHex}@${sellFunctionName}`;
+      // Convert amount to a string without scientific notation
+    const amountWithDecimals = (Number(amount) * Math.pow(10, 18)).toLocaleString('fullwide', { useGrouping: false });
+    const tokenIdHex = Buffer.from(fundTokenId).toString('hex');
+    const amountHex = toEvenHex(BigInt(amountWithDecimals));
+    const sellFunctionName = Buffer.from('sell').toString('hex');
+    const data = `ESDTTransfer@${tokenIdHex}@${amountHex}@${sellFunctionName}`;
 
       // Set initial pending status
       const initialStatus = {
@@ -464,7 +465,7 @@ export const SharesExchangeForm = ({
               <ArrowUpRight className="w-6 h-6 text-primary" />
             )}
           </div>
-          <h2 className="text-2xl font-bold text-white">
+          <h2 className="text-lg sm:text-2xl font-bold text-white">
             {activeTab === 'buy' ? 'Buy Fund Shares' : 'Sell Fund Shares'}
           </h2>
         </div>

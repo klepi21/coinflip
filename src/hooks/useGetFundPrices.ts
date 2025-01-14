@@ -19,11 +19,11 @@ export const useGetFundPrices = (fundId: string) => {
     const fetchPrices = async () => {
       try {
         setIsLoading(true);
-        console.log('Fetching prices for fund:', fundId);
+        //console.log('Fetching prices for fund:', fundId);
         const response = await fetch(`/api/prices?fund=${fundId}`);
-        console.log('API Response:', response);
+        //console.log('API Response:', response);
         const json: PriceResponse = await response.json();
-        console.log('Parsed JSON:', json);
+        //console.log('Parsed JSON:', json);
         
         if (!json.success) {
           throw new Error('Failed to fetch price data');

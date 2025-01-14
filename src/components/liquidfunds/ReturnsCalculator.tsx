@@ -24,26 +24,30 @@ export const ReturnsCalculator = ({ sharePrice, apy }: ReturnsCalculatorProps) =
                  timeframe === '6M' ? 0.5 : 
                  0.25; // 3M
 
-    const periodsPerYear = 12;
-    const totalPeriods = years * periodsPerYear;
-    const monthlyRate = (apy / 100) / periodsPerYear;
+    // Calculate future value using APY directly since it already includes compounding
+    const totalValue = principal * (1 + (apy / 100) * years);
+    
+    // For monthly deposits, calculate each deposit's growth for its specific time period
+    let monthlyValue = 0;
+    const months = years * 12;
+    
+    if (monthly > 0) {
+      for (let i = 0; i < months; i++) {
+        const timeRemaining = (months - i) / 12; // Convert to years
+        monthlyValue += monthly * (1 + (apy / 100) * timeRemaining);
+      }
+    }
 
-    // Calculate future value of initial investment
-    const initialFV = principal * Math.pow(1 + monthlyRate, totalPeriods);
-
-    // Calculate future value of monthly deposits
-    const monthlyFV = monthly * ((Math.pow(1 + monthlyRate, totalPeriods) - 1) / monthlyRate);
-
-    const totalValue = initialFV + monthlyFV;
-    const totalInvested = principal + (monthly * totalPeriods);
-    const profit = totalValue - totalInvested;
-    const monthlyProfit = profit / totalPeriods;
+    const finalValue = totalValue + monthlyValue;
+    const totalInvested = principal + (monthly * months);
+    const profit = finalValue - totalInvested;
+    const monthlyProfit = profit / (years * 12);
 
     return {
-      estimatedValue: totalValue.toFixed(2),
+      estimatedValue: finalValue.toFixed(2),
       profit: profit.toFixed(2),
       monthlyProfit: monthlyProfit.toFixed(2),
-      shares: (totalValue / Number(sharePrice)).toFixed(2)
+      shares: (finalValue / Number(sharePrice)).toFixed(2)
     };
   };
 
@@ -146,7 +150,7 @@ export const ReturnsCalculator = ({ sharePrice, apy }: ReturnsCalculatorProps) =
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-white/60">Monthly Profit</span>
+            <span className="text-white/60">Average Monthly Profit</span>
             <span className="text-lg font-bold text-emerald-400">
               +${results.monthlyProfit}
             </span>

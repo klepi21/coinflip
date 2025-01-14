@@ -134,22 +134,30 @@ export const PriceChart = ({ data, containerClassName = '' }: ChartProps) => {
     };
   }, [data, timeFrame]);
 
+  const timeframes = [
+    { label: '1H', value: '1h' },
+    { label: '1D', value: '1d' },
+    { label: '1M', value: '1m' },
+    { label: '6M', value: '6m' },
+    { label: '1Y', value: '1y' }
+  ];
+
   return (
     <div className={`w-full ${containerClassName}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white">Price Chart</h3>
-        <div className="flex gap-2">
-          {(['5M', '1H', '4H', '1D', '1W', '1M', '6M', '1Y'] as TimeFrame[]).map((tf) => (
+        <div className="flex gap-1 md:gap-2 overflow-x-auto">
+          {timeframes.map((tf) => (
             <button
-              key={tf}
-              onClick={() => setTimeFrame(tf)}
-              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                timeFrame === tf
+              key={tf.value}
+              onClick={() => setTimeFrame(tf.value as TimeFrame)}
+              className={`px-2 md:px-3 py-1 md:py-1.5 rounded-lg text-xs md:text-sm transition-colors ${
+                timeFrame === tf.value
                   ? 'bg-primary text-white'
                   : 'text-white/60 hover:text-white bg-white/5 hover:bg-white/10'
               }`}
             >
-              {tf}
+              {tf.label}
             </button>
           ))}
         </div>

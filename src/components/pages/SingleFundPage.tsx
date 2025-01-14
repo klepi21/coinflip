@@ -149,6 +149,8 @@ const calculateAverageApy = (tokens: any[]) => {
   return weightedApys.reduce((sum, apy) => sum + apy, 0);
 };
 
+
+
 export const SingleFundPage = ({ address }: SingleFundPageProps) => {
   const { details, isLoading, error } = useGetLiquidFundDetails(address);
   const { address: userAddress } = useWallet();
@@ -317,7 +319,7 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
         </div>
 
         {/* Add before the main grid */}
-        {userAddress && (
+        {userAddress && Number(userFundBalance) > 0 && (
           <div className="mb-8">
             <UserPosition
               fundTokenId={details.fundTokenId}
@@ -326,6 +328,23 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
               totalFundSupply={details.supply}
               fundTokens={details.tokens}
             />
+          </div>
+        )}
+
+        {userAddress && Number(userFundBalance) === 0 && (
+          <div className="mb-8 relative">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-10 rounded-3xl flex items-center justify-center">
+              <div className="text-white/60 text-sm">You don't have any shares in this fund</div>
+            </div>
+            <div className="opacity-30 filter grayscale">
+              <UserPosition
+                fundTokenId={details.fundTokenId}
+                fundTokenBalance={userFundBalance}
+                fundPrice={details.price}
+                totalFundSupply={details.supply}
+                fundTokens={details.tokens}
+              />
+            </div>
           </div>
         )}
 
@@ -347,15 +366,13 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
                   <div className="p-2 bg-primary/10 rounded-xl">
                     <LayoutGrid className="w-6 h-6 text-primary" />
                   </div>
-                  <h2 className="text-2xl font-bold text-white">Fund Composition</h2>
+                  <h2 className="text-lg sm:text-2xl font-bold text-white">Fund Composition</h2>
                 </div>
                 <button
                   onClick={() => setIsCalculatorOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 
-                             border border-white/10 hover:border-white/20 transition-all duration-300"
-                >
-                  <Calculator className="w-5 h-5 text-primary" />
-                  <span className="text-sm text-white/60">Profit Calculator</span>
+                  className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary 
+                             hover:bg-primary/20 transition-colors">
+                  <Calculator className="w-6 h-6" />
                 </button>
               </div>
 
@@ -528,7 +545,7 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
               <div className="p-2 bg-primary/10 rounded-xl">
                 <LineChart className="w-6 h-6 text-primary" />
               </div>
-              <h2 className="text-2xl font-bold text-white">Price Chart</h2>
+              <h2 className="text-lg sm:text-2xl font-bold text-white">Price Chart</h2>
             </div>
             <ChevronDown 
               className={`w-6 h-6 text-white/60 transition-transform duration-200
@@ -565,10 +582,10 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
         <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8">
           {/* Left Box with Token Details and Fee Structure */}
           <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 h-[420px]">
-            <div className="flex gap-2 mb-6">
+            <div className="flex overflow-x-auto hide-scrollbar gap-1 mb-6">
               <button
                 onClick={() => setLeftActiveTab('tokens')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition-all ${
                   leftActiveTab === 'tokens'
                     ? 'bg-white/10 text-white'
                     : 'text-white/60 hover:text-white'
@@ -579,7 +596,7 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
               </button>
               <button
                 onClick={() => setLeftActiveTab('fees')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition-all ${
                   leftActiveTab === 'fees'
                     ? 'bg-white/10 text-white'
                     : 'text-white/60 hover:text-white'
@@ -590,7 +607,7 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
               </button>
               <button
                 onClick={() => setLeftActiveTab('distribution')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                className={`hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition-all ${
                   leftActiveTab === 'distribution'
                     ? 'bg-white/10 text-white'
                     : 'text-white/60 hover:text-white'
@@ -609,8 +626,21 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
                     <div className="text-white font-mono">{details.fundTokenId}</div>
                   </div>
                   <div className="bg-black/20 rounded-xl p-4">
-                    <div className="text-sm text-white/60 mb-2">Smart Contract</div>
-                    <div className="text-white font-mono">{address}</div>
+                    <div className="text-sm text-white/60 mb-2">Smart Contract Address</div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-white/80 font-mono text-sm">
+                        {`${address.slice(0, 6)}...${address.slice(-6)}`}
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(address);
+                          // You might want to add a toast notification here
+                        }}
+                        className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                      >
+                        <ClipboardCopy className="w-4 h-4 text-white/60" />
+                      </button>
+                    </div>
                   </div>
                 </>
               ) : leftActiveTab === 'fees' ? (
@@ -632,8 +662,11 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
                   ))}
                 </div>
               ) : (
-                <div className="h-[300px]">
-                  <TokenDistributionChart tokens={details.tokens} />
+                <div className="space-y-4">
+
+                  <div className="w-full">
+                    <TokenDistributionChart tokens={details.tokens} />
+                  </div>
                 </div>
               )}
             </div>
