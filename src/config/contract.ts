@@ -1,6 +1,6 @@
 import proxyAbi from './valoro_proxy_sc.abi.json';
 
 export const contractConfig = {
-  address: 'erd1qqqqqqqqqqqqqpgqpg2f64hdvwupszxf0jedcc06787w9n6du7zshu55yu',
+  address: 'erd1qqqqqqqqqqqqqpgq0tx8c3v5g4nj4k8a6eaqxxdpexh529ut64qsp5hj2u',
   abi: proxyAbi
 }; 

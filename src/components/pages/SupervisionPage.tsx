@@ -1,9 +1,9 @@
 'use client';
 
 import { useWallet } from '@/context/WalletContext';
-import { Loader2, ShieldAlert, ArrowRight, CheckCircle2, ArrowDownRight, Settings, Coins, XCircle, Info, ExternalLink } from 'lucide-react';
+import { Loader2, ShieldAlert, ArrowRight, CheckCircle2, ArrowDownRight, Settings, Coins, XCircle, Info, ExternalLink, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { sendTransactions } from "@multiversx/sdk-dapp/services";
 import { TokenTransfer, Address, SmartContract, AbiRegistry, ContractFunction, ResultsParser } from "@multiversx/sdk-core";
 import { useTrackTransactionStatus } from "@multiversx/sdk-dapp/hooks/transactions";
@@ -13,13 +13,14 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 import { Squares } from '@/components/ui/squares-background';
 import { ProxyNetworkProvider } from '@multiversx/sdk-network-providers';
 import proxyAbi from '@/config/valoro_proxy_sc.abi.json';
+import { BytesValue, AddressValue } from "@multiversx/sdk-core";
 
 const AUTHORIZED_ADDRESSES = [
   'erd1s5ufsgtmzwtp6wrlwtmaqzs24t0p9evmp58p33xmukxwetl8u76sa2p9rv',
   'erd1lnmfa5p9j6qy40kjtrf0wfq6cl056car6hyvrq5uxdcalc2gu7zsrwalel'
 ];
 
-const PROXY_SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqd9rvv2n378e27jcts8vfwynpx0gfl5ufz6hqhfy0u0';
+const PROXY_SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgq0tx8c3v5g4nj4k8a6eaqxxdpexh529ut64qsp5hj2u';
 
 const PROXY_PROVIDER = new ProxyNetworkProvider('https://devnet-gateway.multiversx.com');
 const PROXY_CONTRACT = new SmartContract({
@@ -89,7 +90,7 @@ interface CreateFormProps {
 }
 
 interface InitializeFormProps {
-  onSubmit: (data: InitializeFundData) => Promise<void>;
+  onSubmit: (data: InitializeFundData & { usdcAmount: number }) => Promise<void>;
   isSubmitting: boolean;
 }
 
@@ -116,6 +117,14 @@ interface FormErrors {
   managerSellFee?: string;
   managerPerformanceFee?: string;
   tokens?: string[];
+}
+
+type IndexFundScType = 'Liquid' | 'Staking';
+
+interface RegisterFormData {
+  fundType: IndexFundScType;
+  managerAddress: string;
+  scAddress: string;
 }
 
 const RegisterForm = ({ onSubmit, isSubmitting }: RegisterFormProps) => (
@@ -507,6 +516,7 @@ const TransactionStatus = ({ status, message, hash, scAddress }: TransactionStat
 
 const InitializeForm = ({ onSubmit, isSubmitting }: InitializeFormProps) => {
   const [slippage, setSlippage] = useState<number>(1);
+  const [usdcAmount, setUsdcAmount] = useState<number>(1);
   const [error, setError] = useState<string>('');
 
   const validateAndSubmit = () => {
@@ -514,7 +524,7 @@ const InitializeForm = ({ onSubmit, isSubmitting }: InitializeFormProps) => {
       setError('Slippage must be between 0.1% and 5%');
       return;
     }
-    onSubmit({ slippage });
+    onSubmit({ slippage, usdcAmount });
   };
 
   return (
@@ -564,6 +574,21 @@ const InitializeForm = ({ onSubmit, isSubmitting }: InitializeFormProps) => {
           </AnimatePresence>
         </div>
 
+        <div className="space-y-2">
+          <label className="text-sm text-white/60 flex items-center">
+            USDC Amount
+          </label>
+          <select
+            value={usdcAmount}
+            onChange={(e) => setUsdcAmount(Number(e.target.value))}
+            className="w-full bg-black/20 border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50"
+          >
+            <option value={1}>1 USDC</option>
+            <option value={2}>2 USDC</option>
+            <option value={3}>3 USDC</option>
+          </select>
+        </div>
+
         <button
           onClick={validateAndSubmit}
           disabled={isSubmitting}
@@ -585,6 +610,12 @@ const InitializeForm = ({ onSubmit, isSubmitting }: InitializeFormProps) => {
   );
 };
 
+// Helper function to convert number to even-length hex
+const toEvenHex = (num: number) => {
+  const hex = num.toString(16);
+  return hex.length % 2 === 0 ? hex : '0' + hex;
+};
+
 export const SupervisionPage = () => {
   const { address, isLoggedIn } = useWallet();
   const [currentStep, setCurrentStep] = useState<Step>('register');
@@ -595,6 +626,45 @@ export const SupervisionPage = () => {
   const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set());
   const [manualScAddress, setManualScAddress] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
+  const [registerFormData, setRegisterFormData] = useState<RegisterFormData>({
+    fundType: 'Liquid',
+    managerAddress: '',
+    scAddress: ''
+  });
+  const [formErrors, setFormErrors] = useState<Partial<RegisterFormData>>({});
+  const [scAddresses, setScAddresses] = useState<string[]>([]);
+  const [isLoadingSc, setIsLoadingSc] = useState(false);
+  const [selectedSc, setSelectedSc] = useState<string>('');
+
+  useEffect(() => {
+    const fetchLatestSc = async () => {
+      try {
+        setIsLoadingSc(true);
+        const userAddress = new Address(address);
+        const interaction = PROXY_CONTRACT.methods.getUserLatestSc([userAddress]);
+        
+        const query = interaction.buildQuery();
+        const queryResponse = await PROXY_PROVIDER.queryContract(query);
+        
+        if (queryResponse.returnData && queryResponse.returnData.length > 0) {
+          const addresses = queryResponse.returnData.map(item => {
+            const hex = Buffer.from(item, 'base64').toString('hex');
+            return 'erd1' + hex.slice(4);
+          });
+          setScAddresses(addresses);
+        }
+      } catch (error) {
+        console.error('Error fetching SC addresses:', error);
+        toast.error('Failed to fetch SC addresses');
+      } finally {
+        setIsLoadingSc(false);
+      }
+    };
+
+    if (address) {
+      fetchLatestSc();
+    }
+  }, [address]);
 
   // Auth checks...
 
@@ -678,7 +748,7 @@ export const SupervisionPage = () => {
       setIsSubmitting(true);
 
       const tokenPairs = data.tokens.map(token => 
-        `${token.identifier}@${token.weight.toString(16).padStart(2, '0')}`
+        `${Buffer.from(token.identifier).toString('hex')}@${(token.weight * 100).toString(16).padStart(4, '0')}`
       ).join('@');
 
       const createData = {
@@ -686,18 +756,18 @@ export const SupervisionPage = () => {
         args: [
           Buffer.from(data.tokenTicker).toString('hex'),
           Buffer.from(data.tokenDisplayName).toString('hex'),
-          data.managerBuyFee.toString(16),
-          data.managerSellFee.toString(16),
-          data.managerPerformanceFee.toString(16),
+          toEvenHex(data.managerBuyFee),
+          toEvenHex(data.managerSellFee),
+          toEvenHex(data.managerPerformanceFee),
           tokenPairs
         ],
-        gasLimit: 60000000,
-        value: 0
+        gasLimit: 600000000,
+        value: 50000000000000000 // 0.05 EGLD in wei
       };
 
       const { sessionId } = await sendTransactions({
         transactions: [{
-          value: 0,
+          value: createData.value,
           data: createData.functionName + '@' + createData.args.join('@'),
           receiver: PROXY_SC_ADDRESS,
           gasLimit: createData.gasLimit
@@ -718,21 +788,27 @@ export const SupervisionPage = () => {
     }
   };
 
-  const handleInitializeFund = async (data: InitializeFundData) => {
+  const handleInitializeFund = async (data: InitializeFundData & { usdcAmount: number }) => {
     try {
       setIsSubmitting(true);
 
+      const usdcHex = Buffer.from('USDC-350c4e').toString('hex'); // Assuming 'USDC' is the token identifier
+      const amountHex = toEvenHex(data.usdcAmount * 1000000); // Convert USDC amount to smallest unit and ensure even-length
+
+      const functionNameHex = Buffer.from('initializeIndexFund').toString('hex').padStart(2, '0'); // Convert function name to even-length hex
+
       const initData = {
-        functionName: 'initializeIndexFund',
-        args: data.slippage ? [(data.slippage * 100).toString(16)] : [],
-        gasLimit: 60000000,
-        value: 0
+        functionName: functionNameHex,
+        args: data.slippage ? [(data.slippage * 100).toString(16).padStart(2, '0')] : [],
+        gasLimit: 600000000,
+        value: 0, // No EGLD value needed for ESDTTransfer
+        esdtTransfer: `ESDTTransfer@${usdcHex}@${amountHex}`
       };
 
       const { sessionId } = await sendTransactions({
         transactions: [{
-          value: 0,
-          data: initData.functionName + (initData.args.length ? '@' + initData.args.join('@') : ''),
+          value: initData.value,
+          data: initData.esdtTransfer + '@' + initData.functionName + (initData.args.length ? '@' + initData.args.join('@') : ''),
           receiver: PROXY_SC_ADDRESS,
           gasLimit: initData.gasLimit
         }],
@@ -755,17 +831,7 @@ export const SupervisionPage = () => {
 
   // Add SC address validation before steps
   const validateStep = (step: Step): boolean => {
-    switch (step) {
-      case 'create':
-      case 'initialize':
-        if (!registeredScAddress && !manualScAddress) {
-          toast.error('Please provide a smart contract address');
-          return false;
-        }
-        return true;
-      default:
-        return true;
-    }
+    return true; // Allow navigation to any step
   };
 
   // Add manual SC address handler
@@ -781,42 +847,180 @@ export const SupervisionPage = () => {
 
   // Update step change handler
   const handleStepChange = (newStep: Step) => {
-    if (validateStep(newStep)) {
-      setCurrentStep(newStep);
+    setCurrentStep(newStep);
+  };
+
+  // Validate form
+  const validateForm = () => {
+    const errors: Partial<RegisterFormData> = {};
+    
+    if (!registerFormData.managerAddress) {
+      errors.managerAddress = 'Manager address is required';
+    } else if (!registerFormData.managerAddress.startsWith('erd1')) {
+      errors.managerAddress = 'Invalid manager address format';
+    }
+
+    if (!registerFormData.scAddress) {
+      errors.scAddress = 'Smart contract address is required';
+    } else if (!registerFormData.scAddress.startsWith('erd1')) {
+      errors.scAddress = 'Invalid smart contract address format';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Modify the handleRegister function
+  const handleRegister = async () => {
+    try {
+      setIsSubmitting(true);
+      
+      const registerData = {
+        functionName: 'registerIndexFundSc',
+        args: [registerFormData.fundType === 'Liquid' ? '02' : '01'], // Liquid = 01, Staking = 02
+        gasLimit: 60000000,
+        value: 0,
+      };
+
+      const { sessionId } = await sendTransactions({
+        transactions: [{
+          value: 0,
+          data: registerData.functionName + '@' + registerData.args[0],
+          receiver: PROXY_SC_ADDRESS,
+          gasLimit: registerData.gasLimit
+        }],
+        transactionsDisplayInfo: {
+          processingMessage: 'Registering Index Fund SC',
+          errorMessage: 'An error occurred during registration',
+          successMessage: 'Index Fund SC registered successfully'
+        }
+      });
+
+      // After transaction, get latest SC
+      let retries = 3;
+      let latestSc = '';
+      
+      while (retries > 0) {
+        try {
+          const interaction = PROXY_CONTRACT.methods.getUserLatestSc();
+          const query = interaction.buildQuery();
+          const queryResponse = await PROXY_PROVIDER.queryContract(query);
+          
+          if (queryResponse.returnData && queryResponse.returnData.length > 0) {
+            latestSc = Buffer.from(queryResponse.returnData[0], 'base64').toString('hex');
+            if (latestSc) {
+              latestSc = 'erd1' + latestSc.slice(4);
+              break;
+            }
+          }
+        } catch (e) {
+          retries--;
+          if (retries === 0) throw e;
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+
+      if (!latestSc) {
+        throw new Error('Failed to fetch SC address after multiple attempts');
+      }
+
+      setRegisteredScAddress(latestSc);
+      setCurrentStep('create');
+      
+    } catch (error) {
+      console.error('Error registering fund:', error);
+      toast.error('Failed to register fund');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Update form rendering with SC address
+  // Add this to your render function where appropriate
+  const renderRegisterForm = () => {
+    return (
+      <div className="space-y-4 p-6 bg-black/20 rounded-xl border border-white/10 w-full max-w-4xl mx-auto">
+        <h3 className="text-xl font-semibold mb-4">Register Index Fund</h3>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Fund Type</label>
+            <select
+              value={registerFormData.fundType}
+              onChange={(e) => setRegisterFormData(prev => ({
+                ...prev,
+                fundType: e.target.value as IndexFundScType
+              }))}
+              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3
+                       text-white focus:outline-none focus:border-primary/50"
+            >
+              <option value="Liquid">Liquid</option>
+              <option value="Staking">Staking</option>
+            </select>
+          </div>
+        </div>
+
+        <button
+          onClick={handleRegister}
+          disabled={isSubmitting}
+          className="w-full py-3 px-4 rounded-xl bg-primary/20 text-primary 
+                   hover:bg-primary/30 transition-colors"
+        >
+          {isSubmitting ? (
+            <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+          ) : (
+            'Register Fund'
+          )}
+        </button>
+      </div>
+    );
+  };
+
+  // Add dropdown for SC address selection in the second step
+  const renderScDropdown = () => (
+    <div className="space-y-4 p-6 bg-black/20 rounded-xl border border-white/10 w-full max-w-4xl mx-auto">
+      <h3 className="text-xl font-semibold mb-4">Select SC Address</h3>
+      <div className="space-y-4">
+        {isLoadingSc ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-white/50" />
+          </div>
+        ) : scAddresses.length === 0 ? (
+          <div className="text-center py-8 text-white/60">
+            No SC addresses found
+          </div>
+        ) : (
+          <select
+            value={selectedSc}
+            onChange={(e) => setSelectedSc(e.target.value)}
+            className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50"
+          >
+            <option value="" disabled>Select an address</option>
+            {scAddresses.map((address) => (
+              <option key={address} value={address}>
+                {address}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+    </div>
+  );
+
+  // Update renderCurrentStep to always display CreateForm
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 'register':
-        return (
-          <>
-            <RegisterForm onSubmit={handleRegisterFund} isSubmitting={isSubmitting} />
-            {scFetchError && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mt-4 p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl"
-              >
-                <p className="text-rose-500 text-sm">{scFetchError}</p>
-                <button
-                  onClick={() => handleRegisterFund()}
-                  className="text-sm text-rose-400 hover:text-rose-300 mt-2"
-                >
-                  Retry Registration
-                </button>
-              </motion.div>
-            )}
-          </>
-        );
+        return renderRegisterForm();
       case 'create':
         return (
-          <CreateForm 
-            onSubmit={handleCreateFund} 
-            isSubmitting={isSubmitting}
-            scAddress={registeredScAddress}
-          />
+          <>
+            {renderScDropdown()}
+            <CreateForm 
+              onSubmit={handleCreateFund} 
+              isSubmitting={isSubmitting}
+              scAddress={selectedSc || ''} // Pass empty string if no SC selected
+            />
+          </>
         );
       case 'initialize':
         return (
@@ -838,6 +1042,12 @@ export const SupervisionPage = () => {
     }
     return status;
   };
+
+  useEffect(() => {
+    if (currentStep === 'create' && selectedSc) {
+      setRegisteredScAddress(selectedSc);
+    }
+  }, [currentStep, selectedSc]);
 
   return (
     <div className="min-h-screen bg-[#060606] pt-24 relative">
@@ -889,42 +1099,6 @@ export const SupervisionPage = () => {
                 onClick={() => handleStepChange('initialize')}
               />
             </div>
-
-            {/* Manual SC Address Input */}
-            {currentStep === 'register' && (
-              <div className="max-w-2xl mx-auto">
-                <button
-                  onClick={() => setShowManualInput(!showManualInput)}
-                  className="text-primary text-sm hover:text-primary/80 transition-colors"
-                >
-                  {showManualInput ? '← Back to registration' : 'Have a SC address? Enter manually →'}
-                </button>
-                
-                {showManualInput && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-4 space-y-4"
-                  >
-                    <input
-                      type="text"
-                      value={manualScAddress}
-                      onChange={(e) => setManualScAddress(e.target.value)}
-                      placeholder="Enter SC address (erd1...)"
-                      className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3
-                               text-white placeholder-white/20 focus:outline-none focus:border-primary/50"
-                    />
-                    <button
-                      onClick={handleManualScAddress}
-                      className="w-full py-2 px-4 rounded-xl bg-primary/20 text-primary 
-                               hover:bg-primary/30 transition-colors"
-                    >
-                      Continue with this address
-                    </button>
-                  </motion.div>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Forms */}

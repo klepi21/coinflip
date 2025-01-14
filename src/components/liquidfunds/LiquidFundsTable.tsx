@@ -107,21 +107,8 @@ export const LiquidFundsTable = () => {
     return `https://tools.multiversx.com/assets-cdn/devnet/tokens/${identifier}/icon.png`;
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 text-primary animate-spin" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-red-500">Failed to load funds</p>
-      </div>
-    );
-  }
+  // Ensure funds are displayed without filtering
+  const displayedFunds = funds; // Use funds directly without filtering
 
   return (
     <div className="space-y-8">
@@ -183,21 +170,7 @@ export const LiquidFundsTable = () => {
 
       {/* Existing Funds Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {funds?.filter(fund => {
-          try {
-            if (!fund.nav || !fund.supply || fund.nav === '0' || fund.supply === '0') {
-              return false;
-            }
-            
-            const navValue = Number(BigInt('0x' + fund.nav)) / Math.pow(10, 6);
-            const supplyValue = Number(BigInt('0x' + fund.supply)) / Math.pow(10, 18);
-            
-            return navValue > 1 && supplyValue > 1;
-          } catch (err) {
-            console.error('Error filtering fund:', err);
-            return false;
-          }
-        }).map((fund, index) => (
+        {displayedFunds.map((fund, index) => (
           <motion.div
             key={fund.address}
             initial={{ opacity: 0, y: 20 }}

@@ -14,7 +14,7 @@ interface LiquidFund {
   isPaused: boolean;
 }
 
-const PROXY_ADDRESS = 'erd1qqqqqqqqqqqqqpgqpg2f64hdvwupszxf0jedcc06787w9n6du7zshu55yu';
+const PROXY_ADDRESS = 'erd1qqqqqqqqqqqqqpgq0tx8c3v5g4nj4k8a6eaqxxdpexh529ut64qsp5hj2u';
 
 export const useGetLiquidFunds = () => {
   const [funds, setFunds] = useState<LiquidFund[]>([]);

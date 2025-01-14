@@ -6,12 +6,12 @@ import { Card } from '@/components/ui/Card';
 import { 
   Loader2, ArrowLeft, DollarSign, BarChart3, 
   Users, Activity, Percent, TrendingUp, ChevronRight, ClipboardCopy, ExternalLink, Calculator, 
-  Coins, History, Trophy, FileText, Settings, PieChart, LayoutGrid 
+  Coins, History, Trophy, FileText, Settings, PieChart, LayoutGrid, LineChart, ChevronDown 
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getTokenIconUrl } from '@/utils/tokens';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SharesExchangeForm } from '../liquidfunds/SharesExchangeForm';
 import { UserPosition } from '../liquidfunds/UserPosition';
 import { useWallet } from '@/context/WalletContext';
@@ -22,6 +22,8 @@ import { TopHolders } from '../liquidfunds/TopHolders';
 import { CalculatorModal } from '../liquidfunds/CalculatorModal';
 import { AnalyticsCarousel } from '../liquidfunds/AnalyticsCarousel';
 import { TokenDistributionChart } from '../liquidfunds/TokenDistributionChart';
+import { PriceChart } from '@/components/ui/PriceChart';
+import { useGetFundPrices } from '@/hooks/useGetFundPrices';
 
 interface SingleFundPageProps {
   address: string;
@@ -152,9 +154,13 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
   const { address: userAddress } = useWallet();
   const [userFundBalance, setUserFundBalance] = useState('0');
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [isChartExpanded, setIsChartExpanded] = useState(false);
   const [leftActiveTab, setLeftActiveTab] = useState<'tokens' | 'fees' | 'distribution'>('tokens');
   const [rightActiveTab, setRightActiveTab] = useState<'transactions' | 'holders'>('transactions');
   const [totalInvestors, setTotalInvestors] = useState<number>(0);
+
+  const { data: priceData, isLoading: isPriceLoading, error: priceError } = 
+    useGetFundPrices(details?.fundTokenId?.replace('WEGLD-', '') || '');
 
   // Add this useEffect to fetch user's fund token balance
   useEffect(() => {
@@ -326,7 +332,7 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
         {/* Main Grid - Adjusted ratio to 2.5/1.5 */}
         <div className="flex flex-col lg:grid lg:grid-cols-8 gap-8 mb-8 sm:mb-16">
           {/* Fund Composition - Takes 5 columns (2.5/4) */}
-          <motion.section 
+          <motion.section
             className="lg:col-span-5 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10
                        hover:border-white/20 transition-all duration-300
                        shadow-[0_8px_32px_rgba(0,0,0,0.12)]
@@ -504,6 +510,56 @@ export const SingleFundPage = ({ address }: SingleFundPageProps) => {
             />
           </motion.section>
         </div>
+
+        {/* Price Chart - Collapsible */}
+        <motion.div
+          className="mb-8 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10
+                     hover:border-white/20 transition-all duration-300
+                     shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div 
+            onClick={() => setIsChartExpanded(!isChartExpanded)}
+            className="p-4 sm:p-8 flex items-center justify-between cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-xl">
+                <LineChart className="w-6 h-6 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-white">Price Chart</h2>
+            </div>
+            <ChevronDown 
+              className={`w-6 h-6 text-white/60 transition-transform duration-200
+                         ${isChartExpanded ? 'rotate-180' : ''}`}
+            />
+          </div>
+          
+          <AnimatePresence>
+            {isChartExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="px-4 sm:px-8 pb-8"
+              >
+                {isPriceLoading ? (
+                  <div className="h-[400px] flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-white/50" />
+                  </div>
+                ) : priceError ? (
+                  <div className="h-[400px] flex items-center justify-center text-red-500">
+                    Failed to load price data
+                  </div>
+                ) : (
+                  <PriceChart data={priceData} />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Bottom Grid - Stack on mobile */}
         <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8">
