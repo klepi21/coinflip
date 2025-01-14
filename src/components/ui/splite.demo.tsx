@@ -2,7 +2,7 @@
 
 import { SplineScene } from "@/components/ui/splite";
 import { Card } from "@/components/ui/Card"
-import { Spotlight } from "@/components/ui/spotlight"
+import { Spotlight } from "@/components/ui/Spotlight"
 
 export function SplineSceneBasic() {
   return (
