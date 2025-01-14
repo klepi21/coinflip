@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { Meteors } from '@/components/ui/meteors';
 import { useState, useEffect } from 'react';
 import NumberFlow from '@/components/ui/number-flow';
+import { SplineScene } from '@/components/ui/splite';
 
 const WAD = BigInt('1000000000000000000');
 const SECONDS_PER_YEAR = 31556926;
@@ -116,22 +117,18 @@ export const LiquidFundsTable = () => {
       <div className="relative">
         <div 
           onClick={() => setDisplayMode(prev => prev === 'usd' ? 'egld' : 'usd')}
-          className="relative bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 
+          className="relative bg-black/[0.96] backdrop-blur-xl rounded-2xl border border-white/10 
                     hover:border-white/20 transition-all duration-300 p-6 cursor-pointer
-                    overflow-hidden group"
+                    overflow-hidden group h-[500px]"
         >
-          {/* Glow effect */}
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/30 via-white/10 to-primary/30 
-                          opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500" />
-          
           {/* Add Meteors */}
           <Meteors number={6} />
 
           {/* Content container */}
-          <div className="relative flex justify-between items-center">
+          <div className="relative flex h-full">
             {/* TVL Content */}
-            <div>
-              <h2 className="text-lg font-medium text-white/60 mb-2">
+            <div className="flex-1 p-8 relative z-10 flex flex-col justify-center">
+              <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-400 mb-6">
                 Total Value Locked
               </h2>
               <div className="flex items-baseline gap-2">
@@ -151,18 +148,17 @@ export const LiquidFundsTable = () => {
                   </span>
                 )}
               </div>
-              <div className="text-sm text-white/40 mt-2">
-                Click to toggle USD/EGLD
+              <div className="text-neutral-300 max-w-lg mt-4">
+                Powered by AI AGENTS for smart rebalancing and maximum yield optimization in real-time.
               </div>
             </div>
 
-            {/* Wen Lambo Text */}
-            <div className="relative">
-              <span className="text-[8rem] font-bold text-white/5 select-none
-                              tracking-tighter leading-none whitespace-nowrap
-                              hover:text-white/10 transition-colors duration-300">
-                Wen Lambo?
-              </span>
+            {/* Right content with Spline */}
+            <div className="flex-1 relative">
+              <SplineScene 
+                scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
+                className="w-full h-full"
+              />
             </div>
           </div>
         </div>
