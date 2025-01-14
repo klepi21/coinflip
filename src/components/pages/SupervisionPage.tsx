@@ -17,7 +17,7 @@ import { BytesValue, AddressValue } from "@multiversx/sdk-core";
 
 const AUTHORIZED_ADDRESSES = [
   'erd1s5ufsgtmzwtp6wrlwtmaqzs24t0p9evmp58p33xmukxwetl8u76sa2p9rv',
-  'erd1lnmfa5p9j6qy40kjtrf0wfq6cl056car6hyvrq5uxdcalc2gu7zsrwalel'
+  'erd1dd236qpn4kqn7jtajd74cswqr64t435au0w8jyzlhdxs55jyexzsumj4p4'
 ];
 
 const PROXY_SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgq0tx8c3v5g4nj4k8a6eaqxxdpexh529ut64qsp5hj2u';
