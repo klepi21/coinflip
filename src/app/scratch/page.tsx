@@ -14,14 +14,14 @@ interface Prize {
   animal: string;
 }
 
-const BEAVER_PROBABILITY = 0.2; // 20% chance for beaver
+// Prize structure with exact probabilities
 const PRIZES = {
-  0: 0,
-  1: 2,
-  2: 5,
-  3: 20,
-  4: 100,
-  5: 1000
+  0: { amount: 0, probability: 0.328 },    // 32.8%
+  1: { amount: 2, probability: 0.4096 },   // 40.96%
+  2: { amount: 5, probability: 0.2048 },   // 20.48%
+  3: { amount: 20, probability: 0.0512 },  // 5.12%
+  4: { amount: 100, probability: 0.0064 }, // 0.64%
+  5: { amount: 1000, probability: 0.00032 }// 0.032%
 };
 
 export default function ScratchPage() {
@@ -32,14 +32,37 @@ export default function ScratchPage() {
   const [ticketNumber, setTicketNumber] = useState("");
 
   const generateNewGame = () => {
-    // Generate prizes with 20% chance of beaver for each slot
+    // First, determine how many beavers based on probabilities
+    const random = Math.random();
+    let numBeavers = 0;
+    let cumulativeProbability = 0;
+
+    for (let i = 0; i <= 5; i++) {
+      cumulativeProbability += PRIZES[i as keyof typeof PRIZES].probability;
+      if (random < cumulativeProbability) {
+        numBeavers = i;
+        break;
+      }
+    }
+
+    // Create array of positions and randomly select positions for beavers
+    const positions = Array.from({ length: 5 }, (_, i) => i);
+    const beaverPositions = new Set<number>();
+    
+    while (beaverPositions.size < numBeavers) {
+      const index = Math.floor(Math.random() * positions.length);
+      beaverPositions.add(positions[index]);
+    }
+
+    // Generate the prizes array
     const newPrizes = Array.from({ length: 5 }, (_, i) => ({
       id: i + 1,
       isRevealed: false,
-      animal: Math.random() < BEAVER_PROBABILITY 
-        ? '🦫' 
+      animal: beaverPositions.has(i) 
+        ? '🦫'
         : otherAnimals[Math.floor(Math.random() * otherAnimals.length)]
     }));
+
     setPrizes(newPrizes);
     setRevealedCount(0);
     setBeaverCount(0);
@@ -74,7 +97,7 @@ export default function ScratchPage() {
     }
   };
 
-  const getCurrentPrize = () => PRIZES[beaverCount as keyof typeof PRIZES] || 0;
+  const getCurrentPrize = () => PRIZES[beaverCount as keyof typeof PRIZES]?.amount || 0;
 
   const getPrizeMessage = () => {
     if (!isComplete) {
