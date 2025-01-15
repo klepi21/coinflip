@@ -13,21 +13,18 @@ interface ChartProps {
   containerClassName?: string;
 }
 
-type TimeFrame = '1H' | '1D' | '1M' | '6M' | '1Y';
+type TimeFrame = '1D' | '1M' | '6M' | '1Y';
 
 export const PriceChart = ({ data, containerClassName = '' }: ChartProps) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<any>(null);
-  const [timeFrame, setTimeFrame] = useState<TimeFrame>('1H');
+  const [timeFrame, setTimeFrame] = useState<TimeFrame>('1D');
 
   const filterDataByTimeFrame = (data: PriceData[], timeFrame: TimeFrame): PriceData[] => {
     const now = new Date();
     const cutoff = new Date();
 
     switch (timeFrame) {
-      case '1H':
-        cutoff.setHours(now.getHours() - 1);
-        break;
       case '1D':
         cutoff.setDate(now.getDate() - 1);
         break;
@@ -126,7 +123,6 @@ export const PriceChart = ({ data, containerClassName = '' }: ChartProps) => {
   }, [data, timeFrame]);
 
   const timeframes: { label: string; value: TimeFrame }[] = [
-    { label: '1H', value: '1H' },
     { label: '1D', value: '1D' },
     { label: '1M', value: '1M' },
     { label: '6M', value: '6M' },

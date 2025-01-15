@@ -221,38 +221,39 @@ export const LiquidFundsTable = () => {
               </div>
 
               {/* Key Metrics - Compact Stack */}
-              <div className="flex flex-col gap-2 mt-6">
+              <div className="grid grid-cols-2 gap-3 mt-6">
                 {/* Price Box */}
-                <div className="group/metric flex items-center justify-between py-2.5 px-4 bg-black/10 rounded-lg border border-white/5 hover:bg-black/20 transition-all">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-primary/80" />
-                    <span className="text-sm text-white/50">Price</span>
+                <div className="group/metric relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-sm">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/5 opacity-0 group-hover/metric:opacity-100 transition-opacity duration-500" />
+                  <div className="relative p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="p-1.5 rounded-lg bg-primary/10">
+                        <DollarSign className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="text-base font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">Price</span>
+                    </div>
+                    <p className="font-mono text-xl font-bold text-white tracking-tight">
+                      ${formatNumber(fund.price, 6)}
+                    </p>
                   </div>
-                  <p className="font-mono text-white/90">
-                    ${formatNumber(fund.price, 6)}
-                  </p>
+                  <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
                 </div>
 
                 {/* AUM Box */}
-                <div className="group/metric flex items-center justify-between py-2.5 px-4 bg-black/10 rounded-lg border border-white/5 hover:bg-black/20 transition-all">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-primary/80" />
-                    <span className="text-sm text-white/50">AUM</span>
+                <div className="group/metric relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-sm">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/5 opacity-0 group-hover/metric:opacity-100 transition-opacity duration-500" />
+                  <div className="relative p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="p-1.5 rounded-lg bg-primary/10">
+                        <TrendingUp className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="text-base font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">AUM</span>
+                    </div>
+                    <p className="font-mono text-xl font-bold text-white tracking-tight">
+                      ${formatNumber(fund.nav, 6, 'nav')}
+                    </p>
                   </div>
-                  <p className="font-mono text-white/90">
-                    ${formatNumber(fund.nav, 6, 'nav')}
-                  </p>
-                </div>
-
-                {/* Supply Box */}
-                <div className="group/metric flex items-center justify-between py-2.5 px-4 bg-black/10 rounded-lg border border-white/5 hover:bg-black/20 transition-all">
-                  <div className="flex items-center gap-2">
-                    <Coins className="h-4 w-4 text-primary/80" />
-                    <span className="text-sm text-white/50">Supply</span>
-                  </div>
-                  <p className="font-mono text-white/90">
-                    {formatNumber(fund.supply, 18, 'supply')}
-                  </p>
+                  <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
                 </div>
               </div>
 
