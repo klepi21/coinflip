@@ -20,6 +20,7 @@ export const Navbar = () => {
   const navItems = [
     { name: 'Home', url: '/', icon: Home },
     { name: 'Liquid Funds', url: '/liquid-funds', icon: Coins },
+    { name: 'Scratch', url: '/scratch', icon: Coins },
     {
       name: 'Supervision',
       url: '/supervision',
