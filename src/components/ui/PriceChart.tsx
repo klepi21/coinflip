@@ -13,7 +13,7 @@ interface ChartProps {
   containerClassName?: string;
 }
 
-type TimeFrame = '5M' | '1H' | '4H' | '1D' | '1W' | '1M' | '6M' | '1Y';
+type TimeFrame = '1H' | '1D' | '1M' | '6M' | '1Y';
 
 export const PriceChart = ({ data, containerClassName = '' }: ChartProps) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -25,20 +25,11 @@ export const PriceChart = ({ data, containerClassName = '' }: ChartProps) => {
     const cutoff = new Date();
 
     switch (timeFrame) {
-      case '5M':
-        cutoff.setMinutes(now.getMinutes() - 5);
-        break;
       case '1H':
         cutoff.setHours(now.getHours() - 1);
         break;
-      case '4H':
-        cutoff.setHours(now.getHours() - 4);
-        break;
       case '1D':
         cutoff.setDate(now.getDate() - 1);
-        break;
-      case '1W':
-        cutoff.setDate(now.getDate() - 7);
         break;
       case '1M':
         cutoff.setMonth(now.getMonth() - 1);
@@ -55,7 +46,7 @@ export const PriceChart = ({ data, containerClassName = '' }: ChartProps) => {
   };
 
   useEffect(() => {
-    if (!chartContainerRef.current) return;
+    if (!chartContainerRef.current || !data.length) return;
 
     // Initialize chart
     const chart = createChart(chartContainerRef.current, {
@@ -134,12 +125,12 @@ export const PriceChart = ({ data, containerClassName = '' }: ChartProps) => {
     };
   }, [data, timeFrame]);
 
-  const timeframes = [
-    { label: '1H', value: '1h' },
-    { label: '1D', value: '1d' },
-    { label: '1M', value: '1m' },
-    { label: '6M', value: '6m' },
-    { label: '1Y', value: '1y' }
+  const timeframes: { label: string; value: TimeFrame }[] = [
+    { label: '1H', value: '1H' },
+    { label: '1D', value: '1D' },
+    { label: '1M', value: '1M' },
+    { label: '6M', value: '6M' },
+    { label: '1Y', value: '1Y' }
   ];
 
   return (
@@ -150,7 +141,7 @@ export const PriceChart = ({ data, containerClassName = '' }: ChartProps) => {
           {timeframes.map((tf) => (
             <button
               key={tf.value}
-              onClick={() => setTimeFrame(tf.value as TimeFrame)}
+              onClick={() => setTimeFrame(tf.value)}
               className={`px-2 md:px-3 py-1 md:py-1.5 rounded-lg text-xs md:text-sm transition-colors ${
                 timeFrame === tf.value
                   ? 'bg-primary text-white'
