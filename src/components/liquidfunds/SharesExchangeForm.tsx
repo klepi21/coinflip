@@ -288,7 +288,7 @@ export const SharesExchangeForm = ({
       // Save initial status before sending transaction
       const initialStatus: TransactionStatus = {
         status: 'pending',
-        message: 'Please sign the transaction...'
+        message: 'Processing buy order...'
       };
       setTransactionStatus(initialStatus);
       saveTransactionStatus(initialStatus);
@@ -303,16 +303,18 @@ export const SharesExchangeForm = ({
         redirectAfterSign: true
       });
 
+      console.log('Transaction sent with hash:', hash);
+
       // Update status with hash if available
       if (newSessionId) {
         setSessionId(newSessionId);
         const pendingStatus: TransactionStatus = {
           status: 'pending',
           message: 'Transaction in progress...',
-          hash: hash // MultiversX SDK might provide hash directly
+          hash: hash
         };
         setTransactionStatus(pendingStatus);
-        saveTransactionStatus(pendingStatus); // Important: save before redirect
+        saveTransactionStatus(pendingStatus);
       }
 
     } catch (error) {
@@ -345,7 +347,7 @@ export const SharesExchangeForm = ({
       // Set initial pending status
       const initialStatus = {
         status: 'pending' as const,
-        message: 'Preparing transaction...'
+        message: 'Processing sell order...'
       };
       setTransactionStatus(initialStatus);
 
@@ -395,12 +397,58 @@ export const SharesExchangeForm = ({
 
   useTrackTransactionStatus({
     transactionId: sessionId,
-    onSuccess: () => {
-      toast.success('Successfully bought shares!');
+    onSuccess: (hash) => {
+      console.log('Transaction success with hash:', hash);
+      
+      if (!hash) {
+        console.log('No hash available in success callback');
+        return;
+      }
+      
+      const explorerUrl = `https://devnet-explorer.multiversx.com/transactions/${hash}`;
+      console.log('Explorer URL:', explorerUrl);
+      
+      const message = (
+        <div className="flex flex-col gap-1">
+          <span>{activeTab === 'buy' ? 'Buy order completed!' : 'Sell order completed!'}</span>
+          <span className="text-sm text-white/70">
+            Hash: <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline truncate">
+              {hash.slice(0, 10)}...{hash.slice(-6)}
+            </a>
+          </span>
+        </div>
+      );
+      
+      toast(message, { 
+        dismissible: true, 
+        id: 'success-toast',
+        duration: 5000,
+        className: 'bg-zinc-900 text-white'
+      });
+
       setAmount('0');
+      setTransactionStatus({
+        status: 'success',
+        message: activeTab === 'buy' ? 'Buy order completed!' : 'Sell order completed!',
+        hash: hash
+      });
+      clearTransactionStatus();
+      setSessionId(null);
     },
     onFail: (errorMessage) => {
-      toast.error(`Transaction failed: ${errorMessage}`);
+      if (activeTab === 'buy') {
+        toast.error('Buy order failed. Please try again.', { dismissible: true, id: 'error-toast' });
+        setTimeout(() => toast.dismiss('error-toast'), 5000);
+      } else {
+        toast.error('Sell order failed. Please try again.', { dismissible: true, id: 'error-toast' });
+        setTimeout(() => toast.dismiss('error-toast'), 5000);
+      }
+      setTransactionStatus({
+        status: 'error',
+        message: activeTab === 'buy' ? 'Buy order failed. Please try again.' : 'Sell order failed. Please try again.'
+      });
+      clearTransactionStatus();
+      setSessionId(null);
     },
   });
 
@@ -423,32 +471,6 @@ export const SharesExchangeForm = ({
     setTransactionStatus(null);
     clearTransactionStatus();
   };
-
-  // Add this effect to handle transaction status changes
-  useEffect(() => {
-    if (sessionId && pendingTransactions) {
-      const txArray = Object.values(pendingTransactions);
-      const currentTx = txArray.find(tx => tx.sessionId === sessionId);
-
-      if (success && currentTx?.hash) {
-        setTransactionStatus({
-          status: 'success',
-          message: 'Transaction completed successfully!',
-          hash: currentTx.hash
-        });
-        clearTransactionStatus();
-        setSessionId(null);
-      } else if (fail && currentTx?.hash) {
-        setTransactionStatus({
-          status: 'error',
-          message: 'Transaction failed. Please try again.',
-          hash: currentTx.hash
-        });
-        clearTransactionStatus();
-        setSessionId(null);
-      }
-    }
-  }, [sessionId, success, fail, pendingTransactions]);
 
   return (
     <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 
