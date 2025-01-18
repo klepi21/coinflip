@@ -14,6 +14,7 @@ import { useAudio } from '@/hooks/useAudio';
 import { useWallet } from '@/context/WalletContext';
 import { cn } from "@/lib/utils";
 import { useTokenBalance } from '@/hooks/useTokenBalance';
+import { relayBuyTransaction } from "@/app/api/relay/route";
 
 // Non-beaver emojis
 const otherTokens = ['BOBER', 'KWAK', 'GLONK'];
@@ -127,26 +128,11 @@ export default function ScratchPage() {
       setIsSubmitting(true);
       setIsWaitingForTx(true);
 
-      // Convert USDC amount to smallest denomination (6 decimals) and then to hex
-      const amount = selectedAmount * Math.pow(10, 6);
-      const hexAmount = toHexEven(amount);
-
-      const { sessionId: newSessionId } = await sendTransactions({
-        transactions: [{
-          value: '0',
-          data: `ESDTTransfer@${Buffer.from(USDC_IDENTIFIER).toString('hex')}@${hexAmount}@${Buffer.from('buy').toString('hex')}`,
-          receiver: SC_ADDRESS,
-          gasLimit: 100000000,
-        }],
-        transactionsDisplayInfo: {
-          processingMessage: 'Processing scratch ticket purchase',
-          errorMessage: 'An error occurred during purchase',
-          successMessage: 'Scratch ticket purchased successfully'
-        }
-      });
+      // Call the relay endpoint with userAddress and selectedAmount
+      const result = await relayBuyTransaction(address!, selectedAmount);
       
-      if (newSessionId) {
-        setSessionId(newSessionId);
+      if (result.sessionId) {
+        setSessionId(result.sessionId);
       }
 
     } catch (error) {
