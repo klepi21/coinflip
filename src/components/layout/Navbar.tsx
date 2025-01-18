@@ -26,15 +26,15 @@ export const Navbar = () => {
     <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="fixed top-0 left-0 right-0 z-40 bg-[#FD8700]/90 backdrop-blur-lg border-b border-white/20"
+      className="fixed top-0 left-0 right-0 z-40 bg-[#FD8700]/90 backdrop-blur-lg border-b border-black/20 h-18"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           <Link href="/" className="flex items-center gap-3">
-            <img src="https://bod.gg/assets/bod-solo2-CEyg0yC7.svg" alt="BOD" className="h-14 w-14 absolute top-1" />
+            <img src="https://bod.gg/assets/bod-solo2-CEyg0yC7.svg" alt="BOD" className="h-16 w-14 mt-4 mr--6" />
             <HyperText
               text="BOD jackpot"
-              className="text-base sm:text-lg font-bold text-black font-doggie"
+              className="text-base sm:text-lg md:text-2xl font-bold text-black font-doggie "
               duration={1000}
               animateOnLoad={false}
             />
@@ -78,7 +78,7 @@ export const Navbar = () => {
               href="https://xexchange.com/trade?firstToken=EGLD&secondToken=BOD-204877"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-3 rounded-full bg-[#FFA036] hover:bg-[#FFA036]/80 
+              className="px-6 py-2 rounded-full bg-[#FFA036] hover:bg-[#FFA036]/80 
                         transition-colors text-black font-doggie text-xl font-bold 
                         border-2 border-black"
             >
