@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Doggie';
+  src: url('/fonts/Doggie.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -56,13 +64,16 @@
   --color-xaliasblue: #4c6ef5;
   --color-metamaskorange: #f6851b;
   --color-muted: #9ba1a6;
+  --primary: #FD8700;
+  --primary-light: #FFA036;
+  --font-family: 'Bubblegum Sans', system-ui, sans-serif;
 }
 
 .login-button {
-  background-color: transparent !important;
-  color: var(--color-xportalteal) !important;
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  color: black !important;
   padding: 14px !important;
-  border: 0px solid var(--color-xportalteal)  !important;
+  border: 0px solid transparent !important;
   border-radius: 16px !important;
   width: full !important;
   font-weight: 500 !important;
@@ -71,26 +82,16 @@
   box-shadow: 0 0 0 0 !important;
 
   &:hover {
-    background-color: var(--color-xportalteal) !important;
-    color: var(--color-card) !important;
-  }
-
-  &:focus {
-    outline: none !important;
-    box-shadow: 0 0 0 0 !important;
-  }
-
-  &:active {
-    background-color: var(--color-xportalteal) !important;
-    color: var(--color-card) !important;
+    background-color: #FD9220 !important;
+    color: black !important;
   }
 }
 
 .xalias-login-button {
-  background-color: var(--color-card) !important;
-  color: var(--color-xaliasblue) !important;
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  color: black !important;
   padding: 14px !important;
-  border: 0px solid var(--color-xaliasblue) !important;
+  border: 0px solid transparent !important;
   border-radius: 16px !important;
   width: full !important;
   font-weight: 500 !important;
@@ -99,26 +100,16 @@
   box-shadow: 0 0 0 0 !important;
 
   &:hover {
-    background-color: var(--color-xaliasblue) !important;
-    color: var(--color-card) !important;
-  }
-
-  &:focus {
-    outline: none !important;
-    box-shadow: 0 0 0 0 !important;
-  }
-
-  &:active {
-    background-color: var(--color-xaliasblue) !important;
-    color: var(--color-card) !important;
+    background-color: #FD9220 !important;
+    color: black !important;
   }
 }
 
 .metamask-login-button {
-  background-color: var(--color-card) !important;
-  color: var(--color-metamaskorange) !important;
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  color: black !important;
   padding: 14px !important;
-  border: 0px solid var(--color-metamaskorange) !important;
+  border: 0px solid transparent !important;
   border-radius: 16px !important;
   width: full !important;
   font-weight: 500 !important;
@@ -127,18 +118,8 @@
   box-shadow: 0 0 0 0 !important;
 
   &:hover {
-    background-color: var(--color-metamaskorange) !important;
-    color: var(--color-card) !important;
-  }
-
-  &:focus {
-    outline: none !important;
-    box-shadow: 0 0 0 0 !important;
-  }
-
-  &:active {
-    background-color: var(--color-metamaskorange) !important;
-    color: var(--color-card) !important;
+    background-color: #FD9220 !important;
+    color: black !important;
   }
 }
 
@@ -275,4 +256,198 @@
 
 .ledger-modal-footer-link {
   display: none !important;
+}
+
+body {
+  font-family: var(--font-family);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color: white;
+  min-height: 100vh;
+}
+
+/* Update any dark theme colors to use the new orange theme */
+.dark {
+  --primary: #FD8700;
+  --primary-light: #FFA036;
+}
+
+/* Optional: Add a subtle texture overlay */
+.pattern-grid-white\/5 {
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415L51.8 0h2.827zM5.373 0l-.83.828L5.96 2.243 8.2 0H5.374zM48.97 0l3.657 3.657-1.414 1.414L46.143 0h2.828zM11.03 0L7.372 3.657 8.787 5.07 13.857 0H11.03zm32.284 0L49.8 6.485 48.384 7.9l-7.9-7.9h2.83zM16.686 0L10.2 6.485 11.616 7.9l7.9-7.9h-2.83zM37.656 0l8.485 8.485-1.414 1.414L36.242 0h1.414zM22.344 0L13.858 8.485 15.272 9.9l8.485-8.485H22.344zM32.4 0l10.142 10.142-1.414 1.414L30.986 0H32.4zm-4.8 0L17.457 10.142l1.415 1.414L29.014 0h-1.414zM27.2 0l11.8 11.8-1.415 1.414L25.786 0h1.414zm-2.4 0L13 11.8l1.414 1.414L25.614 0h-.814zM22 0l11.8 11.8-1.414 1.414L19.586 0h2.414zm-2.4 0L8.8 10.8l1.414 1.414L20.414 0h-.814zM16.8 0L28.6 11.8l-1.415 1.414L14.386 0h2.414zm-2.4 0L3.6 10.8 5.014 12.214 15.214 0h-.814zM11.6 0L23.4 11.8l-1.415 1.414L9.186 0h2.414zm-2.4 0L-1.6 9.8 0.014 11.214 9.014 0h.186zM6.4 0L18.2 11.8l-1.415 1.414L4 0h2.4zm-2.4 0L-7.8 8.8l1.414 1.414L4.014 0h-.014zM1.2 0L13 11.8l-1.415 1.414L-1 0h2.2zm-2.4 0L-13 8.8l1.414 1.414L0.014 0h-1.214zM-4 0L7.8 11.8 6.385 13.214-6.4 0h2.4zM-9.2 0L2.6 11.8 1.185 13.214-11.6 0h2.4z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+/* Add this to enhance text styles */
+h1, h2, h3, .game-text {
+  font-family: var(--font-family);
+  letter-spacing: 0.5px;
+}
+
+/* Add some playful hover effects */
+.hover-bounce:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+/* Add these styles for the transaction signing modal */
+.sign-transactions-modals {
+  font-family: var(--font-family) !important;
+}
+
+/* Style the modal container */
+.sign-transactions-modals .modal-container {
+  background-color: #FD8803 !important;
+  border: 2px solid black !important;
+  border-radius: 1rem !important;
+  padding: 1.5rem !important;
+}
+
+/* Style the modal title */
+.sign-transactions-modals .modal-title {
+  color: black !important;
+  font-family: var(--font-family) !important;
+  font-size: 1.5rem !important;
+  font-weight: bold !important;
+}
+
+/* Style the modal content */
+.sign-transactions-modals .modal-content {
+  color: black !important;
+  font-family: var(--font-family) !important;
+}
+
+/* Style the buttons */
+.sign-transactions-modals .modal-action-btn {
+  background-color: #FFA036 !important;
+  color: black !important;
+  border: 2px solid black !important;
+  border-radius: 9999px !important;
+  font-family: var(--font-family) !important;
+  font-weight: bold !important;
+  padding: 0.75rem 1.5rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.sign-transactions-modals .modal-action-btn:hover {
+  background-color: rgba(255, 160, 54, 0.8) !important;
+}
+
+/* Style the close button */
+.sign-transactions-modals .modal-close-btn {
+  color: black !important;
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  border-radius: 9999px !important;
+  padding: 0.5rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.sign-transactions-modals .modal-close-btn:hover {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Style the backdrop */
+.sign-transactions-modals .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Style any error messages */
+.sign-transactions-modals .modal-error {
+  color: #ef4444 !important;
+  font-family: var(--font-family) !important;
+}
+
+/* Style the transaction details */
+.sign-transactions-modals .transaction-details {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  border-radius: 0.75rem !important;
+  padding: 1rem !important;
+  margin: 1rem 0 !important;
+}
+
+/* Style the transaction signing state container */
+.dapp-core-component__pageState-styles__state,
+.dapp-page-state {
+  background-color: #FD8803 !important;
+  border: 2px solid black !important;
+  border-radius: 1rem !important;
+  padding: 2rem !important;
+  font-family: var(--font-family) !important;
+  color: black !important;
+  max-width: 32rem !important;
+  margin: 2rem auto !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Style the title/heading inside the state container */
+.dapp-core-component__pageState-styles__state h2,
+.dapp-page-state h2 {
+  font-size: 1.5rem !important;
+  font-weight: bold !important;
+  margin-bottom: 1rem !important;
+  font-family: var(--font-family) !important;
+  color: black !important;
+}
+
+/* Style the message/content */
+.dapp-core-component__pageState-styles__state p,
+.dapp-page-state p {
+  color: black !important;
+  font-family: var(--font-family) !important;
+  margin-bottom: 1rem !important;
+}
+
+/* Style any buttons inside the state container */
+.dapp-core-component__pageState-styles__state button,
+.dapp-page-state button {
+  background-color: #FFA036 !important;
+  color: black !important;
+  border: 2px solid black !important;
+  border-radius: 9999px !important;
+  font-family: var(--font-family) !important;
+  font-weight: bold !important;
+  padding: 0.75rem 1.5rem !important;
+  transition: all 0.3s ease !important;
+  margin-top: 1rem !important;
+}
+
+.dapp-core-component__pageState-styles__state button:hover,
+.dapp-page-state button:hover {
+  background-color: rgba(255, 160, 54, 0.8) !important;
+}
+
+/* Style any icons or loading spinners */
+.dapp-core-component__pageState-styles__state svg,
+.dapp-page-state svg {
+  color: black !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  margin: 0 auto 1rem auto !important;
+}
+
+/* Style any links */
+.dapp-core-component__pageState-styles__state a,
+.dapp-page-state a {
+  color: black !important;
+  text-decoration: underline !important;
+  font-weight: bold !important;
+  transition: opacity 0.3s ease !important;
+}
+
+.dapp-core-component__pageState-styles__state a:hover,
+.dapp-page-state a:hover {
+  opacity: 0.8 !important;
+}
+
+/* Style the dapp modal content */
+.dapp-core-component__dappModalStyles__dappModalContent {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  z-index: 999 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+  width: 100% !important;
+  box-shadow: none !important;
 }

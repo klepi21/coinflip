@@ -10,6 +10,7 @@ interface ScratchToRevealProps {
   className?: string;
   onComplete?: () => void;
   gradientColors?: [string, string, string];
+  onScratchStart?: () => void;
 }
 
 const ScratchToReveal: React.FC<ScratchToRevealProps> = ({
@@ -20,6 +21,7 @@ const ScratchToReveal: React.FC<ScratchToRevealProps> = ({
   children,
   className,
   gradientColors = ["#A97CF8", "#F38CB8", "#FDCC92"],
+  onScratchStart,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isScratching, setIsScratching] = useState(false);
@@ -88,9 +90,15 @@ const ScratchToReveal: React.FC<ScratchToRevealProps> = ({
     };
   }, [isScratching]);
 
-  const handleMouseDown = () => setIsScratching(true);
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    setIsScratching(true);
+    if (onScratchStart) onScratchStart();
+  };
 
-  const handleTouchStart = () => setIsScratching(true);
+  const handleTouchStart = () => {
+    setIsScratching(true);
+    if (onScratchStart) onScratchStart();
+  };
 
   const scratch = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;

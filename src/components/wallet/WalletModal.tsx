@@ -11,29 +11,7 @@ import { ProxyNetworkProvider } from '@multiversx/sdk-network-providers';
 import { Address } from '@multiversx/sdk-core';
 import Image from 'next/image';
 
-const connectionMethods = [
-  {
-    id: LoginMethodsEnum.extension,
-    name: 'DeFi Wallet',
-    description: 'Connect using the MultiversX DeFi Wallet browser extension',
-    icon: <Wallet className="h-5 w-5" />,
-    component: ExtensionLoginButton
-  },
-  {
-    id: LoginMethodsEnum.walletconnect,
-    name: 'xPortal App',
-    description: 'Scan with your xPortal mobile app to connect',
-    icon: <Smartphone className="h-5 w-5" />,
-    component: WalletConnectLoginButton
-  },
-  {
-    id: LoginMethodsEnum.wallet,
-    name: 'Web Wallet',
-    description: 'Connect using the MultiversX Web Wallet',
-    icon: <Globe className="h-5 w-5" />,
-    component: WebWalletLoginButton
-  }
-];
+
 
 const formatAddress = (addr: string) => {
   if (!addr) return '';
@@ -286,40 +264,7 @@ export const WalletModal = ({ isOpen, onClose }: WalletModalProps) => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {connectionMethods.map((method) => {
-                    const Component = method.component;
-                    return (
-                      <motion.div
-                        key={method.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-2"
-                      >
-                        <Component
-                          {...commonButtonProps}
-                          {...(method.id === LoginMethodsEnum.walletconnect && { 
-                            isWalletConnectV2: true 
-                          })}
-                          {...(method.id === LoginMethodsEnum.wallet && {
-                            redirectUrl: typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '/',
-                            shouldRenderDefaultCss: false,
-                            callbackRoute: typeof window !== 'undefined' ? window.location.pathname : '/'
-                          })}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-3
-                                   bg-white/5 hover:bg-white/10 text-white rounded-xl
-                                   transition-colors duration-200"
-                        >
-                          <div className="flex items-center gap-2">
-                            {method.icon}
-                            <span>{method.name}</span>
-                          </div>
-                        </Component>
-                        <p className="text-sm text-white/60 px-2">
-                          {method.description}
-                        </p>
-                      </motion.div>
-                    );
-                  })}
+                  
                 </div>
               )}
             </div>

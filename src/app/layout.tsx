@@ -9,6 +9,14 @@ import { WalletModal } from '@/components/wallet/WalletModal';
 import './globals.css'
 import { ThemeProvider } from 'next-themes'
 import Head from 'next/head'
+import { Comic_Neue } from 'next/font/google';
+import { Footer } from '@/components/layout/Footer';
+
+const comic = Comic_Neue({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+});
 
 if (typeof window !== 'undefined') {
   window.Buffer = window.Buffer || require('buffer').Buffer;
@@ -20,15 +28,15 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={comic.className} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="Liquid Staking Funds on MultiversX" />
-        <title>Cryptomurmura2.0 - LSF</title>
+        <meta name="description" content="Scratch BOD - A fun and fair scratch game on MultiversX" />
+        <title>Scratch BOD</title>
       </head>
-      <body>
-        <ThemeProvider attribute="class" defaultTheme="dark">
+      <body className="bg-gradient-to-br from-[#FD8700] to-[#FFA036]">
+        <ThemeProvider attribute="class" defaultTheme="light">
           <DappProvider
             environment="devnet"
             customNetworkConfig={{
@@ -38,15 +46,23 @@ export default function RootLayout({
             }}
           >
             <WalletProvider>
-              <Navbar />
-              <main>
-                {children}
-              </main>
-              <WalletModal 
-                isOpen={false}
-                onClose={() => {}}
-              />
-              <SignTransactionsModals />
+              <div className="min-h-screen relative">
+                {/* Optional pattern overlay */}
+                <div className="fixed inset-0 bg-white/5 pattern-grid-white/5 pointer-events-none" />
+                {/* Content */}
+                <div className="relative z-10">
+                  <Navbar />
+                  <main>
+                    {children}
+                  </main>
+                  <Footer />
+                  <WalletModal 
+                    isOpen={false}
+                    onClose={() => {}}
+                  />
+                  <SignTransactionsModals />
+                </div>
+              </div>
             </WalletProvider>
           </DappProvider>
         </ThemeProvider>

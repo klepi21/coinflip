@@ -9,9 +9,14 @@ import { useTrackTransactionStatus } from "@multiversx/sdk-dapp/hooks/transactio
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import confetti from 'canvas-confetti';
+import Image from "next/image";
+import { useAudio } from '@/hooks/useAudio';
+import { useWallet } from '@/context/WalletContext';
+import { cn } from "@/lib/utils";
+import { useTokenBalance } from '@/hooks/useTokenBalance';
 
 // Non-beaver emojis
-const otherAnimals = ['🐂', '🐄', '🐕', '🐈'];
+const otherTokens = ['BOBER', 'KWAK', 'GLONK'];
 
 // BOD image URLs
 const BOD_SOLO_URL = 'https://bod.gg/assets/bod-solo2-CEyg0yC7.svg';
@@ -19,11 +24,17 @@ const BOD_FULL_URL = 'https://bod.gg/assets/bod-DinfoILb.svg';
 
 // Add at the top with other constants
 const USER_EMOJIS = ['👨', '👩', '🧑', '👱', '👴', '👵', '🧔', '👨‍🦰', '👩‍🦰', '👨‍🦱', '👩‍🦱', '👨‍🦳', '👩‍🦳'];
+const TOKEN_IMAGES = {
+  BOD: 'https://bod.gg/assets/bod-solo2-CEyg0yC7.svg',
+  BOBER: 'https://tools.multiversx.com/assets-cdn/tokens/BOBER-9eb764/icon.png',
+  KWAK: 'https://tools.multiversx.com/assets-cdn/tokens/KWAK-469ab0/icon.png',
+  GLONK: 'https://tools.multiversx.com/assets-cdn/tokens/GLONK-9961fb/icon.svg'
+};
 
 interface Prize {
   id: number;
   isRevealed: boolean;
-  animal: string;
+  token: string;
   isBod: boolean; // Add this to track if it's a BOD image
 }
 
@@ -32,11 +43,14 @@ const PRIZES = {
   0: 0,
   1: 2,
   2: 5,
-  3: 20,
-  4: 100
+  3: 100
 };
 
 const RECEIVER_ADDRESS = 'erd1z4wpx7v2q2a4e0cppcf9y6jp8z4cuttycr5uzne2nl0pww3054ssf4jkh5';
+
+const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgq8dcdymtj8a3wu92z6w25gjw72swnte2zu7zs6cvd7y';
+const USDC_IDENTIFIER = 'USDC-350c4e';
+const AMOUNTS = [1, 5, 10]; // USDC amounts
 
 const getTimeAgo = (timestamp: number) => {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -55,10 +69,19 @@ const getTimeAgo = (timestamp: number) => {
   }
 };
 
+// Add this helper function at the top with other constants
+const toHexEven = (num: number) => {
+  // Convert to hex and remove '0x' prefix
+  let hex = (num).toString(16);
+  // Ensure even length by padding with 0 if needed
+  if (hex.length % 2 !== 0) hex = '0' + hex;
+  return hex;
+};
+
 export default function ScratchPage() {
   const [prizes, setPrizes] = useState<Prize[]>([]);
   const [revealedCount, setRevealedCount] = useState(0);
-  const [beaverCount, setBeaverCount] = useState(0);
+  const [bodCount, setBodCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [ticketNumber, setTicketNumber] = useState("");
   const [hasPurchased, setHasPurchased] = useState(false);
@@ -75,20 +98,26 @@ export default function ScratchPage() {
     row: number;
     column: number;
   }>>([]);
+  const [selectedAmount, setSelectedAmount] = useState<number>(1);
+  const scratchSound = useAudio('/sounds/scra.m4a');
+  const { isLoggedIn, address } = useWallet();
+  const [isGameFinished, setIsGameFinished] = useState(false);
+  const { balance: usdcBalance, isLoading: isLoadingBalance } = useTokenBalance(address, USDC_IDENTIFIER);
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   const generateNewGame = () => {
-    const newPrizes = Array.from({ length: 4 }, (_, i) => {
+    const newPrizes = Array.from({ length: 3 }, (_, i) => {
       const isBod = Math.random() < BEAVER_PROBABILITY;
       return {
         id: i + 1,
         isRevealed: false,
-        animal: isBod ? BOD_SOLO_URL : otherAnimals[Math.floor(Math.random() * otherAnimals.length)],
+        token: isBod ? 'BOD' : otherTokens[Math.floor(Math.random() * otherTokens.length)],
         isBod
       };
     });
     setPrizes(newPrizes);
     setRevealedCount(0);
-    setBeaverCount(0);
+    setBodCount(0);
     setIsComplete(false);
     setTicketNumber(Math.floor(Math.random() * 9999).toString().padStart(4, '0'));
   };
@@ -98,12 +127,16 @@ export default function ScratchPage() {
       setIsSubmitting(true);
       setIsWaitingForTx(true);
 
+      // Convert USDC amount to smallest denomination (6 decimals) and then to hex
+      const amount = selectedAmount * Math.pow(10, 6);
+      const hexAmount = toHexEven(amount);
+
       const { sessionId: newSessionId } = await sendTransactions({
         transactions: [{
-          value: "1000000000000000", // 0.001 EGLD
-          data: "buyScratch",
-          receiver: RECEIVER_ADDRESS,
-          gasLimit: 50000000,
+          value: '0',
+          data: `ESDTTransfer@${Buffer.from(USDC_IDENTIFIER).toString('hex')}@${hexAmount}@${Buffer.from('buy').toString('hex')}`,
+          receiver: SC_ADDRESS,
+          gasLimit: 100000000,
         }],
         transactionsDisplayInfo: {
           processingMessage: 'Processing scratch ticket purchase',
@@ -111,7 +144,7 @@ export default function ScratchPage() {
           successMessage: 'Scratch ticket purchased successfully'
         }
       });
-
+      
       if (newSessionId) {
         setSessionId(newSessionId);
       }
@@ -119,9 +152,8 @@ export default function ScratchPage() {
     } catch (error) {
       console.error('Purchase error:', error);
       toast.error('Failed to purchase scratch ticket');
-      setIsWaitingForTx(false);
-    } finally {
       setIsSubmitting(false);
+      setIsWaitingForTx(false);
     }
   };
 
@@ -152,54 +184,49 @@ export default function ScratchPage() {
     setRevealedCount(newRevealedCount);
     
     if (prize.isBod) {
-      setBeaverCount(prev => prev + 1);
+      setBodCount(prev => prev + 1);
+    }
+
+    if (newRevealedCount === 3) {
+      setIsGameFinished(true);
+      setTimeout(() => {
+        setIsComplete(true);
+        const finalPrize = PRIZES[bodCount as keyof typeof PRIZES] || 0;
+        
+        if (finalPrize > 0) {
+          confetti({
+            particleCount: finalPrize >= 20 ? 200 : 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+
+          if (finalPrize >= 20) {
+            setTimeout(() => {
+              confetti({
+                particleCount: 100,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 }
+              });
+              confetti({
+                particleCount: 100,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 }
+              });
+            }, 1000);
+          }
+        }
+      }, 1000);
     }
   };
 
-  // Move completion check to a proper useEffect
-  useEffect(() => {
-    if (revealedCount === 4 && !isComplete) {
-      setIsComplete(true);
-      const finalPrize = PRIZES[beaverCount as keyof typeof PRIZES] || 0;
-      
-      if (finalPrize > 0) {
-        // Trigger confetti for wins
-        const duration = finalPrize >= 20 ? 8000 : 4000; // Longer celebration for bigger wins
-        const particleCount = finalPrize >= 20 ? 200 : 100;
-        
-        confetti({
-          particleCount,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
-
-        // For bigger wins, add more confetti bursts
-        if (finalPrize >= 20) {
-          setTimeout(() => {
-            confetti({
-              particleCount: 100,
-              angle: 60,
-              spread: 55,
-              origin: { x: 0 }
-            });
-            confetti({
-              particleCount: 100,
-              angle: 120,
-              spread: 55,
-              origin: { x: 1 }
-            });
-          }, 1000);
-        }
-      }
-    }
-  }, [revealedCount, beaverCount, isComplete]);
-
-  const getCurrentPrize = () => PRIZES[beaverCount as keyof typeof PRIZES] || 0;
+  const getCurrentPrize = () => PRIZES[bodCount as keyof typeof PRIZES] || 0;
 
   const getPrizeMessage = () => {
-    if (!isComplete) {
-      if (beaverCount > 0) {
-        return `Found ${beaverCount} beaver${beaverCount > 1 ? 's' : ''}! Keep scratching...`;
+    if (!isComplete && !isGameFinished) {
+      if (bodCount > 0) {
+        return "Keep scratching...";
       }
       return "Scratch to reveal your prizes!";
     }
@@ -219,7 +246,6 @@ export default function ScratchPage() {
 
   const handleClosePopup = () => {
     setIsComplete(false);
-    setHasPurchased(false); // Reset to purchase screen
   };
 
   const getRandomScreenPosition = () => {
@@ -288,65 +314,78 @@ export default function ScratchPage() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleScratchStart = () => {
+    scratchSound.play();
+  };
+
+  const getButtonState = () => {
+    if (!isLoggedIn) return { disabled: true, message: null };
+    if (isSubmitting) return { disabled: true, message: null };
+    if (isLoadingBalance) return { disabled: true, message: 'Loading balance...' };
+    if (usdcBalance === 0) return { disabled: true, message: 'No USDC tokens in wallet' };
+    if (usdcBalance < selectedAmount) return { 
+      disabled: true, 
+      message: `Insufficient USDC balance (${usdcBalance.toFixed(2)} USDC available)`
+    };
+    return { disabled: false, message: null };
+  };
+
+  const buttonState = getButtonState();
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isWaitingForTx) {
+      timer = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      setElapsedTime(0);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isWaitingForTx]);
+
   if (isWaitingForTx) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-black/90">
+      <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-[#FD8700] to-[#FFA036] overflow-hidden">
         <div className="relative">
           <motion.div
             animate={{
-              scale: [1, 1.2, 1],
-              rotate: [0, 360],
+              x: [-100, 400],
             }}
             transition={{
               duration: 2,
               repeat: Infinity,
-              ease: "easeInOut"
+              ease: "linear",
+              repeatType: "reverse"
             }}
-            className="text-6xl"
+            className="text-6xl relative z-10"
           >
             <img src={BOD_FULL_URL} alt="BOD" className="h-36 w-36" />
           </motion.div>
+          
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-8 text-center"
+            className="mt-8 text-center relative z-10"
           >
-            <h2 className="mb-2 text-2xl font-bold text-white">Preparing Your Scratch Ticket</h2>
-            <p className="text-[#FD8700]">Transaction in progress...</p>
-            <div className="mt-4 flex items-center justify-center gap-2">
-              <motion.div
-                animate={{
-                  scale: [1, 0.8, 1],
-                }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                }}
-                className="h-2 w-2 rounded-full bg-[#FD8700]"
-              />
-              <motion.div
-                animate={{
-                  scale: [1, 0.8, 1],
-                }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  delay: 0.2,
-                }}
-                className="h-2 w-2 rounded-full bg-[#FD8700]"
-              />
-              <motion.div
-                animate={{
-                  scale: [1, 0.8, 1],
-                }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  delay: 0.4,
-                }}
-                className="h-2 w-2 rounded-full bg-[#FD8700]"
-              />
+            <h2 className="mb-2 text-2xl font-bold text-black font-doggie">
+              Preparing Your Scratch Ticket
+            </h2>
+            <p className="text-black/80 font-doggie">Transaction in progress...</p>
+            
+            <p className="mt-2 text-black/60 font-doggie">
+              Time elapsed: {elapsedTime}s
+            </p>
+            
+            <div className="mt-4 px-4 py-3 rounded-lg bg-[#FFA036]/20 border-2 border-black">
+              <p className="text-black font-doggie text-sm font-bold flex items-center justify-center gap-2">
+                <span className="text-xl">⚠️</span>
+                Please don't close or refresh the page or you may lose your scratch!
+              </p>
             </div>
           </motion.div>
         </div>
@@ -356,10 +395,10 @@ export default function ScratchPage() {
 
   if (!hasPurchased) {
     return (
-      <div className="relative flex min-h-screen flex-col items-center justify-center bg-black/95 overflow-hidden">
+      <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-[#FD8700] to-[#FFA036] overflow-hidden">
         {/* Background Grid of Notifications */}
-        <div className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-md" />
+        <div className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none hidden md:flex">
+          <div className="absolute inset-0 bg-[#FFA036]/20 backdrop-blur-[2px]" />
           <div className="relative grid grid-rows-5 gap-4 p-8">
             {Array.from({ length: 5 }).map((_, rowIndex) => (
               <div key={rowIndex} className="grid grid-cols-5 gap-4">
@@ -381,36 +420,36 @@ export default function ScratchPage() {
                       >
                         <motion.div
                           animate={{
-                            opacity: isRecent ? [0, 0.8] : 0.4
+                            opacity: isRecent ? [0, 1] : 0.8
                           }}
                           transition={{
                             duration: 1
                           }}
                         >
-                          <div className={`h-32 rounded-xl p-4 shadow-xl backdrop-blur-lg border ${
+                          <div className={`h-32 rounded-xl p-4 shadow-xl backdrop-blur-[2px] border ${
                             isWin 
-                              ? 'bg-gradient-to-br from-zinc-900/60 to-zinc-800/60 border-zinc-700/30' 
-                              : 'bg-gradient-to-br from-purple-900/60 to-purple-800/60 border-purple-700/30'
+                              ? 'bg-[#a64200] border-black/20' 
+                              : 'bg-[#7e1e00] border-black/20'
                           }`}>
                             <div className="flex flex-col gap-2">
                               <div className="flex items-center gap-2">
                                 <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
                                   isWin 
-                                    ? 'bg-green-500/5' 
-                                    : 'bg-purple-500/5'
+                                    ? 'bg-black/10' 
+                                    : 'bg-black/10'
                                 }`}>
-                                  <span className="text-xl opacity-70">{notification.userEmoji}</span>
+                                  <span className="text-xl opacity-90">{notification.userEmoji}</span>
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <p className="truncate text-xs text-zinc-400/70">
+                                  <p className="truncate text-xs text-white/90 font-doggie">
                                     {notification.address}
                                   </p>
-                                  <p className={`text-sm font-medium ${
+                                  <p className={`text-sm font-medium font-doggie ${
                                     isWin
                                       ? isRecent 
-                                        ? 'text-yellow-400/90 font-bold'
-                                        : 'text-green-500/70'
-                                      : 'text-purple-400/70'
+                                        ? 'text-white font-bold'
+                                        : 'text-white/90'
+                                      : 'text-white/90'
                                   }`}>
                                     {isWin 
                                       ? isRecent
@@ -420,7 +459,7 @@ export default function ScratchPage() {
                                   </p>
                                 </div>
                               </div>
-                              <p className="text-xs text-zinc-500/50">
+                              <p className="text-xs text-white/50 font-doggie">
                                 {getTimeAgo(notification.timestamp)}
                               </p>
                             </div>
@@ -435,38 +474,128 @@ export default function ScratchPage() {
         </div>
 
         {/* Purchase Button Card - Added stronger blur and glow */}
+        <div className="relative z-20 w-full max-w-md px-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Total Scratched Box */}
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative overflow-hidden rounded-3xl bg-[#FD8803] p-6 shadow-2xl border-2 border-black backdrop-blur-xl"
+            >
+              <div className="relative text-center">
+                <h2 className="text-xl font-bold text-black font-doggie mb-2">
+                  total scratched tickets
+                </h2>
+                <p className="text-3xl font-bold text-black font-doggie">
+                  1,560
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Jackpot Box */}
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative overflow-hidden rounded-3xl bg-[#FD8803] p-6 shadow-2xl border-2 border-black backdrop-blur-xl group"
+            >
+              {/* Animated gradient border effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/10 to-black/20 opacity-50 blur-xl group-hover:opacity-75 transition-opacity duration-500"></div>
+
+              <div className="relative text-center">
+                <h2 className="text-xl font-bold font-doggie mb-2">
+                  <span className="bg-gradient-to-r from-black via-black/80 to-black bg-clip-text text-transparent animate-pulse">
+                    jackpot
+                  </span>
+                </h2>
+                <p className="text-3xl font-bold text-black font-doggie relative">
+                  <span className="relative inline-block">
+                    3M $BOD
+                    <motion.div
+                      animate={{
+                        opacity: [0, 1, 0],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                      }}
+                      className="absolute -inset-1 bg-black/20 blur-sm rounded-full"
+                    />
+                  </span>
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+
         <div className="relative z-20 w-full max-w-md px-4">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-zinc-900/90 via-zinc-800/90 to-zinc-900/90 p-8 shadow-2xl border border-zinc-800/80 backdrop-blur-xl"
+            className="relative overflow-hidden rounded-3xl bg-[#FD8803] p-8 pb-12 shadow-2xl border-2 border-black backdrop-blur-xl"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-zinc-800/20 to-zinc-900/20 backdrop-blur-2xl" />
-            <div className="absolute inset-0 bg-black/20" />
             <div className="relative">
-              <h1 className="mb-6 text-center text-3xl font-bold text-white drop-shadow-lg">BOD Jackpot</h1>
-              <div className="mb-8 space-y-2 text-center">
-                <p className="text-zinc-400">Try your luck with our scratch game!</p>
-                <p className="text-sm text-zinc-500">Only 0.001 EGLD per ticket</p>
+              <h1 className="mb-6 text-center text-3xl font-bold text-black drop-shadow-lg font-doggie">
+                scratch BOD
+              </h1>
+              <div className="mb-8 space-y-2 text-center font-doggie">
+                <p className="text-black">try your luck with our scratch game!</p>
               </div>
-              <button
-                onClick={handleBuyScratch}
-                disabled={isSubmitting}
-                className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-zinc-900 to-zinc-800 px-6 py-4 font-bold text-white shadow-lg transition-all hover:from-zinc-800 hover:to-zinc-700 disabled:opacity-50 border border-zinc-700/50"
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Processing...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center gap-3">
-                    <img src={BOD_SOLO_URL} alt="BOD" className="h-12 w-12" />
-                    <span className="text-lg">Buy & Scratch</span>
-                  </div>
-                )}
-                <div className="absolute inset-0 -z-10 bg-gradient-to-r from-yellow-600/0 via-yellow-600/10 to-yellow-600/0 opacity-0 transition-opacity group-hover:opacity-100" />
-              </button>
+
+              <div className="mt-4 space-y-4">
+                <div className="flex justify-center gap-4">
+                  {AMOUNTS.map((amount) => (
+                    <button
+                      key={amount}
+                      onClick={() => setSelectedAmount(amount)}
+                      className={cn(
+                        "px-6 py-3 rounded-full font-doggie text-xl transition-all duration-300 border-2",
+                        selectedAmount === amount 
+                          ? "bg-[#FFA036] text-black border-black" 
+                          : "bg-black/20 text-white/80 border-white/20 hover:bg-black/30"
+                      )}
+                    >
+                      {amount} USDC
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleBuyScratch}
+                  disabled={buttonState.disabled}
+                  className={`w-full relative group font-doggie
+                    ${!buttonState.disabled 
+                      ? 'bg-[#FFA036] hover:bg-[#FFA036]/80' 
+                      : 'bg-[#FFA036]/50 cursor-not-allowed'
+                    }
+                    text-black rounded-full px-8 py-4 font-semibold transition-all duration-300
+                    border-2 border-black`}
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin text-black" />
+                      <span className="text-black">Processing...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-center gap-3">
+                        <img src={BOD_SOLO_URL} alt="BOD" className="h-12 w-12" />
+                        <span className="text-lg text-black font-bold">
+                          {isLoggedIn ? `buy & scratch (${selectedAmount} USDC)` : 'login to play'}
+                        </span>
+                      </div>
+                      
+                      {/* Balance/Error Message */}
+                      {buttonState.message && (
+                        <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 
+                                      bg-black text-white px-4 py-2 rounded-lg text-sm font-doggie
+                                      whitespace-nowrap pointer-events-none">
+                          {buttonState.message}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -475,39 +604,56 @@ export default function ScratchPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-black/90">
-      <div className="w-full max-w-4xl px-4">
-        <div className="relative rounded-3xl bg-gradient-to-br from-zinc-900/80 via-zinc-800/80 to-zinc-900/80 p-8 shadow-2xl border border-zinc-700/50">
-          <div className="absolute inset-0 bg-gradient-to-br from-zinc-800/10 to-zinc-900/10 backdrop-blur-xl" />
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-[#FD8700] to-[#FFA036]">
+      <div className="w-full max-w-4xl px-4 relative z-10 pt-24 md:pt-0">
+        {/* Enhanced background layers */}
+        <div className="fixed inset-0 bg-black/30" /> {/* Dark overlay */}
+        <div className="fixed inset-0 bg-white/5 pattern-grid-white/5" />
+        
+        {/* Modern lottery ticket container */}
+        <div className="relative rounded-3xl bg-gradient-to-br from-zinc-900/90 via-black/80 to-zinc-900/90 p-4 md:p-8 shadow-2xl border border-white/20">
+          {/* Decorative elements */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FD8700] via-[#FFA036] to-[#FD8700]" />
           
-          {/* Header */}
-          <div className="relative mb-8 text-center">
-            <h1 className="mb-2 text-4xl font-bold text-white drop-shadow-lg">
-              BOD Jackpot
-            </h1>
-            <p className="text-sm text-zinc-400">Find BOD to win!</p>
-            <div className="mt-2 space-y-1 text-xs text-[#FD8700]">
-              <p>1 BOD: $2 | 2 BODs: $5</p>
-              <p>3 BODs: $20 | 4 BODs: $100</p>
+          {/* Header with enhanced styling */}
+          <div className="relative mb-4 md:mb-8 text-center">
+            <div className="flex items-center justify-center gap-3 mb-2 md:mb-4">
+              <img src={BOD_SOLO_URL} alt="BOD" className="h-8 w-8 md:h-12 md:w-12" />
+              <h1 className="text-2xl md:text-4xl font-bold text-white drop-shadow-lg bg-clip-text text-transparent bg-gradient-to-r from-[#FD8700] to-[#FFA036] font-doggie">
+                Scratch BOD
+              </h1>
+            </div>
+            <p className="text-sm text-zinc-400 font-doggie">find 3 matching symbols to win!</p>
+            <div className="mt-4 inline-block px-6 py-2 rounded-full bg-black/40 border border-white/10">
+              <div className="space-y-1 text-xs font-medium font-doggie">
+                <p className="text-[#FD8700]">1 BOD: $2 | 2 BODs: $5</p>
+                <p className="text-[#FFA036]">3 BODs: $20 | 4 BODs: $100</p>
+              </div>
             </div>
           </div>
 
-          {/* Scratch Areas */}
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+          {/* Scratch areas with enhanced styling */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 p-3 md:p-6 rounded-2xl bg-black/40 border border-white/10">
             {prizes.map((prize) => (
-              <div key={prize.id} className="relative">
+              <div key={prize.id} className="relative group mx-auto w-full max-w-[160px] md:max-w-[180px] touch-none">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FD8700] to-[#FFA036] rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300" />
                 <ScratchToReveal
-                  width={180}
-                  height={120}
-                  className="overflow-hidden rounded-2xl border border-[#FD8700]/30 bg-gradient-to-br from-zinc-900/90 to-zinc-800/90"
+                  width={160}
+                  height={100}
+                  className="relative overflow-hidden rounded-2xl border border-white/20 bg-gradient-to-br from-[#FFA036]/90 to-[#FD8700]/90 touch-none"
                   onComplete={() => handleComplete(prize.id)}
-                  gradientColors={["#18181B", "#27272A", "#3F3F46"]}
+                  onScratchStart={handleScratchStart}
+                  gradientColors={["#FD8700", "#FFA036", "#FD8700"]}
                 >
                   <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-zinc-900/90 to-zinc-800/90">
-                    {prize.isBod ? (
-                      <img src={prize.animal} alt="BOD" className="h-16 w-16" />
+                    {prize.isRevealed ? (
+                      <img 
+                        src={TOKEN_IMAGES[prize.token as keyof typeof TOKEN_IMAGES]} 
+                        alt={prize.token} 
+                        className="h-16 w-16 drop-shadow-lg"
+                      />
                     ) : (
-                      <span className="text-4xl">{prize.animal}</span>
+                      <div className="h-16 w-16 rounded-full bg-black/40" />
                     )}
                   </div>
                 </ScratchToReveal>
@@ -515,32 +661,55 @@ export default function ScratchPage() {
             ))}
           </div>
 
-          {/* Footer */}
-          <div className="relative mt-8 text-center">
+          {/* Play Again button - show when game is finished */}
+          {isGameFinished && (
+            <div className="flex justify-center w-full">
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={() => {
+                  setIsGameFinished(false);
+                  setIsComplete(false);
+                  setHasPurchased(false);
+                  setIsSubmitting(false);
+                }}
+                className="mt-8 px-8 py-4 bg-[#FFA036] hover:bg-[#FFA036]/80 
+                          text-black rounded-full font-semibold transition-all 
+                          duration-300 border-2 border-black font-doggie"
+              >
+                Play Again
+              </motion.button>
+            </div>
+          )}
+
+          {/* Footer with ticket info */}
+          <div className="relative mt-4 md:mt-8 text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`mb-4 text-2xl font-bold ${
+              className={`mb-4 text-2xl font-bold font-doggie ${
                 isComplete && getCurrentPrize() > 0 ? 'text-[#FD8700]' : 'text-white'
               }`}
             >
               {getPrizeMessage()}
             </motion.div>
-            <div className="text-xs text-zinc-500">
-              <p>Ticket #{ticketNumber}</p>
-              <p>Must be 18 or older to play. Void where prohibited.</p>
+            <div className="flex items-center justify-center gap-4 text-xs text-zinc-500">
+              <div className="px-4 py-2 rounded-full bg-black/40 border border-white/10">
+                <p>Ticket #{ticketNumber}</p>
+              </div>
+              <p className="opacity-60">Must be 18 or older to play. Void where prohibited.</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Result Popup */}
+      {/* Result Modal - now appears after delay */}
       <AnimatePresence>
         {isComplete && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center px-4"
           >
             <div 
@@ -563,8 +732,12 @@ export default function ScratchPage() {
                 {getCurrentPrize() > 0 ? (
                   <>
                     <motion.div
-                      animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
-                      transition={{ duration: 1, delay: 0.5 }}
+                      animate={{ x: [-20, 20, -20] }}
+                      transition={{ 
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
                       className="mb-4 flex flex-col items-center gap-4"
                     >
                       <div className="rounded-full bg-[#FD8700] p-4">
@@ -572,10 +745,10 @@ export default function ScratchPage() {
                       </div>
                       <img src={BOD_FULL_URL} alt="BOD" className="h-48 w-48" />
                     </motion.div>
-                    <h2 className="mb-2 text-3xl font-bold text-[#FD8700]">
+                    <h2 className="mb-2 text-3xl font-bold text-[#FD8700] font-doggie">
                       Congratulations!
                     </h2>
-                    <p className="mb-4 text-xl text-white">
+                    <p className="mb-4 text-xl text-white font-doggie">
                       You won ${getCurrentPrize()}!
                     </p>
                   </>
@@ -588,19 +761,19 @@ export default function ScratchPage() {
                     >
                       <FaCoins className="h-8 w-8 text-[#FD8700]/50" />
                     </motion.div>
-                    <h2 className="mb-2 text-3xl font-bold text-zinc-300">
+                    <h2 className="mb-2 text-3xl font-bold text-zinc-300 font-doggie">
                       Better Luck Next Time!
                     </h2>
-                    <p className="mb-4 text-zinc-400">
+                    <p className="mb-4 text-zinc-400 font-doggie">
                       Try again for another chance to win
                     </p>
                   </>
                 )}
                 <button
                   onClick={handleClosePopup}
-                  className="rounded-xl bg-gradient-to-r from-zinc-800 to-zinc-700 px-6 py-3 font-bold text-white shadow-lg transition-all hover:from-zinc-700 hover:to-zinc-600 border border-zinc-600/50"
+                  className="rounded-xl bg-gradient-to-r from-zinc-800 to-zinc-700 px-6 py-3 font-bold text-white shadow-lg transition-all hover:from-zinc-700 hover:to-zinc-600 border border-zinc-600/50 font-doggie"
                 >
-                  Buy New Ticket
+                  Close
                 </button>
               </div>
             </motion.div>

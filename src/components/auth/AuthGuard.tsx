@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useGetLoginInfo } from '@multiversx/sdk-dapp/hooks';
 import { useRouter, usePathname } from 'next/navigation';
 
-const PUBLIC_ROUTES = ['/', '/tutorial'];
+const PUBLIC_ROUTES = ['/', '/scratch'];
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isLoggedIn } = useGetLoginInfo();
@@ -12,10 +12,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!isLoggedIn && !PUBLIC_ROUTES.includes(pathname || '')) {
+    if (!PUBLIC_ROUTES.includes(pathname || '')) {
       router.replace('/');
     }
-  }, [isLoggedIn, pathname, router]);
+  }, [pathname, router]);
 
   return <>{children}</>;
 }

@@ -61,24 +61,24 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletModalProps) => {
       <div className="fixed inset-0" aria-hidden="true" />
       
       <div className="fixed inset-0 flex items-center justify-end p-4">
-        <Dialog.Panel className="relative h-full w-full md:w-[400px] bg-[#0A0A0A]/95 backdrop-blur-sm
-          rounded-2xl overflow-auto">
+        <Dialog.Panel className="relative h-full w-full md:w-[400px] bg-[#FD8803] 
+          rounded-2xl overflow-auto border-2 border-black">
           <div className="flex flex-col px-5 py-3 max-md:px-4 max-md:py-2 gap-0 rounded-xl w-full h-full">
             <div className="flex flex-row justify-between items-center gap-2">
-              <h2 className="flex justify-center items-center text-xl md:text-2xl font-medium text-white">
+              <h2 className="flex justify-center items-center text-xl md:text-2xl font-medium text-black font-doggie">
                 Connect your wallet
               </h2>
               <button onClick={onClose} className="rounded-full h-full w-fit py-1">
-                <LuX className="icon-lg text-destructive-accent" />
+                <LuX className="icon-lg text-black" />
               </button>
             </div>
 
             <div className="flex flex-col w-full gap-2 justify-between md:justify-evenly h-full font-medium">
               {/* xPortal QR Section */}
-              <div className="flex flex-col justify-between gap-0 w-full rounded-2xl bg-card-accent py-2 mt-3">
-                <p className="flex font-medium items-center px-3 gap-1">
+              <div className="flex flex-col justify-between gap-0 w-full rounded-2xl bg-black/10 py-2 mt-3 border-2 border-black">
+                <p className="flex font-medium items-center px-3 gap-1 text-black">
                   Scan the QR code with
-                  <span className="text-xportalteal">xPortal app</span>
+                  <span className="text-black font-bold">xPortal app</span>
                 </p>
 
                 <WalletConnectLoginContainer 
@@ -128,7 +128,7 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletModalProps) => {
                 buttonClassName="xalias-login-button"
                 {...commonProps}
               >
-                <div className="flex flex-row gap-5 items-center">
+                <div className="flex flex-row gap-5 items-center text-black">
                   <BiLogoGoogle size={24} />
                   <p>Google</p>
                   <p className="text-xs -ml-3">(xAlias)</p>
@@ -141,7 +141,7 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletModalProps) => {
                 buttonClassName="metamask-login-button"
                 {...commonProps}
               >
-                <div className="flex flex-row gap-5 items-center">
+                <div className="flex flex-row gap-5 items-center text-black">
                   <GiFox size={24} />
                   MetaMask
                   <LuChevronRight className="icon-lg ml-auto"/>
@@ -179,7 +179,7 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletModalProps) => {
                         },
                       }}
                     >
-                      <div className="flex flex-row gap-5 items-center">
+                      <div className="flex flex-row gap-5 items-center text-black">
                         {button.icon}
                         {button.name}
                         <LuChevronRight className="icon-lg ml-auto"/>

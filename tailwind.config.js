@@ -43,6 +43,9 @@ module.exports = {
           },
         },
       },
+      fontFamily: {
+        doggie: ['Doggie', 'cursive'],
+      },
     }
   },
   plugins: [
