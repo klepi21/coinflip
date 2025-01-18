@@ -14,6 +14,11 @@ import { useAudio } from '@/hooks/useAudio';
 import { useWallet } from '@/context/WalletContext';
 import { cn } from "@/lib/utils";
 import { useTokenBalance } from '@/hooks/useTokenBalance';
+import { Address } from "@multiversx/sdk-core";
+import { createInnerTx, createRelayedTx } from "@/utils/relayedTx";
+import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
+
+const networkProvider = new ProxyNetworkProvider('https://devnet-gateway.multiversx.com');
 
 // Non-beaver emojis
 const otherTokens = ['BOBER', 'KWAK', 'GLONK'];
@@ -127,21 +132,34 @@ export default function ScratchPage() {
       setIsSubmitting(true);
       setIsWaitingForTx(true);
 
-      const response = await fetch('/api/relay', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userAddress: address,
-          amount: selectedAmount
-        })
+      if (!address) {
+        throw new Error('Wallet not connected');
+      }
+
+      // Create and sign inner transaction
+      const { sessionId: innerSessionId, innerTx } = await createInnerTx(
+        address,
+        USDC_IDENTIFIER,
+        selectedAmount * Math.pow(10, 6), // Convert to smallest denomination
+        SC_ADDRESS
+      );
+
+      // Wait for inner transaction to be signed
+      await new Promise((resolve) => {
+        const interval = setInterval(async () => {
+          const tx = await networkProvider.getTransaction(innerSessionId);
+          if (tx) {
+            clearInterval(interval);
+            resolve(tx);
+          }
+        }, 1000);
       });
 
-      const result = await response.json();
+      // Create and send relayed transaction
+      const result = await createRelayedTx(innerTx);
       
-      if (result.sessionId) {
-        setSessionId(result.sessionId);
+      if (result) {
+        setSessionId(result);
       }
 
     } catch (error) {
