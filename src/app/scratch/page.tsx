@@ -140,6 +140,8 @@ export default function ScratchPage() {
 
       if (result.sessionId) {
         setSessionId(result.sessionId);
+      } else {
+        toast.error(result.error || 'Failed to purchase scratch ticket');
       }
 
     } catch (error) {

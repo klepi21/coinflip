@@ -22,6 +22,14 @@ const apiNetworkProvider = new ApiNetworkProvider(DEVNET_API);
 export async function POST(request: Request) {
   const { userAddress, selectedAmount } = await request.json();
 
+  console.log('Received userAddress:', userAddress);
+  console.log('Received selectedAmount:', selectedAmount);
+
+  // Check if the values are valid
+  if (!userAddress || typeof selectedAmount !== 'number') {
+    return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+  }
+
   try {
     // 1. Get relayer credentials from env
     const relayerAddress = process.env.RELAYER_ADDRESS;
