@@ -31,7 +31,7 @@ export const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           <Link href="/" className="flex items-center gap-3">
-            <img src="https://bod.gg/assets/bod-solo2-CEyg0yC7.svg" alt="BOD" className="h-10 w-10" />
+            <img src="https://bod.gg/assets/bod-solo2-CEyg0yC7.svg" alt="BOD" className="h-14 w-14 absolute top-1" />
             <HyperText
               text="BOD jackpot"
               className="text-base sm:text-lg font-bold text-black font-doggie"
