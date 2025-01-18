@@ -31,9 +31,9 @@ export const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           <Link href="/" className="flex items-center gap-3">
-            <img src="https://bod.gg/assets/bod-solo2-CEyg0yC7.svg" alt="BOD" className="h-8 w-8" />
+            <img src="https://bod.gg/assets/bod-solo2-CEyg0yC7.svg" alt="BOD" className="h-10 w-10" />
             <HyperText
-              text="scratch BOD"
+              text="BOD jackpot"
               className="text-base sm:text-lg font-bold text-black font-doggie"
               duration={1000}
               animateOnLoad={false}
@@ -82,7 +82,7 @@ export const Navbar = () => {
                         transition-colors text-black font-doggie text-xl font-bold 
                         border-2 border-black"
             >
-              buy
+              buy BOD
             </a>
 
             <WalletButton />

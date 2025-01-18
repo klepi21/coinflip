@@ -46,15 +46,19 @@ export const HowToPlayModal = ({ isOpen, onClose }: HowToPlayModalProps) => {
                 </div>
                 <div className="flex items-center gap-6 text-black font-doggie">
                   <span className="text-3xl">2.</span>
-                  <p className="text-xl">adjust amount</p>
+                  <p className="text-xl">select an amount</p>
                 </div>
                 <div className="flex items-center gap-6 text-black font-doggie">
                   <span className="text-3xl">3.</span>
-                  <p className="text-xl">buy a ticket</p>
+                  <p className="text-xl">buy and scratch tickets</p>
                 </div>
                 <div className="flex items-center gap-6 text-black font-doggie">
                   <span className="text-3xl">4.</span>
-                  <p className="text-xl">scratch it and win!</p>
+                  <p className="text-xl">if you find 3 identical symbols, you win the associated prize</p>
+                </div>
+                <div className="flex items-center gap-6 text-black font-doggie">
+                  <span className="text-3xl">5.</span>
+                  <p className="text-xl">if you're lucky, you can even win the Jackpot at any time!</p>
                 </div>
               </div>
 

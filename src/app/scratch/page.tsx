@@ -14,11 +14,7 @@ import { useAudio } from '@/hooks/useAudio';
 import { useWallet } from '@/context/WalletContext';
 import { cn } from "@/lib/utils";
 import { useTokenBalance } from '@/hooks/useTokenBalance';
-import { Address } from "@multiversx/sdk-core";
-import { createInnerTx, createRelayedTx } from "@/utils/relayedTx";
-import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
-
-const networkProvider = new ProxyNetworkProvider('https://devnet-gateway.multiversx.com');
+import { createRelayedTxV2 } from "@/utils/relayedTx";
 
 // Non-beaver emojis
 const otherTokens = ['BOBER', 'KWAK', 'GLONK'];
@@ -57,24 +53,6 @@ const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgq8dcdymtj8a3wu92z6w25gjw72swnte2zu7zs6cvd
 const USDC_IDENTIFIER = 'USDC-350c4e';
 const AMOUNTS = [1, 5, 10]; // USDC amounts
 
-const getTimeAgo = (timestamp: number) => {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  
-  if (seconds < 60) {
-    return `${seconds}s ago`;
-  } else if (seconds < 3600) {
-    const minutes = Math.floor(seconds / 60);
-    return `${minutes}m ago`;
-  } else if (seconds < 86400) {
-    const hours = Math.floor(seconds / 3600);
-    return `${hours}h ago`;
-  } else {
-    const days = Math.floor(seconds / 86400);
-    return `${days}d ago`;
-  }
-};
-
-// Add this helper function at the top with other constants
 const toHexEven = (num: number) => {
   // Convert to hex and remove '0x' prefix
   let hex = (num).toString(16);
@@ -93,16 +71,6 @@ export default function ScratchPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isWaitingForTx, setIsWaitingForTx] = useState(false);
-  const [notifications, setNotifications] = useState<Array<{
-    id: number;
-    address: string;
-    amount?: number;
-    type: 'win' | 'purchase';
-    timestamp: number;
-    userEmoji: string;
-    row: number;
-    column: number;
-  }>>([]);
   const [selectedAmount, setSelectedAmount] = useState<number>(1);
   const scratchSound = useAudio('/sounds/scra.m4a');
   const { isLoggedIn, address } = useWallet();
@@ -136,30 +104,24 @@ export default function ScratchPage() {
         throw new Error('Wallet not connected');
       }
 
-      // Create and sign inner transaction
-      const { sessionId: innerSessionId, innerTx } = await createInnerTx(
+      const relayedTx = await createRelayedTxV2(
         address,
         USDC_IDENTIFIER,
         selectedAmount * Math.pow(10, 6), // Convert to smallest denomination
         SC_ADDRESS
       );
 
-      // Wait for inner transaction to be signed
-      await new Promise((resolve) => {
-        const interval = setInterval(async () => {
-          const tx = await networkProvider.getTransaction(innerSessionId);
-          if (tx) {
-            clearInterval(interval);
-            resolve(tx);
-          }
-        }, 1000);
+      const { sessionId: newSessionId } = await sendTransactions({
+        transactions: [relayedTx],
+        transactionsDisplayInfo: {
+          processingMessage: 'Processing scratch ticket purchase',
+          errorMessage: 'An error occurred during purchase',
+          successMessage: 'Scratch ticket purchased successfully'
+        }
       });
-
-      // Create and send relayed transaction
-      const result = await createRelayedTx(innerTx);
       
-      if (result) {
-        setSessionId(result);
+      if (newSessionId) {
+        setSessionId(newSessionId);
       }
 
     } catch (error) {
@@ -278,55 +240,6 @@ export default function ScratchPage() {
     };
   };
 
-  useEffect(() => {
-    // Initialize notifications in a grid
-    const initialNotifications = [];
-    const rows = 5;
-    const columns = 5;
-    
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < columns; col++) {
-        const isWin = Math.random() > 0.4; // 60% chance for wins
-        initialNotifications.push({
-          id: Date.now() + Math.random(),
-          address: `erd1${Math.random().toString(36).substring(2, 15)}...${Math.random().toString(36).substring(2, 6)}`,
-          amount: isWin ? Math.floor(Math.random() * 496) + 5 : undefined,
-          type: isWin ? ('win' as const) : ('purchase' as const),
-          timestamp: Date.now() - Math.floor(Math.random() * 30000),
-          userEmoji: USER_EMOJIS[Math.floor(Math.random() * USER_EMOJIS.length)],
-          row,
-          column: col
-        });
-      }
-    }
-    setNotifications(initialNotifications);
-
-    // Replace random notifications periodically
-    const interval = setInterval(() => {
-      const row = Math.floor(Math.random() * rows);
-      const col = Math.floor(Math.random() * columns);
-      const isWin = Math.random() > 0.4;
-
-      setNotifications(prev => prev.map(notif => {
-        if (notif.row === row && notif.column === col) {
-          return {
-            id: Date.now() + Math.random(),
-            address: `erd1${Math.random().toString(36).substring(2, 15)}...${Math.random().toString(36).substring(2, 6)}`,
-            amount: isWin ? Math.floor(Math.random() * 496) + 5 : undefined,
-            type: isWin ? ('win' as const) : ('purchase' as const),
-            timestamp: Date.now(),
-            userEmoji: USER_EMOJIS[Math.floor(Math.random() * USER_EMOJIS.length)],
-            row,
-            column: col
-          };
-        }
-        return notif;
-      }));
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   const handleScratchStart = () => {
     scratchSound.play();
   };
@@ -388,17 +301,17 @@ export default function ScratchPage() {
             <h2 className="mb-2 text-2xl font-bold text-black font-doggie">
               Preparing Your Scratch Ticket
             </h2>
-            <p className="text-black/80 font-doggie">Transaction in progress...</p>
+            <div className="text-black/80 font-doggie">Transaction in progress...</div>
             
-            <p className="mt-2 text-black/60 font-doggie">
+            <div className="mt-2 text-black/60 font-doggie">
               Time elapsed: {elapsedTime}s
-            </p>
+            </div>
             
             <div className="mt-4 px-4 py-3 rounded-lg bg-[#FFA036]/20 border-2 border-black">
-              <p className="text-black font-doggie text-sm font-bold flex items-center justify-center gap-2">
+              <div className="text-black font-doggie text-sm font-bold flex items-center justify-center gap-2">
                 <span className="text-xl">⚠️</span>
                 Please don't close or refresh the page or you may lose your scratch!
-              </p>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -409,86 +322,10 @@ export default function ScratchPage() {
   if (!hasPurchased) {
     return (
       <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-[#FD8700] to-[#FFA036] overflow-hidden">
-        {/* Background Grid of Notifications */}
-        <div className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none hidden md:flex">
-          <div className="absolute inset-0 bg-[#FFA036]/20 backdrop-blur-[2px]" />
-          <div className="relative grid grid-rows-5 gap-4 p-8">
-            {Array.from({ length: 5 }).map((_, rowIndex) => (
-              <div key={rowIndex} className="grid grid-cols-5 gap-4">
-                {notifications
-                  .filter(n => n.row === rowIndex)
-                  .sort((a, b) => a.column - b.column)
-                  .map((notification) => {
-                    const isRecent = Date.now() - notification.timestamp < 2000;
-                    const isWin = notification.type === 'win';
-                    
-                    return (
-                      <motion.div
-                        key={notification.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 1 }}
-                        className="w-48"
-                      >
-                        <motion.div
-                          animate={{
-                            opacity: isRecent ? [0, 1] : 0.8
-                          }}
-                          transition={{
-                            duration: 1
-                          }}
-                        >
-                          <div className={`h-32 rounded-xl p-4 shadow-xl backdrop-blur-[2px] border ${
-                            isWin 
-                              ? 'bg-[#a64200] border-black/20' 
-                              : 'bg-[#7e1e00] border-black/20'
-                          }`}>
-                            <div className="flex flex-col gap-2">
-                              <div className="flex items-center gap-2">
-                                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                                  isWin 
-                                    ? 'bg-black/10' 
-                                    : 'bg-black/10'
-                                }`}>
-                                  <span className="text-xl opacity-90">{notification.userEmoji}</span>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="truncate text-xs text-white/90 font-doggie">
-                                    {notification.address}
-                                  </p>
-                                  <p className={`text-sm font-medium font-doggie ${
-                                    isWin
-                                      ? isRecent 
-                                        ? 'text-white font-bold'
-                                        : 'text-white/90'
-                                      : 'text-white/90'
-                                  }`}>
-                                    {isWin 
-                                      ? isRecent
-                                        ? `JUST WON $${notification.amount}!`
-                                        : `Won $${notification.amount}`
-                                      : 'Purchased a ticket'}
-                                  </p>
-                                </div>
-                              </div>
-                              <p className="text-xs text-white/50 font-doggie">
-                                {getTimeAgo(notification.timestamp)}
-                              </p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      </motion.div>
-                    );
-                  })}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Purchase Button Card - Added stronger blur and glow */}
-        <div className="relative z-20 w-full max-w-md px-4 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Main content */}
+        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-lg mx-auto px-4 py-24 relative z-10">
+          {/* Stats Boxes */}
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {/* Total Scratched Box */}
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
@@ -499,9 +336,9 @@ export default function ScratchPage() {
                 <h2 className="text-xl font-bold text-black font-doggie mb-2">
                   total scratched tickets
                 </h2>
-                <p className="text-3xl font-bold text-black font-doggie">
+                <div className="text-3xl font-bold text-black font-doggie">
                   1,560
-                </p>
+                </div>
               </div>
             </motion.div>
 
@@ -509,52 +346,36 @@ export default function ScratchPage() {
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden rounded-3xl bg-[#FD8803] p-6 shadow-2xl border-2 border-black backdrop-blur-xl group"
+              className="relative overflow-hidden rounded-3xl bg-[#FD8803] p-6 shadow-2xl border-2 border-black backdrop-blur-xl"
             >
-              {/* Animated gradient border effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/10 to-black/20 opacity-50 blur-xl group-hover:opacity-75 transition-opacity duration-500"></div>
-
               <div className="relative text-center">
-                <h2 className="text-xl font-bold font-doggie mb-2">
-                  <span className="bg-gradient-to-r from-black via-black/80 to-black bg-clip-text text-transparent animate-pulse">
-                    jackpot
-                  </span>
+                <h2 className="text-xl font-bold font-doggie mb-2 text-black">
+                  jackpot
                 </h2>
-                <p className="text-3xl font-bold text-black font-doggie relative">
-                  <span className="relative inline-block">
-                    3M $BOD
-                    <motion.div
-                      animate={{
-                        opacity: [0, 1, 0],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                      }}
-                      className="absolute -inset-1 bg-black/20 blur-sm rounded-full"
-                    />
-                  </span>
-                </p>
+                <div className="text-3xl font-bold text-black font-doggie">
+                  30,456,765 $BOD
+                </div>
               </div>
             </motion.div>
           </div>
-        </div>
 
-        <div className="relative z-20 w-full max-w-md px-4">
+          {/* Main Game Box */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-3xl bg-[#FD8803] p-8 pb-12 shadow-2xl border-2 border-black backdrop-blur-xl"
+            className="w-full relative overflow-hidden rounded-3xl bg-[#FD8803] p-8 pb-12 shadow-2xl border-2 border-black backdrop-blur-xl"
           >
             <div className="relative">
               <h1 className="mb-6 text-center text-3xl font-bold text-black drop-shadow-lg font-doggie">
                 scratch BOD
               </h1>
               <div className="mb-8 space-y-2 text-center font-doggie">
-                <p className="text-black">try your luck with our scratch game!</p>
+                <p className="text-lg text-black">
+                  select an amount and try your luck!
+                </p>
               </div>
 
-              <div className="mt-4 space-y-4">
+              <div className="mt-4 space-y-8">
                 <div className="flex justify-center gap-4">
                   {AMOUNTS.map((amount) => (
                     <button
@@ -590,9 +411,9 @@ export default function ScratchPage() {
                     </div>
                   ) : (
                     <>
-                      <div className="flex items-center justify-center gap-3">
-                        <img src={BOD_SOLO_URL} alt="BOD" className="h-12 w-12" />
-                        <span className="text-lg text-black font-bold">
+                      <div className="flex items-center justify-center gap-2">
+                        <img src={BOD_SOLO_URL} alt="BOD" className="h-14 w-14 top-1 left-14 absolute " />
+                        <span className="text-xl text-black font-bold ml-8">
                           {isLoggedIn ? `buy & scratch (${selectedAmount} USDC)` : 'login to play'}
                         </span>
                       </div>
@@ -611,6 +432,13 @@ export default function ScratchPage() {
               </div>
             </div>
           </motion.div>
+        </div>
+
+        {/* Footer */}
+        <div className="fixed bottom-16 left-0 right-0 p-4 text-center">
+          <div className="flex items-center justify-center gap-4 text-xs text-zinc-500">
+            <div className="opacity-100 text-black font-doggie text-xl mb-4">Must be 18 or older to play. Void where prohibited.</div>
+          </div>
         </div>
       </div>
     );
@@ -631,16 +459,16 @@ export default function ScratchPage() {
           {/* Header with enhanced styling */}
           <div className="relative mb-4 md:mb-8 text-center">
             <div className="flex items-center justify-center gap-3 mb-2 md:mb-4">
-              <img src={BOD_SOLO_URL} alt="BOD" className="h-8 w-8 md:h-12 md:w-12" />
+              <img src={BOD_SOLO_URL} alt="BOD" className="h-12 w-12 md:h-16 md:w-16" />
               <h1 className="text-2xl md:text-4xl font-bold text-white drop-shadow-lg bg-clip-text text-transparent bg-gradient-to-r from-[#FD8700] to-[#FFA036] font-doggie">
                 Scratch BOD
               </h1>
             </div>
-            <p className="text-sm text-zinc-400 font-doggie">find 3 matching symbols to win!</p>
+            <div className="text-sm text-zinc-400 font-doggie">find 3 matching symbols to win!</div>
             <div className="mt-4 inline-block px-6 py-2 rounded-full bg-black/40 border border-white/10">
               <div className="space-y-1 text-xs font-medium font-doggie">
-                <p className="text-[#FD8700]">1 BOD: $2 | 2 BODs: $5</p>
-                <p className="text-[#FFA036]">3 BODs: $20 | 4 BODs: $100</p>
+                <div className="text-[#FD8700]">1 BOD: $2 | 2 BODs: $5</div>
+                <div className="text-[#FFA036]">3 BODs: $20 | 4 BODs: $100</div>
               </div>
             </div>
           </div>
@@ -708,9 +536,9 @@ export default function ScratchPage() {
             </motion.div>
             <div className="flex items-center justify-center gap-4 text-xs text-zinc-500">
               <div className="px-4 py-2 rounded-full bg-black/40 border border-white/10">
-                <p>Ticket #{ticketNumber}</p>
+                Ticket #{ticketNumber}
               </div>
-              <p className="opacity-60">Must be 18 or older to play. Void where prohibited.</p>
+              <div className="opacity-60">Must be 18 or older to play. Void where prohibited.</div>
             </div>
           </div>
         </div>
@@ -761,9 +589,9 @@ export default function ScratchPage() {
                     <h2 className="mb-2 text-3xl font-bold text-[#FD8700] font-doggie">
                       Congratulations!
                     </h2>
-                    <p className="mb-4 text-xl text-white font-doggie">
+                    <div className="mb-4 text-xl text-white font-doggie">
                       You won ${getCurrentPrize()}!
-                    </p>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -777,9 +605,9 @@ export default function ScratchPage() {
                     <h2 className="mb-2 text-3xl font-bold text-zinc-300 font-doggie">
                       Better Luck Next Time!
                     </h2>
-                    <p className="mb-4 text-zinc-400 font-doggie">
+                    <div className="mb-4 text-zinc-400 font-doggie">
                       Try again for another chance to win
-                    </p>
+                    </div>
                   </>
                 )}
                 <button
