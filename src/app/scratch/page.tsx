@@ -14,7 +14,6 @@ import { useAudio } from '@/hooks/useAudio';
 import { useWallet } from '@/context/WalletContext';
 import { cn } from "@/lib/utils";
 import { useTokenBalance } from '@/hooks/useTokenBalance';
-import { relayBuyTransaction } from "@/app/api/relay/route";
 
 // Non-beaver emojis
 const otherTokens = ['BOBER', 'KWAK', 'GLONK'];
@@ -128,8 +127,18 @@ export default function ScratchPage() {
       setIsSubmitting(true);
       setIsWaitingForTx(true);
 
-      // Call the relay endpoint instead of direct transaction
-      const result = await relayBuyTransaction(address!, selectedAmount);
+      const response = await fetch('/api/relay', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userAddress: address,
+          amount: selectedAmount
+        })
+      });
+
+      const result = await response.json();
       
       if (result.sessionId) {
         setSessionId(result.sessionId);

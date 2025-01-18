@@ -10,6 +10,7 @@ import {
   } from "@multiversx/sdk-core";
   import { UserSigner } from "@multiversx/sdk-wallet";
   import { ApiNetworkProvider, ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
+  import { NextResponse } from 'next/server';
   
   const DEVNET_GATEWAY = "https://devnet-gateway.multiversx.com";
   const DEVNET_API = "https://devnet-api.multiversx.com";
@@ -19,7 +20,22 @@ import {
   const proxyNetworkProvider = new ProxyNetworkProvider(DEVNET_GATEWAY);
   const apiNetworkProvider = new ApiNetworkProvider(DEVNET_API);
   
-  export async function relayBuyTransaction(userAddress: string, amount: number) {
+  export async function POST(request: Request) {
+    try {
+      const { userAddress, amount } = await request.json();
+      
+      const result = await relayBuyTransaction(userAddress, amount);
+      return NextResponse.json(result);
+    } catch (error) {
+      console.error("API error:", error);
+      return NextResponse.json(
+        { error: "Failed to process transaction" },
+        { status: 500 }
+      );
+    }
+  }
+  
+  async function relayBuyTransaction(userAddress: string, amount: number) {
     try {
       const relayerAddress = process.env.NEXT_PUBLIC_RELAYER_ADDRESS;
       const relayerPem = process.env.NEXT_PUBLIC_RELAYER_PEM;
