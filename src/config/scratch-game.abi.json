@@ -50,12 +50,17 @@
                 "",
                 "For now, it just returns the amount played."
             ],
-            "name": "buy",
+            "name": "testBuy",
             "mutability": "mutable",
             "payableInTokens": [
                 "*"
             ],
-            "inputs": [],
+            "inputs": [
+                {
+                    "name": "player",
+                    "type": "Address"
+                }
+            ],
             "outputs": []
         },
         {
@@ -152,6 +157,18 @@
             "outputs": []
         },
         {
+            "name": "setTreasuryAddress",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "treasury_address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
             "name": "getMinimumAmount",
             "mutability": "readonly",
             "inputs": [],
@@ -182,7 +199,7 @@
             ]
         },
         {
-            "name": "pauseSc",
+            "name": "setState",
             "onlyOwner": true,
             "mutability": "mutable",
             "inputs": [
@@ -202,10 +219,22 @@
                     "type": "State"
                 }
             ]
+        },
+        {
+            "name": "setMainPlayer",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
         }
     ],
     "esdtAttributes": [],
-    "hasCallback": false,
+    "hasCallback": true,
     "types": {
         "Game": {
             "type": "struct",
