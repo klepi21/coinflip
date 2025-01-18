@@ -1,5 +1,6 @@
 'use server';
 
+import { NextResponse } from 'next/server';
 import { UserSigner } from "@multiversx/sdk-wallet";
 import {
   Address,
@@ -18,14 +19,16 @@ const CHAIN_ID = 'D';
 const proxyNetworkProvider = new ProxyNetworkProvider(DEVNET_GATEWAY);
 const apiNetworkProvider = new ApiNetworkProvider(DEVNET_API);
 
-export async function relayBuyTransaction(userAddress: string, selectedAmount: number): Promise<{ sessionId: string }> {
+export async function POST(request: Request) {
+  const { userAddress, selectedAmount } = await request.json();
+
   try {
     // 1. Get relayer credentials from env
     const relayerAddress = process.env.RELAYER_ADDRESS;
     const relayerPem = process.env.RELAYER_PEM;
 
     if (!relayerAddress || !relayerPem) {
-      throw new Error('Relayer credentials not configured');
+      return NextResponse.json({ error: 'Relayer credentials not configured' }, { status: 400 });
     }
 
     console.log('Relayer Address:', relayerAddress);
@@ -79,10 +82,10 @@ export async function relayBuyTransaction(userAddress: string, selectedAmount: n
     relayedTx.applySignature(txSignature);
 
     const hash = await proxyNetworkProvider.sendTransaction(relayedTx);
-    return { sessionId: hash };
+    return NextResponse.json({ sessionId: hash });
 
   } catch (error) {
     console.error('Relay transaction error:', error);
-    throw error;
+    return NextResponse.json({ error: 'Relay transaction failed' }, { status: 500 });
   }
 } 
