@@ -325,7 +325,7 @@ export default function ScratchPage() {
 
   if (!hasPurchased) {
     return (
-      <div className="relative flex min-h-screen flex-col items-center bg-[#FFA036] overflow-hidden pb-36">
+      <div className="relative flex min-h-screen flex-col items-center bg-gradient-to-b from-[#FD8700] to-[#FFA036] overflow-hidden pb-36">
         {/* Main content */}
         <div className="flex-1 flex flex-col items-center justify-center w-full max-w-lg mx-auto px-4 py-24 relative z-10">
           {/* Stats Boxes */}
@@ -389,7 +389,7 @@ export default function ScratchPage() {
                         "px-6 py-3 rounded-full font-doggie text-xl transition-all duration-300 border-2",
                         selectedAmount === amount 
                           ? "bg-[#FD8700] text-black border-black" 
-                          : "bg-black/20 text-white/80 border-white/20 hover:bg-black/30"
+                          : "bg-black/20 text-black/80 border-white/20 hover:bg-black/30"
                       )}
                     >
                       {amount} USDC
