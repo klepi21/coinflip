@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { Address, TokenTransfer, Transaction, TransactionPayload } from '@multiversx/sdk-core';
 import { GameNotifications } from '@/components/ui/game-notifications';
+import { BodRunnerGame } from '@/components/ui/bod-runner-game';
 
 // Non-beaver emojis
 const otherTokens = ['BOBER', 'KWAK', 'GLONK'];
@@ -280,21 +281,7 @@ export default function ScratchPage() {
   if (isWaitingForTx) {
     return (
       <div className="relative flex min-h-screen flex-col items-center justify-center bg-[#FFA036] overflow-hidden">
-        <div className="relative">
-          <motion.div
-            animate={{
-              x: [-100, 400],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "linear",
-              repeatType: "reverse"
-            }}
-            className="text-6xl relative z-10"
-          >
-            <img src={BOD_FULL_URL} alt="BOD" className="h-36 w-36" />
-          </motion.div>
+        <div className="relative max-w-2xl w-full px-4">
           
           <motion.div
             initial={{ opacity: 0 }}
@@ -307,9 +294,27 @@ export default function ScratchPage() {
             </h2>
             <div className="text-black/80 font-doggie">Transaction in progress...</div>
             
-            <div className="mt-2 text-black/60 font-doggie">
+            {/* <div className="mt-2 text-black/60 font-doggie">
               Time elapsed: {elapsedTime}s
+            </div> */}
+
+            {/* BOD Runner Game */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1 }}
+            className="mt-8"
+          >
+            <div className="text-center mb-4">
+              <h3 className="text-xl font-bold text-black font-doggie">
+                While you wait...
+              </h3>
+              <p className="text-black/80 font-doggie">
+                Jump over the sausages! Use SPACE to jump or click/tap the game area
+              </p>
             </div>
+            <BodRunnerGame />
+          </motion.div>
             
             <div className="mt-4 px-4 py-3 rounded-lg bg-[#FFA036]/20 border-2 border-black">
               <div className="text-black font-doggie text-sm font-bold flex items-center justify-center gap-2">
@@ -318,6 +323,8 @@ export default function ScratchPage() {
               </div>
             </div>
           </motion.div>
+
+          
         </div>
       </div>
     );
