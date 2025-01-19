@@ -14,7 +14,8 @@ import { useAudio } from '@/hooks/useAudio';
 import { useWallet } from '@/context/WalletContext';
 import { cn } from "@/lib/utils";
 import { useTokenBalance } from '@/hooks/useTokenBalance';
-import { createRelayedTxV2 } from "@/utils/relayedTx";
+import { Address, TokenTransfer, Transaction, TransactionPayload } from '@multiversx/sdk-core';
+import { GameNotifications } from '@/components/ui/game-notifications';
 
 // Non-beaver emojis
 const otherTokens = ['BOBER', 'KWAK', 'GLONK'];
@@ -104,15 +105,18 @@ export default function ScratchPage() {
         throw new Error('Wallet not connected');
       }
 
-      const relayedTx = await createRelayedTxV2(
-        address,
-        USDC_IDENTIFIER,
-        selectedAmount * Math.pow(10, 6), // Convert to smallest denomination
-        SC_ADDRESS
-      );
+      // Create ESDT transfer transaction
+      const tx = new Transaction({
+        value: 0,
+        data: new TransactionPayload(`ESDTTransfer@${Buffer.from(USDC_IDENTIFIER).toString('hex')}@${(selectedAmount * Math.pow(10, 6)).toString(16).padStart(16, '0')}@${Buffer.from('buy').toString('hex')}`),
+        receiver: new Address(SC_ADDRESS),
+        sender: new Address(address),
+        gasLimit: 20000000,
+        chainID: 'D'
+      });
 
       const { sessionId: newSessionId } = await sendTransactions({
-        transactions: [relayedTx],
+        transactions: [tx],
         transactionsDisplayInfo: {
           processingMessage: 'Processing scratch ticket purchase',
           errorMessage: 'An error occurred during purchase',
@@ -321,7 +325,7 @@ export default function ScratchPage() {
 
   if (!hasPurchased) {
     return (
-      <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-[#FD8700] to-[#FFA036] overflow-hidden">
+      <div className="relative flex min-h-screen flex-col items-center bg-gradient-to-br from-[#FD8700] to-[#FFA036] overflow-hidden pb-36">
         {/* Main content */}
         <div className="flex-1 flex flex-col items-center justify-center w-full max-w-lg mx-auto px-4 py-24 relative z-10">
           {/* Stats Boxes */}
@@ -414,7 +418,7 @@ export default function ScratchPage() {
                       <div className="flex items-center justify-center gap-2">
                         <img src={BOD_SOLO_URL} alt="BOD" className="h-14 w-14 top-1 left-14 absolute " />
                         <span className="text-xl text-black font-bold ml-8">
-                          {isLoggedIn ? `buy & scratch (${selectedAmount} USDC)` : 'login to play'}
+                          {isLoggedIn ? `buy & scratch` : 'login to play'}
                         </span>
                       </div>
                       
@@ -434,10 +438,15 @@ export default function ScratchPage() {
           </motion.div>
         </div>
 
+        {/* Game Notifications */}
+        <div className="relative z-20">
+          <GameNotifications />
+        </div>
+
         {/* Footer */}
-        <div className="fixed bottom-16 left-0 right-0 p-4 text-center">
-          <div className="flex items-center justify-center gap-4 text-xs text-zinc-500">
-            <div className="opacity-100 text-black font-doggie text-xl mb-4">Must be 18 or older to play. Void where prohibited.</div>
+        <div className="fixed bottom-0 left-0 right-0 p-4 text-center bg-[#FD8700]/90 backdrop-blur-lg">
+          <div className="text-black font-doggie text-xl">
+            Must be 18 or older to play. Void where prohibited.
           </div>
         </div>
       </div>

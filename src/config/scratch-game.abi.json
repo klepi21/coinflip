@@ -50,17 +50,12 @@
                 "",
                 "For now, it just returns the amount played."
             ],
-            "name": "testBuy",
+            "name": "buy",
             "mutability": "mutable",
             "payableInTokens": [
                 "*"
             ],
-            "inputs": [
-                {
-                    "name": "player",
-                    "type": "Address"
-                }
-            ],
+            "inputs": [],
             "outputs": []
         },
         {
@@ -219,18 +214,6 @@
                     "type": "State"
                 }
             ]
-        },
-        {
-            "name": "setMainPlayer",
-            "onlyOwner": true,
-            "mutability": "mutable",
-            "inputs": [
-                {
-                    "name": "address",
-                    "type": "Address"
-                }
-            ],
-            "outputs": []
         }
     ],
     "esdtAttributes": [],

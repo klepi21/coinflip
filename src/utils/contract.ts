@@ -7,13 +7,12 @@ import {
   TypedValue
 } from '@multiversx/sdk-core';
 import { ProxyNetworkProvider } from '@multiversx/sdk-network-providers';
-import { mvxConfig } from '../config/config';
-import { contractConfig } from '../config/contract';
+import scratchAbi from '@/config/scratch-game.abi.json';
 
 let networkProvider: ProxyNetworkProvider | null = null;
 
-export const getContract = (address: string, abi: any) => {
-  const abiRegistry = AbiRegistry.create(abi);
+export const getContract = (address: string) => {
+  const abiRegistry = AbiRegistry.create(scratchAbi);
   return new SmartContract({
     address: new Address(address),
     abi: abiRegistry
@@ -22,7 +21,7 @@ export const getContract = (address: string, abi: any) => {
 
 export const getNetworkProvider = () => {
   if (!networkProvider) {
-    networkProvider = new ProxyNetworkProvider(mvxConfig.apiUrl, {
+    networkProvider = new ProxyNetworkProvider('https://devnet-gateway.multiversx.com', {
       timeout: 10000,
     });
   }
@@ -32,15 +31,10 @@ export const getNetworkProvider = () => {
 export const queryContract = async (
   functionName: string,
   args: TypedValue[] = [],
-  returnTypes: any[],
-  customAbi?: any,
-  customAddress?: string
+  contractAddress: string
 ) => {
   try {
-    const contract = customAbi 
-      ? getContract(customAddress || contractConfig.address, customAbi)
-      : getContract(contractConfig.address, contractConfig.abi);
-    
+    const contract = getContract(contractAddress);
     const proxy = getNetworkProvider();
 
     const query = contract.createQuery({
@@ -49,15 +43,18 @@ export const queryContract = async (
     });
 
     const queryResponse = await proxy.queryContract(query);
+    const endpointDefinition = contract.getEndpoint(functionName);
     
     if (!queryResponse || !queryResponse.returnData) {
       throw new Error('No response received from the contract');
     }
 
-    return queryResponse;
+    const resultParser = new ResultsParser();
+    const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
+
+    return results;
   } catch (error: any) {
-    throw new Error(
-      `Failed to query contract endpoint '${functionName}': ${error.message || 'Unknown error'}`
-    );
+    console.error(`Failed to query contract endpoint '${functionName}':`, error);
+    throw error;
   }
 };
