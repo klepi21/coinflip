@@ -150,24 +150,24 @@ export const GameNotifications = () => {
   };
 
   return (
-    <div className="fixed bottom-32 left-0 right-0 overflow-hidden z-50 hidden md:block">
+    <div className="fixed bottom-28 pb-10 left-0 right-0 overflow-hidden z-50 hidden md:block">
       <div className="relative flex gap-4 animate-slide hover:animation-pause">
         {/* First set of notifications */}
         {games.map((game) => (
           <motion.div
             key={`first-${game.uniqueId}`}
-            className="flex-shrink-0 bg-[#7e1e00] border-2 border-black rounded-xl p-3 w-[200px] shadow-lg"
+            className="flex-shrink-0 bg-[#FD8700] border-2 border-black rounded-xl p-3 w-[220px] h-[94px] shadow-lg"
           >
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-xl bg-black/20">
-                  <span className="text-sm opacity-90">🎮</span>
+                <img src="https://bod.gg/assets/bod-coin-BRtRTEUy.svg" alt="BOD Coin" className="text-sm opacity-90" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[10px] text-white font-doggie">
+                  <div className="truncate text-[16px] text-black font-doggie">
                     {formatAddress(game.player)}
                   </div>
-                  <div className="text-xs font-medium font-doggie text-white">
+                  <div className="text-lg font-medium font-doggie text-black">
                     {game.amount_won 
                       ? `Won ${(parseInt(game.amount_won) / 1e6).toFixed(2)} USDC`
                       : `Played ${(parseInt(game.amount_played) / 1e6).toFixed(2)} USDC`
@@ -175,7 +175,7 @@ export const GameNotifications = () => {
                   </div>
                 </div>
               </div>
-              <div className="text-[10px] text-white/70 font-doggie">
+              <div className="text-[16px] text-black/70 font-doggie">
                 {getTimeAgo(game.timestamp)}
               </div>
             </div>
@@ -185,18 +185,18 @@ export const GameNotifications = () => {
         {games.map((game) => (
           <motion.div
             key={`second-${game.uniqueId}`}
-            className="flex-shrink-0 bg-[#7e1e00] border-2 border-black rounded-xl p-3 w-[200px] shadow-lg"
+            className="flex-shrink-0 bg-[#FD8700] border-2 border-black rounded-xl p-3 w-[200px] h-[94px] shadow-lg"
           >
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-xl bg-black/20">
-                  <span className="text-sm opacity-90">🎮</span>
+                  <img src="https://bod.gg/assets/bod-coin-BRtRTEUy.svg" alt="BOD Coin" className="text-sm opacity-90" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[10px] text-white font-doggie">
+                  <div className="truncate text-[16px] text-black font-doggie font-black">
                     {formatAddress(game.player)}
                   </div>
-                  <div className="text-xs font-medium font-doggie text-white">
+                  <div className="text-lg font-medium font-doggie text-black">
                     {game.amount_won 
                       ? `Won ${(parseInt(game.amount_won) / 1e6).toFixed(2)} USDC`
                       : `Played ${(parseInt(game.amount_played) / 1e6).toFixed(2)} USDC`
@@ -204,7 +204,7 @@ export const GameNotifications = () => {
                   </div>
                 </div>
               </div>
-              <div className="text-[10px] text-white/70 font-doggie">
+              <div className="text-[16px] text-black/70 font-doggie">
                 {getTimeAgo(game.timestamp)}
               </div>
             </div>

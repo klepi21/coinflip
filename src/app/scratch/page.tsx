@@ -279,7 +279,7 @@ export default function ScratchPage() {
 
   if (isWaitingForTx) {
     return (
-      <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-[#FD8700] to-[#FFA036] overflow-hidden">
+      <div className="relative flex min-h-screen flex-col items-center justify-center bg-[#FFA036] overflow-hidden">
         <div className="relative">
           <motion.div
             animate={{
@@ -325,7 +325,7 @@ export default function ScratchPage() {
 
   if (!hasPurchased) {
     return (
-      <div className="relative flex min-h-screen flex-col items-center bg-gradient-to-br from-[#FD8700] to-[#FFA036] overflow-hidden pb-36">
+      <div className="relative flex min-h-screen flex-col items-center bg-[#FFA036] overflow-hidden pb-36">
         {/* Main content */}
         <div className="flex-1 flex flex-col items-center justify-center w-full max-w-lg mx-auto px-4 py-24 relative z-10">
           {/* Stats Boxes */}
@@ -334,7 +334,7 @@ export default function ScratchPage() {
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden rounded-3xl bg-[#FD8803] p-6 shadow-2xl border-2 border-black backdrop-blur-xl"
+              className="relative overflow-hidden rounded-3xl bg-[#FFA036] p-6 shadow-2xl border-2 border-black backdrop-blur-xl"
             >
               <div className="relative text-center">
                 <h2 className="text-xl font-bold text-black font-doggie mb-2">
@@ -350,7 +350,7 @@ export default function ScratchPage() {
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden rounded-3xl bg-[#FD8803] p-6 shadow-2xl border-2 border-black backdrop-blur-xl"
+              className="relative overflow-hidden rounded-3xl bg-[#FFA036] p-6 shadow-2xl border-2 border-black backdrop-blur-xl"
             >
               <div className="relative text-center">
                 <h2 className="text-xl font-bold font-doggie mb-2 text-black">
@@ -367,7 +367,7 @@ export default function ScratchPage() {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full relative overflow-hidden rounded-3xl bg-[#FD8803] p-8 pb-12 shadow-2xl border-2 border-black backdrop-blur-xl"
+            className="w-full relative overflow-hidden rounded-3xl bg-[#FFA036] p-8 pb-12 shadow-2xl border-2 border-black backdrop-blur-xl"
           >
             <div className="relative">
               <h1 className="mb-6 text-center text-3xl font-bold text-black drop-shadow-lg font-doggie">
@@ -388,7 +388,7 @@ export default function ScratchPage() {
                       className={cn(
                         "px-6 py-3 rounded-full font-doggie text-xl transition-all duration-300 border-2",
                         selectedAmount === amount 
-                          ? "bg-[#FFA036] text-black border-black" 
+                          ? "bg-[#FD8700] text-black border-black" 
                           : "bg-black/20 text-white/80 border-white/20 hover:bg-black/30"
                       )}
                     >
@@ -402,8 +402,8 @@ export default function ScratchPage() {
                   disabled={buttonState.disabled}
                   className={`w-full relative group font-doggie
                     ${!buttonState.disabled 
-                      ? 'bg-[#FFA036] hover:bg-[#FFA036]/80' 
-                      : 'bg-[#FFA036]/50 cursor-not-allowed'
+                      ? 'bg-[#FD8700] hover:bg-[#FFA036]/80' 
+                      : 'bg-[#FD8700]/50 cursor-not-allowed'
                     }
                     text-black rounded-full px-8 py-4 font-semibold transition-all duration-300
                     border-2 border-black`}
