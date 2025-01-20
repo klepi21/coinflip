@@ -50,6 +50,17 @@ export default function Create() {
   const [isWaitingForTx, setIsWaitingForTx] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [popup, setPopup] = useState<{
+    isOpen: boolean;
+    message: string;
+    isLoading: boolean;
+    gameResult: null;
+  }>({
+    isOpen: false,
+    message: '',
+    isLoading: false,
+    gameResult: null
+  });
 
   const { isLoggedIn, address } = useWallet();
   const { account } = useGetAccountInfo();
@@ -73,13 +84,16 @@ export default function Create() {
       const totalAmount = parseFloat(amount) * multiplier;
       const rawAmount = totalAmount * Math.pow(10, decimalAmount);
 
+      // Convert side to u8 value (0 for heads, 1 for tails)
+      const sideValue = selectedSide === 'heads' ? 0 : 1;
+
       // Create transaction data
       const { sessionId: newSessionId } = await sendTransactions({
         transactions: [{
           value: selectedToken === 'EGLD' ? totalAmount.toString() : '0',
           data: selectedToken === 'USDC' 
-            ? `ESDTTransfer@${Buffer.from(USDC_IDENTIFIER).toString('hex')}@${toHexEven(Math.floor(rawAmount))}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}`
-            : `create@${toHexEven(multiplier)}`,
+            ? `ESDTTransfer@${Buffer.from(USDC_IDENTIFIER).toString('hex')}@${toHexEven(Math.floor(rawAmount))}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`
+            : `create@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
           receiver: SC_ADDRESS,
           gasLimit: 100000000,
         }],
@@ -178,9 +192,21 @@ export default function Create() {
     transactionId: sessionId,
     onSuccess: () => {
       setIsWaitingForTx(false);
-      toast.success('Successfully created game!');
       setAmount('0.00');
       setSelectedSide(null);
+      
+      // Show success popup
+      setPopup({
+        isOpen: true,
+        message: 'Your game has been created! Good luck!',
+        isLoading: false,
+        gameResult: null
+      });
+      
+      // Close popup after 5 seconds
+      setTimeout(() => {
+        setPopup(prev => ({ ...prev, isOpen: false }));
+      }, 5000);
     },
     onFail: (errorMessage) => {
       toast.error(`Transaction failed: ${errorMessage}`);
@@ -339,6 +365,26 @@ export default function Create() {
         isOpen={showWalletModal}
         onClose={() => setShowWalletModal(false)}
       />
+
+      {/* Success Popup */}
+      {popup.isOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-300">
+          <div className="bg-[#1A1A1A] rounded-3xl p-8 max-w-md w-full mx-4 relative border border-zinc-800 shadow-[0_0_50px_-12px] shadow-[#75CBDD]/20">
+            <div className="flex flex-col items-center gap-6 py-4">
+              <div className="relative">
+                <div className="w-24 h-24 rounded-full flex items-center justify-center bg-[#75CBDD]/10">
+                  <span className="text-5xl animate-bounce">🎲</span>
+                </div>
+                <div className="absolute -inset-2 rounded-full border-2 border-[#75CBDD]/30 animate-pulse"></div>
+              </div>
+              <div className="space-y-2 text-center">
+                <h3 className="text-2xl font-bold text-[#75CBDD]">Game Created!</h3>
+                <p className="text-zinc-400">Your game has been created successfully. Good luck!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

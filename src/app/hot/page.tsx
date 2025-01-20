@@ -16,7 +16,7 @@ export default function Home() {
         <div className="flex flex-col items-center mb-12">
           <AnimatedText 
             text="HEADS OR TAILS"
-            textClassName="text-4xl md:text-7xl font-bold text-white tracking-wider"
+            textClassName="text-xl md:text-6xl font-bold text-white tracking-wider"
             underlineClassName="text-[#75CBDD]"
             underlinePath="M 0,10 Q 150,0 300,10 Q 450,20 600,10"
             underlineHoverPath="M 0,10 Q 150,20 300,10 Q 450,0 600,10"
