@@ -70,6 +70,18 @@ export default function Create() {
   const egldBalance = account?.balance ? Number(account.balance) / Math.pow(10, 18) : 0;
   const isLoadingBalance = isLoadingUsdcBalance;
 
+  // Reset popup when component mounts or when sessionId changes to null
+  useEffect(() => {
+    if (!sessionId) {
+      setPopup({
+        isOpen: false,
+        message: '',
+        isLoading: false,
+        gameResult: null
+      });
+    }
+  }, [sessionId]);
+
   const handleLogin = () => {
     setShowWalletModal(true);
   };
@@ -195,6 +207,7 @@ export default function Create() {
       setAmount('');
       setSelectedSide(null);
       setIsSubmitting(false);
+      setSessionId(null); // Reset sessionId after success
       
       // Show success popup
       setPopup({
@@ -213,6 +226,7 @@ export default function Create() {
       toast.error(`Transaction failed: ${errorMessage}`);
       setIsWaitingForTx(false);
       setIsSubmitting(false);
+      setSessionId(null); // Reset sessionId after failure
     },
   });
 

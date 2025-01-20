@@ -20,6 +20,7 @@ import { ApiNetworkProvider } from "@multiversx/sdk-network-providers/out";
 import { sendTransactions } from "@multiversx/sdk-dapp/services";
 import { refreshAccount } from "@multiversx/sdk-dapp/utils/account";
 import flipcoinAbi from '@/config/flipcoin.abi.json';
+import { useGames, Game } from '@/hooks/useGames';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqjksmaalhed4gu59tfn0gtkscl8s2090du7zs6nrdts';
@@ -47,18 +48,6 @@ const formatTokenAmount = (amount: string, token: string): string => {
   });
 };
 
-type Game = {
-  id: number;
-  creator: string;
-  rival: string | null;
-  token: string;
-  amount: string;
-  winner: string | null;
-  timestamp: number;
-  creatorHerotag?: string;
-  rivalHerotag?: string;
-};
-
 type GameResult = 'win' | 'lose' | null;
 
 type PopupState = {
@@ -74,9 +63,6 @@ type Props = {
 
 export default function GameGrid({ onActiveGamesChange }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [games, setGames] = useState<Game[]>([]);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [filter, setFilter] = useState<'all' | 'yours'>('all');
   const [popup, setPopup] = useState<PopupState>({
     isOpen: false,
@@ -85,8 +71,16 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     gameResult: null
   });
   
+  const { games, isInitialLoading, isRefreshing, refetchGames } = useGames();
   const { network } = useGetNetworkConfig();
   const { address: connectedAddress } = useGetAccountInfo();
+
+  // Update active games count whenever games change
+  useEffect(() => {
+    if (onActiveGamesChange) {
+      onActiveGamesChange(games.length);
+    }
+  }, [games, onActiveGamesChange]);
 
   const fetchHerotag = async (address: string): Promise<string | undefined> => {
     try {
@@ -98,120 +92,6 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       return undefined;
     }
   };
-
-  const fetchGames = async () => {
-    try {
-      // Only show loading state on initial load
-      if (isInitialLoading) {
-        setIsInitialLoading(true);
-      } else {
-        setIsRefreshing(true);
-      }
-
-      // Initialize the proxy provider with the network API URL
-      const provider = new ProxyNetworkProvider(network.apiAddress);
-      const abiRegistry = AbiRegistry.create(flipcoinAbi);
-      const contract = new SmartContract({
-        address: new Address(SC_ADDRESS),
-        abi: abiRegistry
-      });
-
-      const query = contract.createQuery({
-        func: new ContractFunction('getGames'),
-        args: [new BooleanValue(true)]
-      });
-
-      const queryResponse = await provider.queryContract(query);
-
-      if (queryResponse?.returnData) {
-        const endpointDefinition = contract.getEndpoint('getGames');
-        const resultParser = new ResultsParser();
-        const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
-        
-        const gamesArray = results.values[0]?.valueOf();
-        
-        if (gamesArray && Array.isArray(gamesArray)) {
-          const processedGames = await Promise.all(gamesArray.map(async (game: any) => {
-            const rival = game?.rival;
-            const winner = game?.winner;
-            const creatorAddress = game?.creator?.toString() || '';
-            const rivalAddress = rival && typeof rival.isNone === 'function' && !rival.isNone() 
-              ? rival.value.toString() 
-              : null;
-            
-            const [creatorHerotag, rivalHerotag] = await Promise.all([
-              fetchHerotag(creatorAddress),
-              rivalAddress ? fetchHerotag(rivalAddress) : undefined
-            ]);
-            
-            return {
-              id: Number(game?.id?.toString() || 0),
-              creator: creatorAddress,
-              creatorHerotag,
-              rival: rivalAddress,
-              rivalHerotag,
-              token: game?.token?.toString() || '',
-              amount: game?.amount?.toString() || '0',
-              winner: winner && typeof winner.isNone === 'function' && !winner.isNone() 
-                ? winner.value.toString() 
-                : null,
-              timestamp: Number(game?.timestamp?.toString() || 0)
-            } as Game;
-          }));
-
-          // Update games smoothly by comparing with existing games
-          setGames(prevGames => {
-            const updatedGames = [...prevGames];
-            
-            // Remove completed games
-            const activeGameIds = new Set(processedGames.map(g => g.id));
-            const completedGames = updatedGames.filter(g => !activeGameIds.has(g.id));
-            completedGames.forEach(game => {
-              const index = updatedGames.findIndex(g => g.id === game.id);
-              if (index !== -1) {
-                updatedGames.splice(index, 1);
-              }
-            });
-
-            // Update existing games and add new ones
-            processedGames.forEach(newGame => {
-              const existingIndex = updatedGames.findIndex(g => g.id === newGame.id);
-              if (existingIndex !== -1) {
-                // Update existing game if it changed
-                if (JSON.stringify(updatedGames[existingIndex]) !== JSON.stringify(newGame)) {
-                  updatedGames[existingIndex] = newGame;
-                }
-              } else {
-                // Add new game
-                updatedGames.push(newGame);
-              }
-            });
-
-            return updatedGames;
-          });
-        }
-      }
-    } catch (error) {
-      // console.error('Error fetching games:', error);
-    } finally {
-      setIsInitialLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchGames();
-    // Fetch games every 30 seconds to keep data fresh
-    const interval = setInterval(fetchGames, 30000);
-    return () => clearInterval(interval);
-  }, [network.apiAddress]);
-
-  useEffect(() => {
-    // Call onActiveGamesChange whenever games list changes
-    if (onActiveGamesChange) {
-      onActiveGamesChange(games.length);
-    }
-  }, [games, onActiveGamesChange]);
 
   const checkGameWinner = async (gameId: number): Promise<string> => {
     const provider = new ProxyNetworkProvider(network.apiAddress);
@@ -254,7 +134,6 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         .withGasLimit(60000000)
         .withChainID(network.chainId);
 
-      // Handle EGLD vs ESDT tokens
       if (token === 'EGLD') {
         transaction.withValue(amount);
       } else {
@@ -263,7 +142,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       }
 
       const tx = transaction.buildTransaction();
-
+      
       setPopup(prev => ({ ...prev, message: 'Confirming transaction...' }));
       
       await sendTransactions({
@@ -277,11 +156,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
       setPopup(prev => ({ ...prev, message: 'Checking winner...' }));
 
-      // Wait for transaction to be completed
       await new Promise(resolve => setTimeout(resolve, 6000));
       await refreshAccount();
 
-      // Get the winner
       const winner = await checkGameWinner(gameId);
       const isWinner = winner.toLowerCase() === connectedAddress?.toLowerCase();
       
@@ -292,11 +169,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         gameResult: isWinner ? 'win' : 'lose'
       });
 
-      // Refresh games list in the background without affecting the popup
-      fetchGames().catch(console.error);
+      // Refresh games in the background
+      refetchGames();
 
     } catch (error) {
-      console.error('Error joining game:', error);
       setPopup({
         isOpen: true,
         message: typeof error === 'string' ? error : 'Failed to join game. Please try again.',
@@ -472,15 +348,19 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
               {!game.rival && (
                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[calc(50%)] border-[#1A1A1A]">
                   <button 
-                    disabled={game.creator.toLowerCase() === connectedAddress?.toLowerCase()}
+                    disabled={!connectedAddress || game.creator.toLowerCase() === connectedAddress?.toLowerCase()}
                     onClick={() => handleJoinGame(game.id, game.amount, game.token)}
                     className={`w-full ${
-                      game.creator.toLowerCase() === connectedAddress?.toLowerCase()
+                      !connectedAddress 
+                        ? 'bg-zinc-600 cursor-not-allowed'
+                        : game.creator.toLowerCase() === connectedAddress?.toLowerCase()
                         ? 'bg-zinc-600 cursor-not-allowed'
                         : 'bg-[#75CBDD] hover:bg-[#75CBDD]/90'
                     } text-black font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black`}
                   >
-                    {game.creator.toLowerCase() === connectedAddress?.toLowerCase()
+                    {!connectedAddress 
+                      ? 'Connect Wallet'
+                      : game.creator.toLowerCase() === connectedAddress?.toLowerCase()
                       ? 'Your Game'
                       : 'Join game'
                     }

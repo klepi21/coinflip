@@ -57,8 +57,8 @@ export default function Hot() {
   }, [network.apiAddress]);
 
   return (
-    <main className="flex flex-col bg-black px-6 pt-24">
-      <div className="w-full max-w-7xl mx-auto">
+    <main className="flex flex-col bg-black min-h-screen px-6 pt-24 pb-12">
+      <div className="w-full max-w-7xl mx-auto flex-1">
         {/* Title Section */}
         <div className="flex flex-col items-center mb-12">
           <AnimatedText 
