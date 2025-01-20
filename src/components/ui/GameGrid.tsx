@@ -269,6 +269,74 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     }
   };
 
+  const handleCancelGame = async (gameId: number) => {
+    try {
+      setPopup({
+        isOpen: true,
+        message: 'Preparing to cancel game...',
+        isLoading: true,
+        gameResult: null
+      });
+
+      const contract = new SmartContract({
+        address: new Address(SC_ADDRESS),
+        abi: AbiRegistry.create(flipcoinAbi)
+      });
+
+      const transaction = contract.methods
+        .cancel([new U64Value(gameId)])
+        .withGasLimit(60000000)
+        .withChainID(network.chainId);
+
+      const tx = transaction.buildTransaction();
+      
+      setPopup(prev => ({ ...prev, message: 'Confirming cancellation...' }));
+      
+      const { sessionId } = await sendTransactions({
+        transactions: [tx],
+        transactionsDisplayInfo: {
+          processingMessage: 'Processing game cancellation',
+          errorMessage: 'An error occurred during cancellation',
+          successMessage: 'Game cancelled successfully'
+        }
+      });
+
+      if (!sessionId) {
+        throw new Error('Failed to get transaction session ID');
+      }
+
+      setPopup(prev => ({ ...prev, message: 'Waiting for cancellation to complete...' }));
+
+      // Wait for blockchain confirmation
+      await new Promise(resolve => setTimeout(resolve, 8000));
+      await refreshAccount();
+
+      setPopup({
+        isOpen: true,
+        message: 'Game cancelled successfully!',
+        isLoading: false,
+        gameResult: null
+      });
+
+      // Close popup after 3 seconds
+      setTimeout(() => {
+        setPopup(prev => ({ ...prev, isOpen: false }));
+      }, 3000);
+
+      // Refresh games in the background
+      refetchGames();
+
+    } catch (error) {
+      console.error('Cancel game error:', error);
+      setPopup({
+        isOpen: true,
+        message: 'Something went wrong. Please check your transaction in Explorer.',
+        isLoading: false,
+        gameResult: null
+      });
+    }
+  };
+
   // Filter games based on selection and sort by newest first
   const filteredGames = (filter === 'all' 
     ? games 
@@ -541,27 +609,31 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                     </div>
                   </div>
 
-                  {/* Join Button - Only show if no rival */}
+                  {/* Join/Cancel Button - Only show if no rival */}
                   {!game.rival && (
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[calc(50%)] border-[#1A1A1A]">
-                      <button 
-                        disabled={!connectedAddress || game.creator.toLowerCase() === connectedAddress?.toLowerCase()}
-                        onClick={() => handleJoinGame(game.id, game.amount, game.token)}
-                        className={`w-full ${
-                          !connectedAddress 
-                            ? 'bg-zinc-600 cursor-not-allowed'
-                            : game.creator.toLowerCase() === connectedAddress?.toLowerCase()
-                            ? 'bg-zinc-600 cursor-not-allowed'
-                            : 'bg-[#75CBDD] hover:bg-[#75CBDD]/90'
-                        } text-black font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black`}
-                      >
-                        {!connectedAddress 
-                          ? 'Connect Wallet'
-                          : game.creator.toLowerCase() === connectedAddress?.toLowerCase()
-                          ? 'Your Game'
-                          : 'Join game'
-                        }
-                      </button>
+                      {!connectedAddress ? (
+                        <button 
+                          disabled
+                          className="w-full bg-zinc-600 cursor-not-allowed text-black font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black"
+                        >
+                          Connect Wallet
+                        </button>
+                      ) : game.creator.toLowerCase() === connectedAddress?.toLowerCase() ? (
+                        <button 
+                          onClick={() => handleCancelGame(game.id)}
+                          className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black"
+                        >
+                          Cancel
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => handleJoinGame(game.id, game.amount, game.token)}
+                          className="w-full bg-[#75CBDD] hover:bg-[#75CBDD]/90 text-black font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black"
+                        >
+                          Join game
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
