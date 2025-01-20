@@ -77,6 +77,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
   const [previousGames, setPreviousGames] = useState<Game[]>([]);
   const [disappearingGames, setDisappearingGames] = useState<Game[]>([]);
+  const [totalGamesPlayed, setTotalGamesPlayed] = useState<number>(0);
 
   // Track disappearing games with full game data
   useEffect(() => {
@@ -104,6 +105,40 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       onActiveGamesChange(games.length);
     }
   }, [games, onActiveGamesChange]);
+
+  // Add function to fetch total games
+  const fetchTotalGames = async () => {
+    try {
+      const provider = new ProxyNetworkProvider(network.apiAddress);
+      const contract = new SmartContract({
+        address: new Address(SC_ADDRESS),
+        abi: AbiRegistry.create(flipcoinAbi)
+      });
+
+      const query = contract.createQuery({
+        func: new ContractFunction('getId'),
+      });
+
+      const queryResponse = await provider.queryContract(query);
+      
+      if (queryResponse?.returnData?.[0]) {
+        const endpointDefinition = contract.getEndpoint('getId');
+        const resultParser = new ResultsParser();
+        const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
+        const totalGames = Number(results.values[0].valueOf().toString());
+        setTotalGamesPlayed(totalGames);
+      }
+    } catch (error) {
+      console.error('Error fetching total games:', error);
+    }
+  };
+
+  // Fetch total games on mount and every minute
+  useEffect(() => {
+    fetchTotalGames();
+    const interval = setInterval(fetchTotalGames, 60000);
+    return () => clearInterval(interval);
+  }, [network.apiAddress]);
 
   const fetchHerotag = async (address: string): Promise<string | undefined> => {
     try {
@@ -168,7 +203,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       
       setPopup(prev => ({ ...prev, message: 'Confirming transaction...' }));
       
-      await sendTransactions({
+      const { sessionId } = await sendTransactions({
         transactions: [tx],
         transactionsDisplayInfo: {
           processingMessage: 'Processing join game transaction',
@@ -177,12 +212,40 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         }
       });
 
-      setPopup(prev => ({ ...prev, message: 'Checking winner...' }));
+      if (!sessionId) {
+        throw new Error('Failed to get transaction session ID');
+      }
 
-      await new Promise(resolve => setTimeout(resolve, 6000));
+      setPopup(prev => ({ ...prev, message: 'Waiting for transaction to complete...' }));
+
+      // Wait for initial blockchain confirmation
+      await new Promise(resolve => setTimeout(resolve, 8000));
       await refreshAccount();
 
-      const winner = await checkGameWinner(gameId);
+      setPopup(prev => ({ ...prev, message: 'Checking game result...' }));
+
+      // Additional wait to ensure smart contract state is updated
+      await new Promise(resolve => setTimeout(resolve, 4000));
+
+      let retries = 3;
+      let winner = null;
+
+      while (retries > 0 && !winner) {
+        try {
+          winner = await checkGameWinner(gameId);
+          if (winner) break;
+        } catch (error) {
+          retries--;
+          if (retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+      }
+
+      if (!winner) {
+        throw new Error('Could not determine game result');
+      }
+
       const isWinner = winner.toLowerCase() === connectedAddress?.toLowerCase();
       
       setPopup({
@@ -196,9 +259,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       refetchGames();
 
     } catch (error) {
+      console.error('Join game error:', error);
       setPopup({
         isOpen: true,
-        message: typeof error === 'string' ? error : 'Failed to join game. Please try again.',
+        message: 'Something went wrong. Please check your transaction in Explorer.',
         isLoading: false,
         gameResult: null
       });
@@ -230,10 +294,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       <div className="flex items-center justify-between">
         <div className="flex gap-4">
           <div className="bg-[#1A1A1A] rounded-full px-6 py-2 text-white">
-            23 ACTIVE GAMES
+            {games.length} ACTIVE GAMES
           </div>
           <div className="bg-[#1A1A1A] rounded-full px-6 py-2 text-white">
-            53 GAMES PLAYED
+            {totalGamesPlayed} GAMES PLAYED
           </div>
         </div>
         

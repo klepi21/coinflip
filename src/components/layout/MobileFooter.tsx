@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 export const MobileFooter = () => {
   const pathname = usePathname();
 
-  const isActive = (path: string) => pathname === path;
+  const ise = (path: string) => pathname === path;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-black/20 backdrop-blur-lg border-t border-white/10 lg:hidden">
