@@ -1,0 +1,314 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.80.1",
+            "commitHash": "3f5fd8dd41153bc5fdca9427e9e05be2c767ba23",
+            "commitDate": "2024-08-06",
+            "channel": "Stable",
+            "short": "rustc 1.80.1 (3f5fd8dd4 2024-08-06)"
+        },
+        "contractCrate": {
+            "name": "flipcoin",
+            "version": "0.1.0"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.55.0"
+        }
+    },
+    "name": "FlipcoinSc",
+    "constructor": {
+        "inputs": [],
+        "outputs": []
+    },
+    "upgradeConstructor": {
+        "inputs": [],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "docs": [
+                "Receives a payment and creates a number of games.",
+                "",
+                "Parameters:",
+                "- `number_of_games`: The number of games to create.",
+                "",
+                "Requirements:",
+                "- The smart contract is not paused.",
+                "- The token is valid.",
+                "- The amount is valid.",
+                "- The creator is not a smart contract."
+            ],
+            "name": "create",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [
+                {
+                    "name": "number_of_games",
+                    "type": "u64"
+                },
+                {
+                    "name": "side",
+                    "type": "u8"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Cancels a game.",
+                "",
+                "Parameters:",
+                "- `game_id`: The game's unique identifier.",
+                "",
+                "Requirements:",
+                "- The smart contract is not paused.",
+                "- The game exists.",
+                "- The game is still open (no rival).",
+                "- The caller is the creator.",
+                "- The caller is not a smart contract."
+            ],
+            "name": "cancel",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Accepts a payment and joins a game.",
+                "",
+                "Parameters:",
+                "- `game_id`: The game's unique identifier.",
+                "",
+                "Requirements:",
+                "- The smart contract is not paused.",
+                "- The game exists.",
+                "- The game is still open (no rival).",
+                "- The token is valid.",
+                "- The amount is valid.",
+                "- The caller is not the creator.",
+                "- The caller is not a smart contract."
+            ],
+            "name": "join",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Returns all the games played from the latest to the oldest.",
+                "",
+                "Optional arguments:",
+                "- `opt_only_active`: If set true, only returns the games that are still open. Otherwise, returns all games.",
+                "- `opt_creator`: If set, only returns the games created by the specified player. Otherwise, returns all games.",
+                "- `opt_max_results`: If set, limits the number of games returned. Otherwise, returns the latest 50 games.",
+                "",
+                "The returned type is a Game Structure, which contains the following fields:",
+                "- `id`: The game's unique identifier",
+                "- `creator`: The player who created the game",
+                "- `rival`: The player who accepted the game. If None, the game is still open.",
+                "- `token`: The token used in the game",
+                "- `amount`: The amount of the token used in the game",
+                "- `winner`: The player who won the game. If None, the game is still open.",
+                "- `timestamp`: The timestamp when the game was created"
+            ],
+            "name": "getGames",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "opt_only_active",
+                    "type": "optional<bool>",
+                    "multi_arg": true
+                },
+                {
+                    "name": "opt_creator",
+                    "type": "optional<Address>",
+                    "multi_arg": true
+                },
+                {
+                    "name": "opt_max_results",
+                    "type": "optional<u32>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "variadic<Game>",
+                    "multi_result": true
+                }
+            ],
+            "allow_multiple_var_args": true
+        },
+        {
+            "name": "getId",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getWinner",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "addTokens",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "tokens",
+                    "type": "variadic<EgldOrEsdtTokenIdentifier>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "getTokens",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<EgldOrEsdtTokenIdentifier>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "setMinimumAmount",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "getMinimumAmount",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "setState",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "new_state",
+                    "type": "State"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "getState",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "State"
+                }
+            ]
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": false,
+    "types": {
+        "Game": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                },
+                {
+                    "name": "creator",
+                    "type": "Address"
+                },
+                {
+                    "name": "rival",
+                    "type": "Option<Address>"
+                },
+                {
+                    "name": "token",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "side",
+                    "type": "u8"
+                },
+                {
+                    "name": "winner",
+                    "type": "Option<Address>"
+                },
+                {
+                    "name": "timestamp",
+                    "type": "u64"
+                }
+            ]
+        },
+        "State": {
+            "type": "enum",
+            "variants": [
+                {
+                    "name": "Paused",
+                    "discriminant": 0
+                },
+                {
+                    "name": "Active",
+                    "discriminant": 1
+                }
+            ]
+        }
+    }
+}

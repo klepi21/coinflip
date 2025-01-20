@@ -32,10 +32,10 @@ export default function RootLayout({
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="Scratch BOD - A fun and fair scratch game on MultiversX" />
-        <title>Scratch BOD</title>
+        <meta name="description" content="HOT - A fun and fair game on MultiversX" />
+        <title>HOT</title>
       </head>
-      <body className="bg-gradient-to-br from-[#FD8700] to-[#FFA036]">
+      <body className="bg-[#69B7C7]">
         <ThemeProvider attribute="class" defaultTheme="light">
           <DappProvider
             environment="devnet"
@@ -55,7 +55,6 @@ export default function RootLayout({
                   <main>
                     {children}
                   </main>
-                  <Footer />
                   <WalletModal 
                     isOpen={false}
                     onClose={() => {}}

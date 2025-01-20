@@ -260,7 +260,7 @@
 
 body {
   font-family: var(--font-family);
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  background: black;
   color: white;
   min-height: 100vh;
 }
