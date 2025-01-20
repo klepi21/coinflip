@@ -41,7 +41,7 @@ const toHexEven = (num: number) => {
 const GAME_MULTIPLIERS = [1, 2, 5, 10, 15];
 
 export default function Create() {
-  const [amount, setAmount] = useState('0.00');
+  const [amount, setAmount] = useState('');
   const [selectedToken, setSelectedToken] = useState<'EGLD' | 'USDC'>('EGLD');
   const [multiplier, setMultiplier] = useState(1);
   const [selectedSide, setSelectedSide] = useState<'heads' | 'tails' | null>(null);
@@ -109,7 +109,7 @@ export default function Create() {
       }
 
     } catch (error) {
-      console.error('Game creation error:', error);
+      // console.error('Game creation error:', error);
       toast.error('Failed to create game');
       setIsSubmitting(false);
       setIsWaitingForTx(false);
@@ -192,8 +192,9 @@ export default function Create() {
     transactionId: sessionId,
     onSuccess: () => {
       setIsWaitingForTx(false);
-      setAmount('0.00');
+      setAmount('');
       setSelectedSide(null);
+      setIsSubmitting(false);
       
       // Show success popup
       setPopup({
@@ -211,6 +212,7 @@ export default function Create() {
     onFail: (errorMessage) => {
       toast.error(`Transaction failed: ${errorMessage}`);
       setIsWaitingForTx(false);
+      setIsSubmitting(false);
     },
   });
 
@@ -262,27 +264,25 @@ export default function Create() {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white text-lg font-medium placeholder-zinc-500 outline-none focus:border-[#75CBDD]"
-                    placeholder="Amount"
+                    placeholder="Enter amount"
                   />
                   <div className="relative">
                     <select 
                       value={selectedToken}
                       onChange={(e) => setSelectedToken(e.target.value as 'EGLD' | 'USDC')}
-                      className="bg-zinc-900 text-white pl-10 pr-4 py-3 rounded-xl border border-zinc-700 outline-none focus:border-[#75CBDD] appearance-none"
+                      className="appearance-none bg-black text-white pl-10 pr-10 py-3 rounded-xl border border-zinc-800 outline-none focus:border-[#75CBDD] cursor-pointer hover:bg-zinc-900 transition-colors"
                     >
                       {Object.values(TOKENS).map((token) => (
                         <option 
                           key={token.id} 
                           value={token.id}
-                          className="flex items-center gap-2"
+                          className="bg-black hover:bg-zinc-900"
                         >
                           {token.name}
                         </option>
                       ))}
                     </select>
-                    <div 
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full overflow-hidden"
-                    >
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full overflow-hidden">
                       <Image
                         src={TOKENS[selectedToken].image}
                         alt={selectedToken}
@@ -290,6 +290,11 @@ export default function Create() {
                         height={20}
                         className="w-full h-full object-cover"
                       />
+                    </div>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
                     </div>
                   </div>
                 </div>
@@ -312,23 +317,30 @@ export default function Create() {
                 </div>
               </div>
 
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setSelectedSide('heads')}
-                  className={`flex-1 h-16 rounded-xl ${
-                    selectedSide === 'heads' ? 'bg-[#75CBDD] border-2 border-white' : 'bg-zinc-800'
-                  } text-white font-medium transition-all flex items-center justify-center gap-2`}
-                >
-                  <span>HEADS 🪙</span>
-                </button>
-                <button
-                  onClick={() => setSelectedSide('tails')}
-                  className={`flex-1 h-16 rounded-xl ${
-                    selectedSide === 'tails' ? 'bg-[#75CBDD] border-2 border-white' : 'bg-zinc-800'
-                  } text-white font-medium transition-all flex items-center justify-center gap-2`}
-                >
-                  <span>TAILS 🪙</span>
-                </button>
+              <div>
+                <label className="block text-zinc-400 text-sm mb-2">Pick a side</label>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setSelectedSide('heads')}
+                    className={`flex-1 h-16 rounded-xl ${
+                      selectedSide === 'heads' 
+                        ? 'bg-[#75CBDD] border-2 border-black text-black' 
+                        : 'bg-zinc-800 text-white'
+                    } font-medium transition-all flex items-center justify-center gap-2 hover:bg-[#75CBDD]/80 hover:text-black`}
+                  >
+                    <span>HEADS 🪙</span>
+                  </button>
+                  <button
+                    onClick={() => setSelectedSide('tails')}
+                    className={`flex-1 h-16 rounded-xl ${
+                      selectedSide === 'tails' 
+                        ? 'bg-[#75CBDD] border-2 border-black text-black' 
+                        : 'bg-zinc-800 text-white'
+                    } font-medium transition-all flex items-center justify-center gap-2 hover:bg-[#75CBDD]/80 hover:text-black`}
+                  >
+                    <span>TAILS 🪙</span>
+                  </button>
+                </div>
               </div>
 
               <button

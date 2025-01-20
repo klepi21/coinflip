@@ -295,7 +295,7 @@ h1, h2, h3, .game-text {
 
 /* Style the modal container */
 .sign-transactions-modals .modal-container {
-  background-color: #FD8803 !important;
+  background-color: #69B7C7  !important;
   border: 2px solid black !important;
   border-radius: 1rem !important;
   padding: 1.5rem !important;
@@ -317,7 +317,7 @@ h1, h2, h3, .game-text {
 
 /* Style the buttons */
 .sign-transactions-modals .modal-action-btn {
-  background-color: #FFA036 !important;
+  background-color: #69B7C7  !important;
   color: black !important;
   border: 2px solid black !important;
   border-radius: 9999px !important;
@@ -367,7 +367,7 @@ h1, h2, h3, .game-text {
 /* Style the transaction signing state container */
 .dapp-core-component__pageState-styles__state,
 .dapp-page-state {
-  background-color: #FD8803 !important;
+  background-color: #69B7C7 !important;
   border: 2px solid black !important;
   border-radius: 1rem !important;
   padding: 2rem !important;

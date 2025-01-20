@@ -68,10 +68,15 @@ type PopupState = {
   gameResult: GameResult;
 };
 
-export default function GameGrid() {
+type Props = {
+  onActiveGamesChange?: (count: number) => void;
+};
+
+export default function GameGrid({ onActiveGamesChange }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [games, setGames] = useState<Game[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [filter, setFilter] = useState<'all' | 'yours'>('all');
   const [popup, setPopup] = useState<PopupState>({
     isOpen: false,
@@ -96,21 +101,21 @@ export default function GameGrid() {
 
   const fetchGames = async () => {
     try {
-      setIsLoading(true);
+      // Only show loading state on initial load
+      if (isInitialLoading) {
+        setIsInitialLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
 
       // Initialize the proxy provider with the network API URL
       const provider = new ProxyNetworkProvider(network.apiAddress);
-
-      // Create ABI registry from the JSON
       const abiRegistry = AbiRegistry.create(flipcoinAbi);
-
-      // Create smart contract instance
       const contract = new SmartContract({
         address: new Address(SC_ADDRESS),
         abi: abiRegistry
       });
 
-      // Query the contract
       const query = contract.createQuery({
         func: new ContractFunction('getGames'),
         args: [new BooleanValue(true)]
@@ -123,18 +128,10 @@ export default function GameGrid() {
         const resultParser = new ResultsParser();
         const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
         
-        console.log('Raw results:', results);
-        console.log('First value:', results.values[0]?.valueOf());
-
-        // The results are in a VariadicValue which contains an array of Game structs
         const gamesArray = results.values[0]?.valueOf();
-        console.log('Games array:', gamesArray);
         
         if (gamesArray && Array.isArray(gamesArray)) {
           const processedGames = await Promise.all(gamesArray.map(async (game: any) => {
-            console.log('Processing game:', game);
-            
-            // Safely access nested properties
             const rival = game?.rival;
             const winner = game?.winner;
             const creatorAddress = game?.creator?.toString() || '';
@@ -142,7 +139,6 @@ export default function GameGrid() {
               ? rival.value.toString() 
               : null;
             
-            // Fetch herotags in parallel
             const [creatorHerotag, rivalHerotag] = await Promise.all([
               fetchHerotag(creatorAddress),
               rivalAddress ? fetchHerotag(rivalAddress) : undefined
@@ -163,20 +159,43 @@ export default function GameGrid() {
             } as Game;
           }));
 
-          console.log('Processed games:', processedGames);
-          setGames(processedGames);
-        } else {
-          console.log('No valid games array found');
-          setGames([]);
+          // Update games smoothly by comparing with existing games
+          setGames(prevGames => {
+            const updatedGames = [...prevGames];
+            
+            // Remove completed games
+            const activeGameIds = new Set(processedGames.map(g => g.id));
+            const completedGames = updatedGames.filter(g => !activeGameIds.has(g.id));
+            completedGames.forEach(game => {
+              const index = updatedGames.findIndex(g => g.id === game.id);
+              if (index !== -1) {
+                updatedGames.splice(index, 1);
+              }
+            });
+
+            // Update existing games and add new ones
+            processedGames.forEach(newGame => {
+              const existingIndex = updatedGames.findIndex(g => g.id === newGame.id);
+              if (existingIndex !== -1) {
+                // Update existing game if it changed
+                if (JSON.stringify(updatedGames[existingIndex]) !== JSON.stringify(newGame)) {
+                  updatedGames[existingIndex] = newGame;
+                }
+              } else {
+                // Add new game
+                updatedGames.push(newGame);
+              }
+            });
+
+            return updatedGames;
+          });
         }
-      } else {
-        console.log('No return data from query');
-        setGames([]);
       }
     } catch (error) {
-      console.error('Error fetching games:', error);
+      // console.error('Error fetching games:', error);
     } finally {
-      setIsLoading(false);
+      setIsInitialLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -186,6 +205,13 @@ export default function GameGrid() {
     const interval = setInterval(fetchGames, 30000);
     return () => clearInterval(interval);
   }, [network.apiAddress]);
+
+  useEffect(() => {
+    // Call onActiveGamesChange whenever games list changes
+    if (onActiveGamesChange) {
+      onActiveGamesChange(games.length);
+    }
+  }, [games, onActiveGamesChange]);
 
   const checkGameWinner = async (gameId: number): Promise<string> => {
     const provider = new ProxyNetworkProvider(network.apiAddress);
@@ -298,14 +324,6 @@ export default function GameGrid() {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Filter Buttons */}
@@ -334,66 +352,64 @@ export default function GameGrid() {
 
       {/* Games Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {currentGames.map((game) => (
-          <div key={game.id} className="relative pb-6">
-            {/* Main box with players */}
-            <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg">
-              <div className="flex relative min-h-[140px]">
-                {/* Left Player (Creator) */}
-                <div className="flex-1 p-4 flex flex-col items-center justify-center">
-                  <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
-                    <Image
-                      src="https://png.pngtree.com/png-vector/20220817/ourmid/pngtree-man-avatar-with-circle-frame-vector-ilustration-png-image_6110328.png"
-                      alt="Creator"
-                      width={24}
-                      height={24}
-                      className="w-full h-full object-cover"
-                    />
+        {isInitialLoading ? (
+          // Show placeholder cards during initial load
+          Array.from({ length: 6 }).map((_, index) => (
+            <div key={`placeholder-${index}`} className="relative pb-6">
+              <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg animate-pulse">
+                <div className="flex relative min-h-[140px]">
+                  {/* Left Player Placeholder */}
+                  <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-zinc-800 mb-2"></div>
+                    <div className="h-4 w-20 bg-zinc-800 rounded mb-2"></div>
+                    <div className="h-4 w-16 bg-zinc-800 rounded"></div>
                   </div>
-                  <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
-                    {game.creatorHerotag || `${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-zinc-400 text-sm font-medium">
-                      {formatTokenAmount(game.amount, game.token)}
+
+                  {/* VS Badge */}
+                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-zinc-800">
+                      <span className="text-zinc-500 text-xs">VS</span>
+                    </div>
+                  </div>
+
+                  {/* Vertical Divider */}
+                  <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-800 transform -translate-x-1/2"></div>
+
+                  {/* Right Player Placeholder */}
+                  <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-zinc-800 mb-2"></div>
+                    <div className="h-4 w-20 bg-zinc-800 rounded mb-2"></div>
+                    <div className="h-4 w-16 bg-zinc-800 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          currentGames.map((game) => (
+            <div 
+              key={game.id} 
+              className={`relative pb-6 transition-opacity duration-300 ${
+                isRefreshing ? 'opacity-80' : 'opacity-100'
+              }`}
+            >
+              {/* Main box with players */}
+              <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg">
+                <div className="flex relative min-h-[140px]">
+                  {/* Left Player (Creator) */}
+                  <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                    <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
+                      <Image
+                        src="https://png.pngtree.com/png-vector/20220817/ourmid/pngtree-man-avatar-with-circle-frame-vector-ilustration-png-image_6110328.png"
+                        alt="Creator"
+                        width={24}
+                        height={24}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
+                      {game.creatorHerotag || `${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
                     </span>
-                    <Image
-                      src={`https://tools.multiversx.com/assets-cdn/devnet/tokens/${game.token}/icon.svg`}
-                      alt={game.token}
-                      width={20}
-                      height={20}
-                      className="rounded-full"
-                    />
-                  </div>
-                </div>
-
-                {/* VS Badge */}
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-zinc-800 shadow-lg">
-                    <span className="text-zinc-500 text-xs font-medium">VS</span>
-                  </div>
-                </div>
-
-                {/* Vertical Divider */}
-                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-800 transform -translate-x-1/2"></div>
-
-                {/* Right Player (Rival) */}
-                <div className="flex-1 p-4 flex flex-col items-center justify-center">
-                  <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
-                    <Image
-                      src="https://png.pngtree.com/png-vector/20220817/ourmid/pngtree-man-avatar-with-circle-frame-vector-ilustration-png-image_6110328.png"
-                      alt="Rival"
-                      width={24}
-                      height={24}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
-                    {game.rival 
-                      ? (game.rivalHerotag || `${game.rival.slice(0, 8)}...${game.rival.slice(-4)}`)
-                      : 'Waiting...'}
-                  </span>
-                  {game.rival && (
                     <div className="flex items-center gap-2">
                       <span className="text-zinc-400 text-sm font-medium">
                         {formatTokenAmount(game.amount, game.token)}
@@ -406,32 +422,74 @@ export default function GameGrid() {
                         className="rounded-full"
                       />
                     </div>
-                  )}
+                  </div>
+
+                  {/* VS Badge */}
+                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-zinc-800 shadow-lg">
+                      <span className="text-zinc-500 text-xs font-medium">VS</span>
+                    </div>
+                  </div>
+
+                  {/* Vertical Divider */}
+                  <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-800 transform -translate-x-1/2"></div>
+
+                  {/* Right Player (Rival) */}
+                  <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                    <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
+                      <Image
+                        src="https://png.pngtree.com/png-vector/20220817/ourmid/pngtree-man-avatar-with-circle-frame-vector-ilustration-png-image_6110328.png"
+                        alt="Rival"
+                        width={24}
+                        height={24}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
+                      {game.rival 
+                        ? (game.rivalHerotag || `${game.rival.slice(0, 8)}...${game.rival.slice(-4)}`)
+                        : 'Waiting...'}
+                    </span>
+                    {game.rival && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-zinc-400 text-sm font-medium">
+                          {formatTokenAmount(game.amount, game.token)}
+                        </span>
+                        <Image
+                          src={`https://tools.multiversx.com/assets-cdn/devnet/tokens/${game.token}/icon.svg`}
+                          alt={game.token}
+                          width={20}
+                          height={20}
+                          className="rounded-full"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Join Button - Only show if no rival */}
-            {!game.rival && (
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[calc(50%)] border-[#1A1A1A]">
-                <button 
-                  disabled={game.creator.toLowerCase() === connectedAddress?.toLowerCase()}
-                  onClick={() => handleJoinGame(game.id, game.amount, game.token)}
-                  className={`w-full ${
-                    game.creator.toLowerCase() === connectedAddress?.toLowerCase()
-                      ? 'bg-zinc-600 cursor-not-allowed'
-                      : 'bg-[#75CBDD] hover:bg-[#75CBDD]/90'
-                  } text-black font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black`}
-                >
-                  {game.creator.toLowerCase() === connectedAddress?.toLowerCase()
-                    ? 'Your Game'
-                    : 'Join game'
-                  }
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
+              {/* Join Button - Only show if no rival */}
+              {!game.rival && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[calc(50%)] border-[#1A1A1A]">
+                  <button 
+                    disabled={game.creator.toLowerCase() === connectedAddress?.toLowerCase()}
+                    onClick={() => handleJoinGame(game.id, game.amount, game.token)}
+                    className={`w-full ${
+                      game.creator.toLowerCase() === connectedAddress?.toLowerCase()
+                        ? 'bg-zinc-600 cursor-not-allowed'
+                        : 'bg-[#75CBDD] hover:bg-[#75CBDD]/90'
+                    } text-black font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black`}
+                  >
+                    {game.creator.toLowerCase() === connectedAddress?.toLowerCase()
+                      ? 'Your Game'
+                      : 'Join game'
+                    }
+                  </button>
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
 
       {totalPages > 1 && (

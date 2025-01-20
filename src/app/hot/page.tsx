@@ -1,13 +1,60 @@
 'use client';
 
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import Create from "@/components/ui/create";
-import GameGrid from "@/components/ui/GameGrid";
+import { useState, useEffect } from 'react';
+import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
+import { 
+  AbiRegistry, 
+  SmartContract, 
+  Address,
+  ResultsParser,
+  ContractFunction
+} from "@multiversx/sdk-core";
+import { useGetNetworkConfig } from "@multiversx/sdk-dapp/hooks";
+import flipcoinAbi from '@/config/flipcoin.abi.json';
+import Create from '@/components/ui/create';
+import GameGrid from '@/components/ui/GameGrid';
 import { AnimatedText } from "@/components/ui/animated-underline-text-one";
 
-export default function Home() {
-  const [showBetSheet, setShowBetSheet] = useState(false);
+// Constants
+const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqjksmaalhed4gu59tfn0gtkscl8s2090du7zs6nrdts';
+
+export default function Hot() {
+  const [totalGamesPlayed, setTotalGamesPlayed] = useState<number>(0);
+  const [activeGames, setActiveGames] = useState<number>(0);
+  const { network } = useGetNetworkConfig();
+
+  const fetchTotalGames = async () => {
+    try {
+      const provider = new ProxyNetworkProvider(network.apiAddress);
+      const contract = new SmartContract({
+        address: new Address(SC_ADDRESS),
+        abi: AbiRegistry.create(flipcoinAbi)
+      });
+
+      const query = contract.createQuery({
+        func: new ContractFunction('getId'),
+      });
+
+      const queryResponse = await provider.queryContract(query);
+      
+      if (queryResponse?.returnData?.[0]) {
+        const endpointDefinition = contract.getEndpoint('getId');
+        const resultParser = new ResultsParser();
+        const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
+        const totalGames = Number(results.values[0].valueOf().toString());
+        setTotalGamesPlayed(totalGames);
+      }
+    } catch (error) {
+      // console.error('Error fetching total games:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTotalGames();
+    // Refresh total games count every minute
+    const interval = setInterval(fetchTotalGames, 60000);
+    return () => clearInterval(interval);
+  }, [network.apiAddress]);
 
   return (
     <main className="flex flex-col bg-black px-6 pt-24">
@@ -24,22 +71,14 @@ export default function Home() {
           />
         </div>
 
-        {/* Create Room Button - Only visible on mobile */}
-        <Button 
-          className="w-full max-w-md py-6 text-lg font-semibold bg-[#75CBDD] hover:bg-[#75CBDD]/90 text-black rounded-full mb-6 md:hidden mx-auto"
-          onClick={() => setShowBetSheet(true)}
-        >
-          create a game
-        </Button>
-
         {/* Stats Section - Only visible on desktop */}
         <div className="hidden md:block mb-8">
           <div className="flex gap-4 mb-4">
             <div className="bg-[#1A1A1A] rounded-full px-8 py-3 border border-zinc-800">
-              <span className="text-white font-bold text-xl">16 ACTIVE GAMES</span>
+              <span className="text-white font-bold text-xl">{activeGames} ACTIVE GAMES</span>
             </div>
             <div className="bg-[#1A1A1A] rounded-full px-8 py-3 border border-zinc-800">
-              <span className="text-white font-bold text-xl">211,829 GAMES PLAYED</span>
+              <span className="text-white font-bold text-xl">{totalGamesPlayed.toLocaleString()} GAMES PLAYED</span>
             </div>
           </div>
         </div>
@@ -53,7 +92,7 @@ export default function Home() {
 
           {/* Right Half - Game Grid */}
           <div className="w-full md:w-2/3">
-            <GameGrid />
+            <GameGrid onActiveGamesChange={setActiveGames} />
           </div>
         </div>
       </div>
