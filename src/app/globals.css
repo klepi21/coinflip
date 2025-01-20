@@ -399,7 +399,7 @@ h1, h2, h3, .game-text {
 /* Style any buttons inside the state container */
 .dapp-core-component__pageState-styles__state button,
 .dapp-page-state button {
-  background-color: #FFA036 !important;
+  background-color: #69B7C7 !important;
   color: black !important;
   border: 2px solid black !important;
   border-radius: 9999px !important;

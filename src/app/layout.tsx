@@ -35,7 +35,7 @@ export default function RootLayout({
         <meta name="description" content="HOT - A fun and fair game on MultiversX" />
         <title>HOT</title>
       </head>
-      <body className="bg-[#69B7C7]">
+      <body className="bg-black">
         <ThemeProvider attribute="class" defaultTheme="light">
           <DappProvider
             environment="devnet"

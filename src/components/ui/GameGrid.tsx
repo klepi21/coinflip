@@ -23,7 +23,7 @@ import flipcoinAbi from '@/config/flipcoin.abi.json';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqjksmaalhed4gu59tfn0gtkscl8s2090du7zs6nrdts';
-const GAMES_PER_PAGE = 6;
+const GAMES_PER_PAGE = 9;
 
 // Token configuration
 const TOKEN_DECIMALS: { [key: string]: number } = {
