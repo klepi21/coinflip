@@ -75,6 +75,29 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const { network } = useGetNetworkConfig();
   const { address: connectedAddress } = useGetAccountInfo();
 
+  const [previousGames, setPreviousGames] = useState<Game[]>([]);
+  const [disappearingGames, setDisappearingGames] = useState<Game[]>([]);
+
+  // Track disappearing games with full game data
+  useEffect(() => {
+    if (!games || games.length === 0) return;
+
+    // Find games that were in previous state but not in current games
+    const currentGameIds = new Set(games.map(g => g.id));
+    const disappeared = previousGames.filter(pg => !currentGameIds.has(pg.id));
+
+    if (disappeared.length > 0) {
+      setDisappearingGames(prev => [...prev, ...disappeared]);
+      
+      // Remove from disappearing after animation
+      setTimeout(() => {
+        setDisappearingGames(prev => prev.filter(g => !disappeared.map(d => d.id).includes(g.id)));
+      }, 3000);
+    }
+
+    setPreviousGames(games);
+  }, [games]);
+
   // Update active games count whenever games change
   useEffect(() => {
     if (onActiveGamesChange) {
@@ -182,10 +205,11 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     }
   };
 
-  // Filter games based on selection
-  const filteredGames = filter === 'all' 
+  // Filter games based on selection and sort by newest first
+  const filteredGames = (filter === 'all' 
     ? games 
-    : games.filter(game => game.creator.toLowerCase() === connectedAddress?.toLowerCase());
+    : games.filter(game => game.creator.toLowerCase() === connectedAddress?.toLowerCase()))
+    .sort((a, b) => b.id - a.id); // Sort by ID in descending order
 
   const totalPages = Math.ceil(filteredGames.length / GAMES_PER_PAGE);
   const startIndex = (currentPage - 1) * GAMES_PER_PAGE;
@@ -275,71 +299,27 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
               </div>
             ))
           ) : (
-            currentGames.map((game) => (
-              <div 
-                key={game.id} 
-                className={`relative pb-6 transition-opacity duration-300 ${
-                  isRefreshing ? 'opacity-80' : 'opacity-100'
-                }`}
-              >
-                {/* Main box with players */}
-                <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg">
-                  <div className="flex relative min-h-[140px]">
-                    {/* Left Player (Creator) */}
-                    <div className="flex-1 p-4 flex flex-col items-center justify-center">
-                      <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
-                        <Image
-                          src="https://png.pngtree.com/png-vector/20220817/ourmid/pngtree-man-avatar-with-circle-frame-vector-ilustration-png-image_6110328.png"
-                          alt="Creator"
-                          width={24}
-                          height={24}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
-                        {game.creatorHerotag || `${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-zinc-400 text-sm font-medium">
-                          {formatTokenAmount(game.amount, game.token)}
+            <>
+              {/* Disappearing Games with Animation */}
+              {disappearingGames.map((game) => (
+                <div key={`disappearing-${game.id}`} className="relative pb-6">
+                  <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg min-h-[140px] animate-fadeOut">
+                    {/* Keep the original game card content for smooth transition */}
+                    <div className="flex relative min-h-[140px] opacity-30">
+                      {/* Left Player (Creator) */}
+                      <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                        <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
+                          <Image
+                            src="https://png.pngtree.com/png-vector/20220817/ourmid/pngtree-man-avatar-with-circle-frame-vector-ilustration-png-image_6110328.png"
+                            alt="Creator"
+                            width={24}
+                            height={24}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
+                          {game.creatorHerotag || `${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
                         </span>
-                        <Image
-                          src={`https://tools.multiversx.com/assets-cdn/devnet/tokens/${game.token}/icon.svg`}
-                          alt={game.token}
-                          width={20}
-                          height={20}
-                          className="rounded-full"
-                        />
-                      </div>
-                    </div>
-
-                    {/* VS Badge */}
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                      <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-zinc-800 shadow-lg">
-                        <span className="text-zinc-500 text-xs font-medium">VS</span>
-                      </div>
-                    </div>
-
-                    {/* Vertical Divider */}
-                    <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-800 transform -translate-x-1/2"></div>
-
-                    {/* Right Player (Rival) */}
-                    <div className="flex-1 p-4 flex flex-col items-center justify-center">
-                      <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
-                        <Image
-                          src="https://png.pngtree.com/png-vector/20220817/ourmid/pngtree-man-avatar-with-circle-frame-vector-ilustration-png-image_6110328.png"
-                          alt="Rival"
-                          width={24}
-                          height={24}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
-                        {game.rival 
-                          ? (game.rivalHerotag || `${game.rival.slice(0, 8)}...${game.rival.slice(-4)}`)
-                          : 'Waiting...'}
-                      </span>
-                      {game.rival && (
                         <div className="flex items-center gap-2">
                           <span className="text-zinc-400 text-sm font-medium">
                             {formatTokenAmount(game.amount, game.token)}
@@ -352,36 +332,177 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             className="rounded-full"
                           />
                         </div>
-                      )}
+                      </div>
+
+                      {/* VS Badge */}
+                      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-zinc-800">
+                          <span className="text-zinc-500 text-xs">VS</span>
+                        </div>
+                      </div>
+
+                      {/* Vertical Divider */}
+                      <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-800 transform -translate-x-1/2"></div>
+
+                      {/* Right Player (Rival) */}
+                      <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                        <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
+                          <Image
+                            src="https://png.pngtree.com/png-vector/20220817/ourmid/pngtree-man-avatar-with-circle-frame-vector-ilustration-png-image_6110328.png"
+                            alt="Rival"
+                            width={24}
+                            height={24}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
+                          {game.rival 
+                            ? (game.rivalHerotag || `${game.rival.slice(0, 8)}...${game.rival.slice(-4)}`)
+                            : 'Waiting...'}
+                        </span>
+                        {game.rival && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-zinc-400 text-sm font-medium">
+                              {formatTokenAmount(game.amount, game.token)}
+                            </span>
+                            <Image
+                              src={`https://tools.multiversx.com/assets-cdn/devnet/tokens/${game.token}/icon.svg`}
+                              alt={game.token}
+                              width={20}
+                              height={20}
+                              className="rounded-full"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Coin Flip Animation Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <div className="animate-coinFlip">
+                        <div className="w-32 h-32 relative">
+                          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#75CBDD] to-[#5B9EA9] backface-hidden flex items-center justify-center shadow-lg border-4 border-black">
+                            <span className="text-6xl">🪙</span>
+                          </div>
+                          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#75CBDD] to-[#5B9EA9] backface-hidden rotate-y-180 flex items-center justify-center shadow-lg border-4 border-black">
+                            <span className="text-6xl">🪙</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
+              ))}
 
-                {/* Join Button - Only show if no rival */}
-                {!game.rival && (
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[calc(50%)] border-[#1A1A1A]">
-                    <button 
-                      disabled={!connectedAddress || game.creator.toLowerCase() === connectedAddress?.toLowerCase()}
-                      onClick={() => handleJoinGame(game.id, game.amount, game.token)}
-                      className={`w-full ${
-                        !connectedAddress 
-                          ? 'bg-zinc-600 cursor-not-allowed'
-                          : game.creator.toLowerCase() === connectedAddress?.toLowerCase()
-                          ? 'bg-zinc-600 cursor-not-allowed'
-                          : 'bg-[#75CBDD] hover:bg-[#75CBDD]/90'
-                      } text-black font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black`}
-                    >
-                      {!connectedAddress 
-                        ? 'Connect Wallet'
-                        : game.creator.toLowerCase() === connectedAddress?.toLowerCase()
-                        ? 'Your Game'
-                        : 'Join game'
-                      }
-                    </button>
+              {/* Current Games */}
+              {currentGames.map((game) => (
+                <div 
+                  key={game.id} 
+                  className={`relative pb-6 transition-opacity duration-300 ${
+                    isRefreshing ? 'opacity-80' : 'opacity-100'
+                  }`}
+                >
+                  {/* Main box with players */}
+                  <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg">
+                    <div className="flex relative min-h-[140px]">
+                      {/* Left Player (Creator) */}
+                      <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                        <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
+                          <Image
+                            src="https://png.pngtree.com/png-vector/20220817/ourmid/pngtree-man-avatar-with-circle-frame-vector-ilustration-png-image_6110328.png"
+                            alt="Creator"
+                            width={24}
+                            height={24}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
+                          {game.creatorHerotag || `${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-zinc-400 text-sm font-medium">
+                            {formatTokenAmount(game.amount, game.token)}
+                          </span>
+                          <Image
+                            src={`https://tools.multiversx.com/assets-cdn/devnet/tokens/${game.token}/icon.svg`}
+                            alt={game.token}
+                            width={20}
+                            height={20}
+                            className="rounded-full"
+                          />
+                        </div>
+                      </div>
+
+                      {/* VS Badge */}
+                      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-zinc-800 shadow-lg">
+                          <span className="text-zinc-500 text-xs font-medium">VS</span>
+                        </div>
+                      </div>
+
+                      {/* Vertical Divider */}
+                      <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-800 transform -translate-x-1/2"></div>
+
+                      {/* Right Player (Rival) */}
+                      <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                        <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
+                          <Image
+                            src="https://png.pngtree.com/png-vector/20220817/ourmid/pngtree-man-avatar-with-circle-frame-vector-ilustration-png-image_6110328.png"
+                            alt="Rival"
+                            width={24}
+                            height={24}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
+                          {game.rival 
+                            ? (game.rivalHerotag || `${game.rival.slice(0, 8)}...${game.rival.slice(-4)}`)
+                            : 'Waiting...'}
+                        </span>
+                        {game.rival && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-zinc-400 text-sm font-medium">
+                              {formatTokenAmount(game.amount, game.token)}
+                            </span>
+                            <Image
+                              src={`https://tools.multiversx.com/assets-cdn/devnet/tokens/${game.token}/icon.svg`}
+                              alt={game.token}
+                              width={20}
+                              height={20}
+                              className="rounded-full"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-            ))
+
+                  {/* Join Button - Only show if no rival */}
+                  {!game.rival && (
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[calc(50%)] border-[#1A1A1A]">
+                      <button 
+                        disabled={!connectedAddress || game.creator.toLowerCase() === connectedAddress?.toLowerCase()}
+                        onClick={() => handleJoinGame(game.id, game.amount, game.token)}
+                        className={`w-full ${
+                          !connectedAddress 
+                            ? 'bg-zinc-600 cursor-not-allowed'
+                            : game.creator.toLowerCase() === connectedAddress?.toLowerCase()
+                            ? 'bg-zinc-600 cursor-not-allowed'
+                            : 'bg-[#75CBDD] hover:bg-[#75CBDD]/90'
+                        } text-black font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black`}
+                      >
+                        {!connectedAddress 
+                          ? 'Connect Wallet'
+                          : game.creator.toLowerCase() === connectedAddress?.toLowerCase()
+                          ? 'Your Game'
+                          : 'Join game'
+                        }
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </>
           )}
         </div>
       </div>
@@ -472,4 +593,39 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       )}
     </div>
   );
+}
+
+// Add styles to document
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = `
+    @keyframes coinFlip {
+      0% { transform: rotateY(0) scale(1); }
+      50% { transform: rotateY(360deg) scale(1.2); }
+      100% { transform: rotateY(720deg) scale(1); }
+    }
+
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .animate-coinFlip {
+      animation: coinFlip 3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .animate-fadeOut {
+      animation: fadeOut 3s ease-in-out forwards;
+    }
+
+    .backface-hidden {
+      backface-visibility: hidden;
+    }
+
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+  `;
+  document.head.appendChild(styleSheet);
 } 
