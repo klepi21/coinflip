@@ -202,131 +202,103 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Filter Buttons */}
-      <div className="flex justify-center gap-4">
-        <button
-          onClick={() => setFilter('all')}
-          className={`px-6 py-2 rounded-full font-semibold transition-colors ${
-            filter === 'all'
-              ? 'bg-[#75CBDD] text-black'
-              : 'bg-zinc-800 text-white hover:bg-zinc-700'
-          }`}
-        >
-          All Games
-        </button>
-        <button
-          onClick={() => setFilter('yours')}
-          className={`px-6 py-2 rounded-full font-semibold transition-colors ${
-            filter === 'yours'
-              ? 'bg-[#75CBDD] text-black'
-              : 'bg-zinc-800 text-white hover:bg-zinc-700'
-          }`}
-        >
-          Your Games
-        </button>
+      {/* Stats and Filter Row */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-4">
+          <div className="bg-[#1A1A1A] rounded-full px-6 py-2 text-white">
+            23 ACTIVE GAMES
+          </div>
+          <div className="bg-[#1A1A1A] rounded-full px-6 py-2 text-white">
+            53 GAMES PLAYED
+          </div>
+        </div>
+        
+        {/* Filter Buttons */}
+        <div className="flex gap-4">
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-6 py-2 rounded-full font-semibold transition-colors ${
+              filter === 'all'
+                ? 'bg-[#75CBDD] text-black'
+                : 'bg-zinc-800 text-white hover:bg-zinc-700'
+            }`}
+          >
+            All Games
+          </button>
+          <button
+            onClick={() => setFilter('yours')}
+            className={`px-6 py-2 rounded-full font-semibold transition-colors ${
+              filter === 'yours'
+                ? 'bg-[#75CBDD] text-black'
+                : 'bg-zinc-800 text-white hover:bg-zinc-700'
+            }`}
+          >
+            Your Games
+          </button>
+        </div>
       </div>
 
-      {/* Games Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {isInitialLoading ? (
-          // Show placeholder cards during initial load
-          Array.from({ length: 6 }).map((_, index) => (
-            <div key={`placeholder-${index}`} className="relative pb-6">
-              <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg animate-pulse">
-                <div className="flex relative min-h-[140px]">
-                  {/* Left Player Placeholder */}
-                  <div className="flex-1 p-4 flex flex-col items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-zinc-800 mb-2"></div>
-                    <div className="h-4 w-20 bg-zinc-800 rounded mb-2"></div>
-                    <div className="h-4 w-16 bg-zinc-800 rounded"></div>
-                  </div>
-
-                  {/* VS Badge */}
-                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-zinc-800">
-                      <span className="text-zinc-500 text-xs">VS</span>
+      {/* Games Grid with Fixed Height Container */}
+      <div className="min-h-[600px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {isInitialLoading ? (
+            // Show placeholder cards during initial load
+            Array.from({ length: 6 }).map((_, index) => (
+              <div key={`placeholder-${index}`} className="relative pb-6">
+                <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg animate-pulse">
+                  <div className="flex relative min-h-[140px]">
+                    {/* Left Player Placeholder */}
+                    <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-zinc-800 mb-2"></div>
+                      <div className="h-4 w-20 bg-zinc-800 rounded mb-2"></div>
+                      <div className="h-4 w-16 bg-zinc-800 rounded"></div>
                     </div>
-                  </div>
 
-                  {/* Vertical Divider */}
-                  <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-800 transform -translate-x-1/2"></div>
+                    {/* VS Badge */}
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-zinc-800">
+                        <span className="text-zinc-500 text-xs">VS</span>
+                      </div>
+                    </div>
 
-                  {/* Right Player Placeholder */}
-                  <div className="flex-1 p-4 flex flex-col items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-zinc-800 mb-2"></div>
-                    <div className="h-4 w-20 bg-zinc-800 rounded mb-2"></div>
-                    <div className="h-4 w-16 bg-zinc-800 rounded"></div>
+                    {/* Vertical Divider */}
+                    <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-800 transform -translate-x-1/2"></div>
+
+                    {/* Right Player Placeholder */}
+                    <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-zinc-800 mb-2"></div>
+                      <div className="h-4 w-20 bg-zinc-800 rounded mb-2"></div>
+                      <div className="h-4 w-16 bg-zinc-800 rounded"></div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))
-        ) : (
-          currentGames.map((game) => (
-            <div 
-              key={game.id} 
-              className={`relative pb-6 transition-opacity duration-300 ${
-                isRefreshing ? 'opacity-80' : 'opacity-100'
-              }`}
-            >
-              {/* Main box with players */}
-              <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg">
-                <div className="flex relative min-h-[140px]">
-                  {/* Left Player (Creator) */}
-                  <div className="flex-1 p-4 flex flex-col items-center justify-center">
-                    <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
-                      <Image
-                        src="https://png.pngtree.com/png-vector/20220817/ourmid/pngtree-man-avatar-with-circle-frame-vector-ilustration-png-image_6110328.png"
-                        alt="Creator"
-                        width={24}
-                        height={24}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
-                      {game.creatorHerotag || `${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-zinc-400 text-sm font-medium">
-                        {formatTokenAmount(game.amount, game.token)}
+            ))
+          ) : (
+            currentGames.map((game) => (
+              <div 
+                key={game.id} 
+                className={`relative pb-6 transition-opacity duration-300 ${
+                  isRefreshing ? 'opacity-80' : 'opacity-100'
+                }`}
+              >
+                {/* Main box with players */}
+                <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg">
+                  <div className="flex relative min-h-[140px]">
+                    {/* Left Player (Creator) */}
+                    <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                      <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
+                        <Image
+                          src="https://png.pngtree.com/png-vector/20220817/ourmid/pngtree-man-avatar-with-circle-frame-vector-ilustration-png-image_6110328.png"
+                          alt="Creator"
+                          width={24}
+                          height={24}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
+                        {game.creatorHerotag || `${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
                       </span>
-                      <Image
-                        src={`https://tools.multiversx.com/assets-cdn/devnet/tokens/${game.token}/icon.svg`}
-                        alt={game.token}
-                        width={20}
-                        height={20}
-                        className="rounded-full"
-                      />
-                    </div>
-                  </div>
-
-                  {/* VS Badge */}
-                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-zinc-800 shadow-lg">
-                      <span className="text-zinc-500 text-xs font-medium">VS</span>
-                    </div>
-                  </div>
-
-                  {/* Vertical Divider */}
-                  <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-800 transform -translate-x-1/2"></div>
-
-                  {/* Right Player (Rival) */}
-                  <div className="flex-1 p-4 flex flex-col items-center justify-center">
-                    <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
-                      <Image
-                        src="https://png.pngtree.com/png-vector/20220817/ourmid/pngtree-man-avatar-with-circle-frame-vector-ilustration-png-image_6110328.png"
-                        alt="Rival"
-                        width={24}
-                        height={24}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
-                      {game.rival 
-                        ? (game.rivalHerotag || `${game.rival.slice(0, 8)}...${game.rival.slice(-4)}`)
-                        : 'Waiting...'}
-                    </span>
-                    {game.rival && (
                       <div className="flex items-center gap-2">
                         <span className="text-zinc-400 text-sm font-medium">
                           {formatTokenAmount(game.amount, game.token)}
@@ -339,62 +311,107 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           className="rounded-full"
                         />
                       </div>
-                    )}
+                    </div>
+
+                    {/* VS Badge */}
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-zinc-800 shadow-lg">
+                        <span className="text-zinc-500 text-xs font-medium">VS</span>
+                      </div>
+                    </div>
+
+                    {/* Vertical Divider */}
+                    <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-800 transform -translate-x-1/2"></div>
+
+                    {/* Right Player (Rival) */}
+                    <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                      <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
+                        <Image
+                          src="https://png.pngtree.com/png-vector/20220817/ourmid/pngtree-man-avatar-with-circle-frame-vector-ilustration-png-image_6110328.png"
+                          alt="Rival"
+                          width={24}
+                          height={24}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
+                        {game.rival 
+                          ? (game.rivalHerotag || `${game.rival.slice(0, 8)}...${game.rival.slice(-4)}`)
+                          : 'Waiting...'}
+                      </span>
+                      {game.rival && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-zinc-400 text-sm font-medium">
+                            {formatTokenAmount(game.amount, game.token)}
+                          </span>
+                          <Image
+                            src={`https://tools.multiversx.com/assets-cdn/devnet/tokens/${game.token}/icon.svg`}
+                            alt={game.token}
+                            width={20}
+                            height={20}
+                            className="rounded-full"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Join Button - Only show if no rival */}
-              {!game.rival && (
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[calc(50%)] border-[#1A1A1A]">
-                  <button 
-                    disabled={!connectedAddress || game.creator.toLowerCase() === connectedAddress?.toLowerCase()}
-                    onClick={() => handleJoinGame(game.id, game.amount, game.token)}
-                    className={`w-full ${
-                      !connectedAddress 
-                        ? 'bg-zinc-600 cursor-not-allowed'
+                {/* Join Button - Only show if no rival */}
+                {!game.rival && (
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[calc(50%)] border-[#1A1A1A]">
+                    <button 
+                      disabled={!connectedAddress || game.creator.toLowerCase() === connectedAddress?.toLowerCase()}
+                      onClick={() => handleJoinGame(game.id, game.amount, game.token)}
+                      className={`w-full ${
+                        !connectedAddress 
+                          ? 'bg-zinc-600 cursor-not-allowed'
+                          : game.creator.toLowerCase() === connectedAddress?.toLowerCase()
+                          ? 'bg-zinc-600 cursor-not-allowed'
+                          : 'bg-[#75CBDD] hover:bg-[#75CBDD]/90'
+                      } text-black font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black`}
+                    >
+                      {!connectedAddress 
+                        ? 'Connect Wallet'
                         : game.creator.toLowerCase() === connectedAddress?.toLowerCase()
-                        ? 'bg-zinc-600 cursor-not-allowed'
-                        : 'bg-[#75CBDD] hover:bg-[#75CBDD]/90'
-                    } text-black font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black`}
-                  >
-                    {!connectedAddress 
-                      ? 'Connect Wallet'
-                      : game.creator.toLowerCase() === connectedAddress?.toLowerCase()
-                      ? 'Your Game'
-                      : 'Join game'
-                    }
-                  </button>
-                </div>
-              )}
-            </div>
-          ))
-        )}
+                        ? 'Your Game'
+                        : 'Join game'
+                      }
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
+      {/* Fixed Position Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-4">
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-            className={`p-2 rounded-full ${
-              currentPage === 1 ? 'text-zinc-600' : 'text-white hover:bg-zinc-800'
-            }`}
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <span className="text-white">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-            className={`p-2 rounded-full ${
-              currentPage === totalPages ? 'text-zinc-600' : 'text-white hover:bg-zinc-800'
-            }`}
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
+        <div className="flex justify-center items-center gap-4 mt-4 sticky bottom-6">
+          <div className="bg-[#1A1A1A] rounded-full px-6 py-2 flex items-center gap-4 border border-zinc-800">
+            <button
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+              className={`p-2 rounded-full transition-colors ${
+                currentPage === 1 ? 'text-zinc-600' : 'text-white hover:bg-zinc-800'
+              }`}
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <span className="text-white font-medium">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className={`p-2 rounded-full transition-colors ${
+                currentPage === totalPages ? 'text-zinc-600' : 'text-white hover:bg-zinc-800'
+              }`}
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       )}
 

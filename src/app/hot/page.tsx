@@ -71,17 +71,6 @@ export default function Hot() {
           />
         </div>
 
-        {/* Stats Section - Only visible on desktop */}
-        <div className="hidden md:block mb-8">
-          <div className="flex gap-4 mb-4">
-            <div className="bg-[#1A1A1A] rounded-full px-8 py-3 border border-zinc-800">
-              <span className="text-white font-bold text-xl">{activeGames} ACTIVE GAMES</span>
-            </div>
-            <div className="bg-[#1A1A1A] rounded-full px-8 py-3 border border-zinc-800">
-              <span className="text-white font-bold text-xl">{totalGamesPlayed.toLocaleString()} GAMES PLAYED</span>
-            </div>
-          </div>
-        </div>
 
         {/* Main Content - Split Screen */}
         <div className="flex flex-col md:flex-row gap-8">

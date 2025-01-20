@@ -207,12 +207,11 @@ export default function Create() {
       setAmount('');
       setSelectedSide(null);
       setIsSubmitting(false);
-      setSessionId(null); // Reset sessionId after success
       
-      // Show success popup
+      // Show success popup immediately
       setPopup({
         isOpen: true,
-        message: 'Your game has been created! Good luck!',
+        message: 'We are creating your game, good luck.',
         isLoading: false,
         gameResult: null
       });
@@ -220,13 +219,14 @@ export default function Create() {
       // Close popup after 5 seconds
       setTimeout(() => {
         setPopup(prev => ({ ...prev, isOpen: false }));
+        setSessionId(null); // Reset sessionId after popup closes
       }, 5000);
     },
     onFail: (errorMessage) => {
       toast.error(`Transaction failed: ${errorMessage}`);
       setIsWaitingForTx(false);
       setIsSubmitting(false);
-      setSessionId(null); // Reset sessionId after failure
+      setSessionId(null);
     },
   });
 
@@ -394,7 +394,7 @@ export default function Create() {
 
       {/* Success Popup */}
       {popup.isOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-300">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] animate-in fade-in duration-300">
           <div className="bg-[#1A1A1A] rounded-3xl p-8 max-w-md w-full mx-4 relative border border-zinc-800 shadow-[0_0_50px_-12px] shadow-[#75CBDD]/20">
             <div className="flex flex-col items-center gap-6 py-4">
               <div className="relative">
@@ -407,6 +407,13 @@ export default function Create() {
                 <h3 className="text-2xl font-bold text-[#75CBDD]">Game Created!</h3>
                 <p className="text-zinc-400">Your game has been created successfully. Good luck!</p>
               </div>
+              <button
+                onClick={() => setPopup(prev => ({ ...prev, isOpen: false }))}
+                className="mt-4 group relative px-8 py-3 bg-[#1A1A1A] text-white font-semibold rounded-full overflow-hidden transition-all hover:scale-105"
+              >
+                <div className="absolute inset-0 w-0 bg-[#75CBDD] transition-all duration-300 ease-out group-hover:w-full"></div>
+                <span className="relative group-hover:text-black">Close</span>
+              </button>
             </div>
           </div>
         </div>
