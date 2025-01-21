@@ -83,7 +83,7 @@ export default function Create() {
       setIsSubmitting(true);
       setIsWaitingForTx(true);
 
-      const decimalAmount = 6; // USDC decimals
+      const decimalAmount = 18; // USDC decimals
       // Calculate total amount (amount per game * number of games)
       const totalAmount = parseFloat(amount) * multiplier;
       const rawAmount = totalAmount * Math.pow(10, decimalAmount);
@@ -147,15 +147,21 @@ export default function Create() {
       action: handleCreateGame,
       text: 'Create Game'
     };
-    if (currentBalance < totalAmount) return { 
-      disabled: true, 
-      message: `Insufficient USDC balance (${currentBalance.toFixed(2)} MINCU available)`,
-      action: handleCreateGame,
-      text: 'Create Game'
-    };
     if (!amount || amountValue <= 0) return { 
       disabled: true, 
       message: 'Enter an amount',
+      action: handleCreateGame,
+      text: 'Create Game'
+    };
+    if (amountValue < 1001) return {
+      disabled: true,
+      message: 'Minimum amount is 1001 MINCU',
+      action: handleCreateGame,
+      text: 'Create Game'
+    };
+    if (currentBalance < totalAmount) return { 
+      disabled: true, 
+      message: `Insufficient USDC balance (${currentBalance.toFixed(2)} MINCU available)`,
       action: handleCreateGame,
       text: 'Create Game'
     };
@@ -392,7 +398,7 @@ export default function Create() {
                           <span className="text-zinc-400">Loading...</span>
                         ) : (
                           <span className="text-white font-medium">
-                            {usdcBalance.toFixed(2)} USDC
+                            {usdcBalance.toFixed(2)} MINCU
                           </span>
                         )}
                       </div>
@@ -483,7 +489,7 @@ export default function Create() {
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <span>USDC</span>
+                        <span>MINCU</span>
                       </div>
                     </div>
                   </div>
@@ -569,7 +575,7 @@ export default function Create() {
                     <span className="text-zinc-400">Loading...</span>
                   ) : (
                     <span className="text-white font-medium">
-                      {usdcBalance.toFixed(2)} USDC
+                      {usdcBalance.toFixed(2)} MINCU
                     </span>
                   )}
                 </div>

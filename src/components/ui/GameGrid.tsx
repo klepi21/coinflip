@@ -29,7 +29,7 @@ const GAMES_PER_PAGE = 9;
 // Token configuration
 const TOKEN_DECIMALS: { [key: string]: number } = {
   'EGLD': 18,
-  'USDC': 6,
+  'MINCU': 18,
   'WEGLD': 18,
 };
 
@@ -456,9 +456,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           <span className="text-zinc-400 text-sm font-medium">
                             {formatTokenAmount(game.amount, game.token)}
                           </span>
-                          {game.token === 'USDC' && (
+                          {game.token === 'MINCU' && (
                             <Image
-                              src={`https://tools.multiversx.com/assets-cdn/devnet/tokens/${game.token}/icon.svg`}
+                              src={`https://tools.multiversx.com/assets-cdn//tokens/${game.token}/icon.svg`}
                               alt={game.token}
                               width={20}
                               height={20}
@@ -499,9 +499,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             <span className="text-zinc-400 text-sm font-medium">
                               {formatTokenAmount(game.amount, game.token)}
                             </span>
-                            {game.token === 'USDC' && (
+                            {game.token === 'MINCU' && (
                               <Image
-                                src={`https://tools.multiversx.com/assets-cdn/devnet/tokens/${game.token}/icon.svg`}
+                                src={`https://tools.multiversx.com/assets-cdn/tokens/${game.token}/icon.svg`}
                                 alt={game.token}
                                 width={20}
                                 height={20}
@@ -571,9 +571,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           <span className="text-zinc-400 text-sm font-medium">
                             {formatTokenAmount(game.amount, game.token)}
                           </span>
-                          {game.token === 'USDC' && (
+                          {game.token === 'MINCU' && (
                             <Image
-                              src={`https://tools.multiversx.com/assets-cdn/devnet/tokens/${game.token}/icon.svg`}
+                              src={`https://tools.multiversx.com/assets-cdn/tokens/${game.token}/icon.svg`}
                               alt={game.token}
                               width={20}
                               height={20}
@@ -613,9 +613,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           <span className="text-zinc-400 text-sm font-medium">
                             {formatTokenAmount(game.amount, game.token)}
                           </span>
-                          {game.token === 'USDC' && (
+                          {game.token === 'MINCU' && (
                             <Image
-                              src={`https://tools.multiversx.com/assets-cdn/devnet/tokens/${game.token}/icon.svg`}
+                              src={`https://tools.multiversx.com/assets-cdn/tokens/${game.token}/icon.svg`}
                               alt={game.token}
                               width={20}
                               height={20}
@@ -628,9 +628,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             <span className="text-zinc-400 text-sm font-medium">
                               {formatTokenAmount(game.amount, game.token)}
                             </span>
-                            {game.token === 'USDC' && (
+                            {game.token === 'MINCU' && (
                               <Image
-                                src={`https://tools.multiversx.com/assets-cdn/devnet/tokens/${game.token}/icon.svg`}
+                                src={`https://tools.multiversx.com/assets-cdn/tokens/${game.token}/icon.svg`}
                                 alt={game.token}
                                 width={20}
                                 height={20}
