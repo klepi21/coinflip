@@ -302,6 +302,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
       const transaction = contract.methods
         .cancel([new U64Value(gameId)])
+        .withSender(new Address(connectedAddress))
         .withGasLimit(60000000)
         .withChainID(network.chainId);
 
