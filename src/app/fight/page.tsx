@@ -14,9 +14,47 @@ import flipcoinAbi from '@/config/flipcoin.abi.json';
 import Create from '@/components/ui/create';
 import GameGrid from '@/components/ui/GameGrid';
 import { AnimatedText } from "@/components/ui/animated-underline-text-one";
+import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
+
+const calculateTimeLeft = () => {
+  const difference = +new Date('2025-02-01') - +new Date();
+  let timeLeft = { hours: '00', minutes: '00', seconds: '00' };
+
+  if (difference > 0) {
+    timeLeft = {
+      hours: Math.floor((difference / (1000 * 60 * 60))).toString().padStart(2, '0'),
+      minutes: Math.floor((difference / 1000 / 60) % 60).toString().padStart(2, '0'),
+      seconds: Math.floor((difference / 1000) % 60).toString().padStart(2, '0'),
+    };
+  }
+
+  return timeLeft;
+};
+
+function CountdownBadge() {
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black text-xs font-medium px-3 py-1 rounded-full animate-pulse">
+      Next $MINCU opponent in {timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}
+    </div>
+  );
+}
+
+const CreateDynamic = dynamic(() => import('@/components/ui/create'), { ssr: false });
+const GameGridDynamic = dynamic(() => import('@/components/ui/GameGrid'), { ssr: false });
 
 export default function Hot() {
   const [totalGamesPlayed, setTotalGamesPlayed] = useState<number>(0);
@@ -61,40 +99,43 @@ export default function Hot() {
       <div className="w-full max-w-7xl mx-auto flex-1">
         {/* Title Section */}
         <div className="flex flex-col items-center mb-12">
-          <div className="flex flex-col items-center">
-            <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center w-full">
+            <div className="relative w-full md:w-[600px]">
               <AnimatedText 
                 text="$MINCU FIGHT"
-                textClassName="text-xl md:text-6xl font-bold text-white tracking-wider"
+                textClassName="text-3xl md:text-6xl font-bold text-white tracking-wider"
                 underlineClassName="text-gradient-gold"
                 underlinePath="M 0,10 Q 150,0 300,10 Q 450,20 600,10"
                 underlineHoverPath="M 0,10 Q 150,20 300,10 Q 450,0 600,10"
-                className="w-full md:w-[600px]"
+                className="w-full"
               />
+              <div className="absolute right-1 top-1 -translate-y-1/2 ml-8">
+                <CountdownBadge />
+              </div>
             </div>
-            <p className="text-lg md:text-2xl font-semibold text-white mt-4 text-center">Fight between $MINCU and Lower Expectations | P2P Game</p>
-            
+            <p className="text-lg md:text-2xl font-semibold text-white mt-4 text-center">
+              Fight between $MINCU and Lower Expectations | P2P Game
+            </p>
           </div>
         </div>
-
 
         {/* Main Content - Split Screen */}
         <div className="flex flex-col md:flex-row gap-8">
           {/* Left Half - Create Game */}
           <div className="w-full md:w-1/3">
-            <Create />
+            <CreateDynamic />
           </div>
 
           {/* Right Half - Game Grid */}
           <div className="w-full md:w-2/3">
-            <GameGrid onActiveGamesChange={setActiveGames} />
+            <GameGridDynamic onActiveGamesChange={setActiveGames} />
           </div>
         </div>
       </div>
       {/* Footer Section */}
       <div className="text-center text-white mt-8">
         <p>Engage in a provably fair, peer-to-peer gaming experience. Please ensure you are at least 18 years old and comply with your local regulations.</p>
-        <p>The Dapp is not affiliated with the $MINCU team.</p>
+        <p>The Dapp is not affiliated with the $MINCU token.</p>
       </div>
     </main>
   );
