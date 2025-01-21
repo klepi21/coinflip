@@ -80,17 +80,19 @@ export default function Hot() {
         const resultParser = new ResultsParser();
         const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
         const totalGames = Number(results.values[0].valueOf().toString());
+        console.log('Total games fetched:', totalGames);
         setTotalGamesPlayed(totalGames);
+      } else {
+        console.log('No return data from getId');
       }
     } catch (error) {
-      // console.error('Error fetching total games:', error);
+      console.error('Error fetching total games:', error);
     }
   };
 
   useEffect(() => {
     fetchTotalGames();
-    // Refresh total games count every minute
-    const interval = setInterval(fetchTotalGames, 60000);
+    const interval = setInterval(fetchTotalGames, 10000);
     return () => clearInterval(interval);
   }, [network.apiAddress]);
 
