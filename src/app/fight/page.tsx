@@ -71,9 +71,8 @@ export default function Hot() {
                 underlineHoverPath="M 0,10 Q 150,20 300,10 Q 450,0 600,10"
                 className="w-full md:w-[600px]"
               />
-              <span className="text-sm text-white font-semibold mt-4">P2P Game</span>
             </div>
-            <p className="text-lg md:text-2xl font-semibold text-white mt-4">Fight between $MINCU and Lower Expectations</p>
+            <p className="text-lg md:text-2xl font-semibold text-white mt-4 text-center">Fight between $MINCU and Lower Expectations | P2P Game</p>
             
           </div>
         </div>
@@ -91,6 +90,11 @@ export default function Hot() {
             <GameGrid onActiveGamesChange={setActiveGames} />
           </div>
         </div>
+      </div>
+      {/* Footer Section */}
+      <div className="text-center text-white mt-8">
+        <p>Engage in a provably fair, peer-to-peer gaming experience. Please ensure you are at least 18 years old and comply with your local regulations.</p>
+        <p>The Dapp is not affiliated with the $MINCU team.</p>
       </div>
     </main>
   );

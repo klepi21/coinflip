@@ -241,183 +241,189 @@ export default function Create() {
 
       {/* Mobile Create Form Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] md:hidden">
-          <div className="w-full h-full flex flex-col">
-            <div className="flex justify-end p-4">
-              <button 
-                onClick={() => setShowCreateModal(false)}
-                className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-white"
-              >
-                ×
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto px-4 pb-8">
-              <div className="bg-[#1A1A1A] rounded-2xl border border-zinc-800 shadow-xl overflow-hidden max-w-sm mx-auto">
-                <div className="p-4">
-                  {/* Mobile Form Content */}
-                  <div className="space-y-6">
-                    {/* Smaller Coin Animation */}
-                    <div className="flex justify-center">
-                      <motion.div 
-                        className="relative w-32 h-32"
-                        animate={{ rotateY: selectedSide ? 180 : 0 }}
-                        transition={{ duration: 0.6, type: "spring" }}
-                        key={selectedSide}
-                      >
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-zinc-800 to-black shadow-2xl flex items-center justify-center">
-                          <div className="absolute inset-2 rounded-full bg-gradient-to-br from-[#C99733] to-[#FFD163] flex items-center justify-center overflow-hidden">
-                            {selectedSide === 'heads' ? (
-                              <Image
-                                src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
-                                alt="MINCU"
-                                width={60}
-                                height={60}
-                                className="w-20 h-20"
-                              />
-                            ) : selectedSide === 'tails' ? (
-                              <Image
-                                src="https://i.ibb.co/2SdHttC/lower2.png"
-                                alt="Lower Expectations"
-                                width={60}
-                                height={60}
-                                className="w-20 h-20"
-                              />
-                            ) : (
-                              <div className="text-4xl">?</div>
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                    </div>
-
-                    {/* Mobile Form Fields */}
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-zinc-400 text-sm mb-2">Amount</label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="number"
-                            value={amount}
-                            onChange={(e) => {
-                              // Only allow whole numbers
-                              const value = e.target.value.replace(/\D/g, '');
-                              setAmount(value);
-                            }}
-                            onKeyDown={(e) => {
-                              // Prevent decimal point
-                              if (e.key === '.' || e.key === ',') {
-                                e.preventDefault();
-                              }
-                            }}
-                            step="1"
-                            min="1001"
-                            className="flex-1 bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
-                            placeholder="Enter amount"
-                          />
-                          <div className="relative">
-                            <div className="flex items-center gap-2 bg-black text-white px-3 py-2 rounded-xl border border-zinc-800">
-                              <div className="w-4 h-4 rounded-full overflow-hidden">
-                                <Image
-                                  src={TOKENS.MINCU.image}
-                                  alt="MINCU"
-                                  width={16}
-                                  height={16}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                              <span className="text-sm">MINCU</span>
-                            </div>
-                          </div>
-                        </div>
-                        {/* Helper message */}
-                        <div className="text-sm text-zinc-500 mt-1">
-                          Minimum amount: 1000 MINCU
+        <div 
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] md:hidden flex items-center justify-center"
+          onClick={() => setShowCreateModal(false)}
+        >
+          <div 
+            className="w-full max-w-sm mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-[#1A1A1A] rounded-2xl border border-zinc-800 shadow-xl overflow-hidden">
+              <div className="flex justify-end p-4">
+                <button 
+                  onClick={() => setShowCreateModal(false)}
+                  className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-white"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="px-4 pb-8">
+                {/* Mobile Form Content */}
+                <div className="space-y-6">
+                  {/* Smaller Coin Animation */}
+                  <div className="flex justify-center">
+                    <motion.div 
+                      className="relative w-32 h-32"
+                      animate={{ rotateY: selectedSide ? 180 : 0 }}
+                      transition={{ duration: 0.6, type: "spring" }}
+                      key={selectedSide}
+                    >
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-zinc-800 to-black shadow-2xl flex items-center justify-center">
+                        <div className="absolute inset-2 rounded-full bg-gradient-to-br from-[#C99733] to-[#FFD163] flex items-center justify-center overflow-hidden">
+                          {selectedSide === 'heads' ? (
+                            <Image
+                              src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
+                              alt="MINCU"
+                              width={60}
+                              height={60}
+                              className="w-20 h-20"
+                            />
+                          ) : selectedSide === 'tails' ? (
+                            <Image
+                              src="https://i.ibb.co/2SdHttC/lower2.png"
+                              alt="Lower Expectations"
+                              width={60}
+                              height={60}
+                              className="w-20 h-20"
+                              style={{ transform: 'scaleX(-1)' }}
+                            />
+                          ) : (
+                            <div className="text-4xl">?</div>
+                          )}
                         </div>
                       </div>
+                    </motion.div>
+                  </div>
 
-                      <div>
-                        <label className="block text-zinc-400 text-sm mb-2">Games to create</label>
-                        <div className="flex gap-1">
-                          {GAME_MULTIPLIERS.map((mult) => (
-                            <button
-                              key={mult}
-                              onClick={() => setMultiplier(mult)}
-                              className={`flex-1 h-10 rounded-xl text-sm ${
-                                multiplier === mult ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' : 'bg-zinc-800 text-white'
-                              } font-medium transition-all`}
-                            >
-                              {mult}x
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-zinc-400 text-sm mb-2">Pick a side</label>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setSelectedSide('heads')}
-                            className={`flex-1 h-12 rounded-xl ${
-                              selectedSide === 'heads' 
-                                ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-2 border-black text-black' 
-                                : 'bg-zinc-800 text-white'
-                            } font-medium transition-all flex items-center justify-center gap-2`}
-                          >
-                            <div className="w-8 h-8 rounded-full overflow-hidden bg-black/20 p-1">
+                  {/* Mobile Form Fields */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-zinc-400 text-sm mb-2">Amount</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={amount}
+                          onChange={(e) => {
+                            // Only allow whole numbers
+                            const value = e.target.value.replace(/\D/g, '');
+                            setAmount(value);
+                          }}
+                          onKeyDown={(e) => {
+                            // Prevent decimal point
+                            if (e.key === '.' || e.key === ',') {
+                              e.preventDefault();
+                            }
+                          }}
+                          step="1"
+                          min="1001"
+                          className="flex-1 bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
+                          placeholder="Enter amount"
+                        />
+                        <div className="relative">
+                          <div className="flex items-center gap-2 bg-black text-white px-3 py-2 rounded-xl border border-zinc-800">
+                            <div className="w-4 h-4 rounded-full overflow-hidden">
                               <Image
-                                src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
+                                src={TOKENS.MINCU.image}
                                 alt="MINCU"
-                                width={24}
-                                height={24}
-                                className="w-full h-full object-contain rounded-full"
+                                width={16}
+                                height={16}
+                                className="w-full h-full object-cover"
                               />
                             </div>
                             <span className="text-sm">MINCU</span>
-                          </button>
-                          <button
-                            onClick={() => setSelectedSide('tails')}
-                            className={`flex-1 h-12 rounded-xl ${
-                              selectedSide === 'tails' 
-                                ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-2 border-black text-black' 
-                                : 'bg-zinc-800 text-white'
-                            } font-medium transition-all flex items-center justify-center gap-2`}
-                          >
-                            <div className="w-8 h-8 rounded-full overflow-hidden bg-black/20 p-1">
-                              <Image
-                                src="https://i.ibb.co/2SdHttC/lower2.png"
-                                alt="Lower Expectations"
-                                width={24}
-                                height={24}
-                                className="w-full h-full object-contain rounded-full"
-                              />
-                            </div>
-                            <span className="text-sm">Lower</span>
-                          </button>
+                          </div>
                         </div>
                       </div>
-
-                      <button
-                        onClick={buttonState.action}
-                        disabled={buttonState.disabled}
-                        className={`w-full h-12 rounded-xl text-sm font-medium transition-all ${
-                          !buttonState.disabled
-                            ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:opacity-90 text-black'
-                            : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                        }`}
-                      >
-                        {buttonState.text}
-                      </button>
-
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="text-zinc-500">Balance:</span>
-                        {isLoadingBalance ? (
-                          <span className="text-zinc-400">Loading...</span>
-                        ) : (
-                          <span className="text-white font-medium">
-                            {usdcBalance.toFixed(2)} MINCU
-                          </span>
-                        )}
+                      {/* Helper message */}
+                      <div className="text-sm text-zinc-500 mt-1">
+                        Minimum amount: 1000 MINCU
                       </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-zinc-400 text-sm mb-2">Games to create</label>
+                      <div className="flex gap-1">
+                        {GAME_MULTIPLIERS.map((mult) => (
+                          <button
+                            key={mult}
+                            onClick={() => setMultiplier(mult)}
+                            className={`flex-1 h-10 rounded-xl text-sm ${
+                              multiplier === mult ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' : 'bg-zinc-800 text-white'
+                            } font-medium transition-all`}
+                          >
+                            {mult}x
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-zinc-400 text-sm mb-2">Pick a side</label>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setSelectedSide('heads')}
+                          className={`flex-1 h-12 rounded-xl ${
+                            selectedSide === 'heads' 
+                              ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-2 border-black text-black' 
+                              : 'bg-zinc-800 text-white'
+                          } font-medium transition-all flex items-center justify-center gap-2`}
+                        >
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-black/20 p-1">
+                            <Image
+                              src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
+                              alt="MINCU"
+                              width={24}
+                              height={24}
+                              className="w-full h-full object-contain rounded-full"
+                            />
+                          </div>
+                          <span className="text-sm">MINCU</span>
+                        </button>
+                        <button
+                          onClick={() => setSelectedSide('tails')}
+                          className={`flex-1 h-12 rounded-xl ${
+                            selectedSide === 'tails' 
+                              ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-2 border-black text-black' 
+                              : 'bg-zinc-800 text-white'
+                          } font-medium transition-all flex items-center justify-center gap-2`}
+                        >
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-black/20 p-1">
+                            <Image
+                              src="https://i.ibb.co/2SdHttC/lower2.png"
+                              alt="Lower Expectations"
+                              width={24}
+                              height={24}
+                              className="w-full h-full object-contain rounded-full"
+                              style={{ transform: 'scaleX(-1)' }}
+                            />
+                          </div>
+                          <span className="text-sm">Lower Expectations</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={buttonState.action}
+                      disabled={buttonState.disabled}
+                      className={`w-full h-12 rounded-xl text-sm font-medium transition-all ${
+                        !buttonState.disabled
+                          ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:opacity-90 text-black'
+                          : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                      }`}
+                    >
+                      {buttonState.text}
+                    </button>
+
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-zinc-500">Balance:</span>
+                      {isLoadingBalance ? (
+                        <span className="text-zinc-400">Loading...</span>
+                      ) : (
+                        <span className="text-white font-medium">
+                          {usdcBalance.toFixed(2)} MINCU
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -574,17 +580,19 @@ export default function Create() {
                           : 'bg-zinc-800 text-white'
                       } font-medium transition-all flex items-center justify-center gap-3 hover:bg-gradient-to-r hover:from-[#C99733] hover:to-[#FFD163] hover:text-black`}
                     >
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-black/20 p-1">
-                        <Image
-                          src="https://i.ibb.co/2SdHttC/lower2.png"
-                          alt="Lower Expectations"
-                          width={32}
-                          height={32}
-                          className="w-full h-full object-contain rounded-full"
-                          style={{ transform: 'scaleX(-1)' }}
-                        />
+                      <div className="flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-black/20 p-1">
+                          <Image
+                            src="https://i.ibb.co/2SdHttC/lower2.png"
+                            alt="Lower Expectations"
+                            width={32}
+                            height={32}
+                            className="w-full h-full object-contain rounded-full"
+                            style={{ transform: 'scaleX(-1)' }}
+                          />
+                        </div>
+                        <span className="ml-0">Lower Expectations</span>
                       </div>
-                      <span>Lower Expectations</span>
                     </button>
                   </div>
                 </div>
