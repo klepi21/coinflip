@@ -621,7 +621,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       <div className="flex-1 p-4 flex flex-col items-center justify-center">
                         <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
                           <Image
-                            src="https://i.ibb.co/zFg3c9G/Screenshot-2025-01-21-at-1-17-39-AM.png"
+                            src={game.side === 0 
+                              ? "https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
+                              : "https://i.ibb.co/2SdHttC/lower2.png"}
                             alt="Creator"
                             width={48}
                             height={48}
@@ -659,7 +661,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       <div className="flex-1 p-4 flex flex-col items-center justify-center">
                         <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
                           <Image
-                            src="https://i.ibb.co/zFg3c9G/Screenshot-2025-01-21-at-1-17-39-AM.png"
+                            src={game.side === 0 
+                              ? "https://i.ibb.co/2SdHttC/lower2.png"
+                              : "https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"}
                             alt="Rival"
                             width={48}
                             height={48}

@@ -24,6 +24,7 @@ export type Game = {
   timestamp: number;
   creatorHerotag?: string;
   rivalHerotag?: string;
+  side: number;
 };
 
 export function useGames() {
@@ -91,12 +92,20 @@ export function useGames() {
               rivalHerotag,
               token: game?.token?.toString() || '',
               amount: game?.amount?.toString() || '0',
+              side: Number(game?.side?.toString() || 0),
               winner: winner && typeof winner.isNone === 'function' && !winner.isNone() 
                 ? winner.value.toString() 
                 : null,
               timestamp: Number(game?.timestamp?.toString() || 0)
             } as Game;
           }));
+
+          // Add console log for active games
+          processedGames.forEach(game => {
+            if (!game.rival) {  // Only log active (open) games
+              console.log(`Game ${game.id} side: ${game.side}`);
+            }
+          });
 
           // Update games smoothly
           setGames(prevGames => {
