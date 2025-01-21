@@ -36,8 +36,12 @@ export default function RootLayout({
         <title>$MINCU Fight - The Ultimate Battle</title>
         <meta name="description" content="Engage in epic battles with $MINCU Fight, the premier blockchain-based fighting game on MultiversX. Compete against other players and claim your rewards." />
         <meta property="og:image" content="/img/mincufight.png" />
+        <meta property="og:image:alt" content="MINCU Fight Game Logo" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content="/img/mincufight.png" />
+        <meta name="twitter:image:alt" content="MINCU Fight Game Logo" />
         <style>
           {`
             * {
