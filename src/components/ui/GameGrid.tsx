@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
 import { 
   AbiRegistry, 
@@ -67,13 +67,16 @@ type PopupState = {
   gameResult: GameResult;
 };
 
+type FilterType = 'all' | 'highest' | 'lowest' | 'yours';
+
 type Props = {
   onActiveGamesChange?: (count: number) => void;
 };
 
 export default function GameGrid({ onActiveGamesChange }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [filter, setFilter] = useState<'all' | 'yours'>('all');
+  const [filter, setFilter] = useState<FilterType>('all');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [popup, setPopup] = useState<PopupState>({
     isOpen: false,
     message: '',
@@ -363,11 +366,35 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     }
   };
 
-  // Filter games based on selection and sort by newest first
-  const filteredGames = (filter === 'all' 
-    ? games 
-    : games.filter(game => game.creator.toLowerCase() === connectedAddress?.toLowerCase()))
-    .sort((a, b) => b.id - a.id); // Sort by ID in descending order
+  // Filter and sort games based on selection
+  const filteredGames = (() => {
+    let filtered = games;
+    
+    // First apply owner filter
+    if (filter === 'yours') {
+      filtered = filtered.filter(game => game.creator.toLowerCase() === connectedAddress?.toLowerCase());
+    }
+    
+    // Then apply sorting
+    switch (filter) {
+      case 'highest':
+        return filtered.sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
+      case 'lowest':
+        return filtered.sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount));
+      default:
+        return filtered.sort((a, b) => b.id - a.id); // Default sort by newest
+    }
+  })();
+
+  // Get display text for current filter
+  const getFilterDisplayText = (filterType: FilterType) => {
+    switch (filterType) {
+      case 'all': return 'All Games';
+      case 'highest': return 'Highest Value';
+      case 'lowest': return 'Lowest Value';
+      case 'yours': return 'Your Games';
+    }
+  };
 
   const totalPages = Math.ceil(filteredGames.length / GAMES_PER_PAGE);
   const startIndex = (currentPage - 1) * GAMES_PER_PAGE;
@@ -395,28 +422,45 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
           </div>
         </div>
         
-        {/* Filter Buttons */}
-        <div className="flex gap-2 sm:gap-4">
+        {/* Filter Dropdown */}
+        <div className="relative">
           <button
-            onClick={() => setFilter('all')}
-            className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base font-semibold transition-colors ${
-              filter === 'all'
-                ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black'
-                : 'bg-zinc-800 text-white hover:bg-zinc-700'
-            }`}
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className="w-full sm:w-48 h-10 px-4 rounded-xl bg-[#1A1A1A] border border-zinc-800 text-white flex items-center justify-between hover:border-[#C99733] transition-colors"
           >
-            All Games
+            <span>{getFilterDisplayText(filter)}</span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
           </button>
-          <button
-            onClick={() => setFilter('yours')}
-            className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base font-semibold transition-colors ${
-              filter === 'yours'
-                ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black'
-                : 'bg-zinc-800 text-white hover:bg-zinc-700'
-            }`}
-          >
-            Your Games
-          </button>
+          
+          {isFilterOpen && (
+            <>
+              {/* Backdrop to close dropdown when clicking outside */}
+              <div 
+                className="fixed inset-0 z-40"
+                onClick={() => setIsFilterOpen(false)} 
+              />
+              
+              {/* Dropdown Menu */}
+              <div className="absolute top-full mt-2 w-full sm:w-48 bg-[#1A1A1A] border border-zinc-800 rounded-xl overflow-hidden z-50 shadow-lg">
+                {(['all', 'highest', 'lowest', 'yours'] as FilterType[]).map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      setFilter(option);
+                      setIsFilterOpen(false);
+                    }}
+                    className={`w-full px-4 py-2.5 text-left hover:bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:text-black transition-colors ${
+                      filter === option 
+                        ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' 
+                        : 'text-white'
+                    }`}
+                  >
+                    {getFilterDisplayText(option)}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
