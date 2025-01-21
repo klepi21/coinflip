@@ -21,10 +21,12 @@ import { sendTransactions } from "@multiversx/sdk-dapp/services";
 import { refreshAccount } from "@multiversx/sdk-dapp/utils/account";
 import flipcoinAbi from '@/config/flipcoin.abi.json';
 import { useGames, Game } from '@/hooks/useGames';
+import { useTokenBalance } from '@/hooks/useTokenBalance';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
 const GAMES_PER_PAGE = 9;
+const MINCU_IDENTIFIER = 'MINCU-38e93d';
 
 // Token configuration
 const TOKEN_DECIMALS = 18;
@@ -79,6 +81,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const { games, isInitialLoading, isRefreshing, refetchGames } = useGames();
   const { network } = useGetNetworkConfig();
   const { address: connectedAddress } = useGetAccountInfo();
+  const { balance: mincuBalance, isLoading: isLoadingBalance } = useTokenBalance(connectedAddress || '', MINCU_IDENTIFIER);
 
   const [previousGames, setPreviousGames] = useState<Game[]>([]);
   const [disappearingGames, setDisappearingGames] = useState<Game[]>([]);
@@ -340,6 +343,12 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         gameResult: null
       });
     }
+  };
+
+  const canJoinGame = (gameAmount: string): boolean => {
+    if (!connectedAddress || isLoadingBalance) return false;
+    const requiredAmount = parseFloat(formatTokenAmount(gameAmount));
+    return mincuBalance >= requiredAmount;
   };
 
   // Filter games based on selection and sort by newest first
@@ -623,9 +632,15 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       ) : (
                         <button 
                           onClick={() => handleJoinGame(game.id, game.amount, game.token)}
-                          className="w-full bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:opacity-90 text-black font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black"
+                          disabled={!canJoinGame(game.amount)}
+                          className={`w-full font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black ${
+                            canJoinGame(game.amount)
+                              ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:opacity-90 text-black'
+                              : 'bg-zinc-600 cursor-not-allowed text-zinc-400'
+                          }`}
+                          title={!canJoinGame(game.amount) ? `Insufficient balance (${formatTokenAmount(game.amount)} MINCU required)` : ''}
                         >
-                          Join game
+                          {canJoinGame(game.amount) ? 'Join game' : 'Insufficient balance'}
                         </button>
                       )}
                     </div>
