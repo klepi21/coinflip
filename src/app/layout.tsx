@@ -35,13 +35,20 @@ export default function RootLayout({
         <meta name="description" content="$MINCU Fight - The Ultimate Battle" />
         <title>$MINCU Fight - The Ultimate Battle</title>
         <meta name="description" content="Engage in epic battles with $MINCU Fight, the premier blockchain-based fighting game on MultiversX. Compete against other players and claim your rewards." />
-        <meta property="og:image" content="/img/mincufight.png" />
+        <meta property="og:title" content="$MINCU Fight - P2P Game" />
+        <meta property="og:description" content="Fight between $MINCU and Lower Expectations | P2P Game on MultiversX" />
+        <meta property="og:image" content="https://mincufight.vercel.app/img/mincufight.png" />
         <meta property="og:image:alt" content="MINCU Fight Game Logo" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
+        <meta property="og:url" content="https://mincufight.vercel.app/fight" />
+        <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content="/img/mincufight.png" />
+        <meta name="twitter:title" content="$MINCU Fight - P2P Game" />
+        <meta name="twitter:description" content="Fight between $MINCU and Lower Expectations | P2P Game on MultiversX" />
+        <meta name="twitter:image" content="https://mincufight.vercel.app/img/mincufight.png" />
         <meta name="twitter:image:alt" content="MINCU Fight Game Logo" />
+        <meta name="twitter:url" content="https://mincufight.vercel.app/fight" />
         <style>
           {`
             * {

@@ -526,6 +526,13 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           <span className="text-zinc-400 text-sm font-medium">
                             {formatTokenAmount(game.amount)}
                           </span>
+                          <Image
+                            src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
+                            alt="MINCU"
+                            width={24}
+                            height={24}
+                            className="w-8 h-8 rounded-full"
+                          />
                         </div>
                       </div>
 
@@ -555,13 +562,18 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             ? (game.rivalHerotag || `${game.rival.slice(0, 5)}...${game.rival.slice(-4)}`)
                             : 'Waiting...'}
                         </span>
-                        {game.rival && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-zinc-400 text-sm font-medium">
-                              {formatTokenAmount(game.amount)}
-                            </span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="text-zinc-400 text-sm font-medium">
+                            {formatTokenAmount(game.amount)}
+                          </span>
+                          <Image
+                            src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
+                            alt="MINCU"
+                            width={16}
+                            height={16}
+                            className="w-4 h-4 rounded-full"
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -623,6 +635,13 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           <span className="text-zinc-400 text-sm font-medium">
                             {formatTokenAmount(game.amount)}
                           </span>
+                          <Image
+                            src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
+                            alt="MINCU"
+                            width={16}
+                            height={16}
+                            className="w-4 h-4 rounded-full"
+                          />
                         </div>
                       </div>
 
@@ -656,14 +675,14 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           <span className="text-zinc-400 text-sm font-medium">
                             {formatTokenAmount(game.amount)}
                           </span>
+                          <Image
+                            src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
+                            alt="MINCU"
+                            width={16}
+                            height={16}
+                            className="w-4 h-4 rounded-full"
+                          />
                         </div>
-                        {game.rival && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-zinc-400 text-sm font-medium">
-                              {formatTokenAmount(game.amount)}
-                            </span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
