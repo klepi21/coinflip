@@ -52,7 +52,7 @@ export default function RootLayout({
         <style>
           {`
             * {
-              zoom: 99%;
+              zoom: 99.5%;
             }
           `}
         </style>

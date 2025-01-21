@@ -133,8 +133,8 @@ export default function Hot() {
         </div>
       </div>
       {/* Footer Section */}
-      <div className="text-center text-white mt-8">
-        <p>Engage in a provably fair, peer-to-peer gaming experience. Please ensure you are at least 18 years old and comply with your local regulations.</p>
+      <div className="relative z-20 bg-black text-center text-white/60 mt-8 py-6 px-4">
+        <p className="max-w-2xl mx-auto mb-2">Engage in a provably fair, peer-to-peer gaming experience. Please ensure you are at least 18 years old and comply with your local regulations.</p>
         <p>The Dapp is not affiliated with the $MINCU token.</p>
       </div>
     </main>
