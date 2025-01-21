@@ -223,12 +223,12 @@ export default function Create() {
   return (
     <>
       {/* Mobile Create Button */}
-      <div className="md:hidden fixed bottom-20 right-4 z-50">
+      <div className="md:hidden fixed bottom-24 right-4 z-[90]">
         <button
           onClick={() => setShowWalletModal(true)}
           className="w-14 h-14 rounded-full bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black flex items-center justify-center shadow-lg border-4 border-black hover:scale-105 transition-transform"
         >
-          <span className="text-2xl">+</span>
+          <span className="text-3xl font-bold">+</span>
         </button>
       </div>
 

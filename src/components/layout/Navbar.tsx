@@ -27,13 +27,13 @@ export const Navbar = () => {
     <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-[#C99733] to-[#FFD163] backdrop-blur-lg border-b border-black/20"
+      className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-[#C99733] to-[#FFD163] backdrop-blur-lg border-b border-black/20"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-[60px]">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-3">
-              
+            <Link href="/" className="flex items-center gap-3 text-black font-bold">
+              $MINCU FIGHT
             </Link>
           </div>
 
@@ -43,7 +43,7 @@ export const Navbar = () => {
 
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg bg-black/10 hover:bg-black/20 transition-colors"
+            className="md:hidden p-2 rounded-lg bg-black/20 hover:bg-black/30 transition-colors"
           >
             {isMobileMenuOpen ? (
               <X className="h-6 w-6 text-black" />

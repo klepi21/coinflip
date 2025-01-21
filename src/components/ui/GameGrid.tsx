@@ -359,21 +359,21 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   return (
     <div className="space-y-6">
       {/* Stats and Filter Row */}
-      <div className="flex items-center justify-between">
-        <div className="flex gap-4">
-          <div className="bg-[#1A1A1A] rounded-full px-6 py-2 text-white">
-            {games.length} ACTIVE GAMES
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex gap-2 sm:gap-4 text-sm sm:text-base">
+          <div className="bg-[#1A1A1A] rounded-full px-3 sm:px-6 py-1.5 sm:py-2 text-white">
+            <span className="font-bold">{games.length}</span> ACTIVE
           </div>
-          <div className="bg-[#1A1A1A] rounded-full px-6 py-2 text-white">
-            {totalGamesPlayed} GAMES PLAYED
+          <div className="bg-[#1A1A1A] rounded-full px-3 sm:px-6 py-1.5 sm:py-2 text-white">
+            <span className="font-bold">{totalGamesPlayed}</span> PLAYED
           </div>
         </div>
         
         {/* Filter Buttons */}
-        <div className="flex gap-4">
+        <div className="flex gap-2 sm:gap-4">
           <button
             onClick={() => setFilter('all')}
-            className={`px-6 py-2 rounded-full font-semibold transition-colors ${
+            className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base font-semibold transition-colors ${
               filter === 'all'
                 ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black'
                 : 'bg-zinc-800 text-white hover:bg-zinc-700'
@@ -383,7 +383,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
           </button>
           <button
             onClick={() => setFilter('yours')}
-            className={`px-6 py-2 rounded-full font-semibold transition-colors ${
+            className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base font-semibold transition-colors ${
               filter === 'yours'
                 ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black'
                 : 'bg-zinc-800 text-white hover:bg-zinc-700'
