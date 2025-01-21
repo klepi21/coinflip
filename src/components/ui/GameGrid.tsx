@@ -184,6 +184,12 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
   const handleJoinGame = async (gameId: number, amount: string, token: string) => {
     try {
+      if (!connectedAddress) {
+        throw new Error('No connected address');
+      }
+
+     
+
       setPopup({
         isOpen: true,
         message: 'Preparing transaction...',
@@ -198,6 +204,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
       const transaction = contract.methods
         .join([new U64Value(gameId)])
+        .withSender(new Address(connectedAddress))
         .withGasLimit(60000000)
         .withChainID(network.chainId);
 
@@ -209,6 +216,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       }
 
       const tx = transaction.buildTransaction();
+      //console.log('Transaction built:', tx);
       
       setPopup(prev => ({ ...prev, message: 'Confirming transaction...' }));
       
@@ -297,7 +305,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         .withGasLimit(60000000)
         .withChainID(network.chainId);
 
+        
       const tx = transaction.buildTransaction();
+      
       
       setPopup(prev => ({ ...prev, message: 'Confirming cancellation...' }));
       
