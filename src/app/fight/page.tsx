@@ -95,8 +95,8 @@ export default function Hot() {
   }, [network.apiAddress]);
 
   return (
-    <main className="flex flex-col bg-black min-h-screen px-6 pt-24 pb-12">
-      <div className="w-full max-w-7xl mx-auto flex-1">
+    <main className="flex flex-col bg-black min-h-[100vh] px-6 pt-24">
+      <div className="w-full max-w-7xl mx-auto flex-1 mb-auto">
         {/* Title Section */}
         <div className="flex flex-col items-center mb-12">
           <div className="flex flex-col items-center w-full">
@@ -133,7 +133,7 @@ export default function Hot() {
         </div>
       </div>
       {/* Footer Section */}
-      <div className="relative z-20 bg-black text-center text-white/60 mt-8 py-6 px-4">
+      <div className="relative z-20 bg-black text-center text-white/60 mt-auto py-6 px-4">
         <p className="max-w-2xl mx-auto mb-2">Engage in a provably fair, peer-to-peer gaming experience. Please ensure you are at least 18 years old and comply with your local regulations.</p>
         <p>The Dapp is not affiliated with the $MINCU token.</p>
       </div>
