@@ -76,7 +76,7 @@ export function HyperText({
         {displayText.map((letter, i) => (
           <motion.span
             key={i}
-            className={cn("font-doggie", letter === " " ? "w-3" : "", className)}
+            className={cn(" gie", letter === " " ? "w-3" : "", className)}
             {...framerProps}
           >
             {letter.toUpperCase()}

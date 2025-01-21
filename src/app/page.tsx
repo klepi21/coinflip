@@ -7,7 +7,7 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/hot');
+    router.replace('/fight');
   }, [router]);
 
   return null;

@@ -37,13 +37,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const handleLogout = useCallback(() => {
     logout();
     closeModal();
-    router.replace('/hot');
+    router.replace('/fight');
   }, [closeModal, router]);
 
   useEffect(() => {
-    // Redirect to /hot after login
+    // Redirect to /fight after login
     if (isLoggedIn) {
-      router.replace('/hot');
+      router.replace('/fight');
     }
   }, [isLoggedIn, router]);
 

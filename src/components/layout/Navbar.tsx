@@ -20,14 +20,14 @@ export const Navbar = () => {
   const { isLoggedIn } = useWallet();
 
   const navItems = [
-    { name: 'Scratch', url: '/scratch', icon: Coins }
+    { name: 'Hot', url: '/hot', icon: Coins }
   ];
 
   return (
     <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="fixed top-0 left-0 right-0 z-40 bg-[#75CBDD]/90 backdrop-blur-lg border-b border-black/20 h-10"
+      className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-[#C99733] to-[#FFD163] backdrop-blur-lg border-b border-black/20 h-10"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
@@ -43,7 +43,7 @@ export const Navbar = () => {
 
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg bg-[#75CBDD] hover:bg-[#75CBDD]/80 transition-colors border-2 border-black"
+            className="md:hidden p-2 rounded-lg bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:opacity-80 transition-opacity border-2 border-black"
           >
             {isMobileMenuOpen ? (
               <X className="h-6 w-6 text-black" />
@@ -70,17 +70,17 @@ export const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-[#75CBDD] border-t border-white/20"
+            className="md:hidden bg-gradient-to-r from-[#C99733] to-[#FFD163] border-t border-black/20"
           >
             <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.url}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-doggie ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                     pathname === item.url
-                      ? 'bg-[#75CBDD] text-black font-medium'
-                      : 'text-white/80 hover:text-white hover:bg-[#75CBDD]/50'
+                      ? 'bg-black/10 text-black font-medium'
+                      : 'text-black/80 hover:text-black hover:bg-black/5'
                   }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >

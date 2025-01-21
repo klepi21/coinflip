@@ -10,6 +10,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .text-gradient-gold {
+    background: linear-gradient(to right, #C99733, #FFD163);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
 /* Override MultiversX SDK button styles */
 .extension-login-button,
 .walletconnect-login-button,
@@ -59,13 +67,13 @@
 
 /* Add these styles for wallet connect modal */
 :root {
-  --color-xportalteal: #23f7dd;
+  --color-xportalteal: #C99733;
   --color-card: #1a1b1f;
-  --color-xaliasblue: #4c6ef5;
-  --color-metamaskorange: #f6851b;
+  --color-xaliasblue: #C99733;
+  --color-metamaskorange: #FFD163;
   --color-muted: #9ba1a6;
-  --primary: #FD8700;
-  --primary-light: #FFA036;
+  --primary: #C99733;
+  --primary-light: #FFD163;
   --font-family: 'Bubblegum Sans', system-ui, sans-serif;
 }
 
@@ -82,7 +90,7 @@
   box-shadow: 0 0 0 0 !important;
 
   &:hover {
-    background-color: #FD9220 !important;
+    background: linear-gradient(to right, #C99733, #FFD163) !important;
     color: black !important;
   }
 }
@@ -100,7 +108,7 @@
   box-shadow: 0 0 0 0 !important;
 
   &:hover {
-    background-color: #FD9220 !important;
+    background: linear-gradient(to right, #C99733, #FFD163) !important;
     color: black !important;
   }
 }
@@ -118,7 +126,7 @@
   box-shadow: 0 0 0 0 !important;
 
   &:hover {
-    background-color: #FD9220 !important;
+    background: linear-gradient(to right, #C99733, #FFD163) !important;
     color: black !important;
   }
 }
@@ -130,8 +138,8 @@
   width: 70% !important;
   font-weight: 500 !important;
   align-self: center !important;
-  background-color: var(--color-xportalteal) !important;
-  color: var(--color-card) !important;
+  background: linear-gradient(to right, #C99733, #FFD163) !important;
+  color: black !important;
   display: flex !important;
   justify-content: flex-center !important;
   align-items: center !important;
@@ -295,7 +303,7 @@ h1, h2, h3, .game-text {
 
 /* Style the modal container */
 .sign-transactions-modals .modal-container {
-  background-color: #69B7C7  !important;
+  background: linear-gradient(to right, #C99733, #FFD163) !important;
   border: 2px solid black !important;
   border-radius: 1rem !important;
   padding: 1.5rem !important;
@@ -367,7 +375,7 @@ h1, h2, h3, .game-text {
 /* Style the transaction signing state container */
 .dapp-core-component__pageState-styles__state,
 .dapp-page-state {
-  background-color: #69B7C7 !important;
+  background: linear-gradient(to right, #C99733, #FFD163) !important;
   border: 2px solid black !important;
   border-radius: 1rem !important;
   padding: 2rem !important;
@@ -450,4 +458,16 @@ h1, h2, h3, .game-text {
   position: relative !important;
   width: 100% !important;
   box-shadow: none !important;
+}
+
+.dapp-core-component__main__btn.dapp-core-component__main__btn-dark.dapp-core-component__main__text-white.dapp-core-component__main__mt-2 {
+  background-color: rgba(255, 160, 54, 0.8) !important;
+  color: black !important;
+  border: 2px solid black !important;
+  border-radius: 9999px !important;
+  font-family: var(--font-family) !important;
+  font-weight: bold !important;
+  padding: 0.75rem 1.5rem !important;
+  transition: all 0.3s ease !important;
+  margin-top: 1rem !important;
 }

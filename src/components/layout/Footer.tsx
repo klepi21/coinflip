@@ -9,7 +9,7 @@ export const Footer = () => {
   return (
     <>
       <div className="fixed bottom-0 left-0 right-0 text-center z-40 bg-[#FFA036]/90 backdrop-blur-lg py-2 border-t-2 border-black/30">
-        <div className="text-black font-doggie space-y-1">
+        <div className="text-black  gie space-y-1">
           <div className="flex justify-center">
             <img src="https://bod.gg/assets/logo-DMc1kk4n.svg" alt="BOD Logo" className=" w-12" />
           </div>

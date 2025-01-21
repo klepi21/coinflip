@@ -32,8 +32,9 @@ export default function RootLayout({
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="HOT - A fun and fair game on MultiversX" />
-        <title>HOT</title>
+        <meta name="description" content="$MINCU Fight - The Ultimate Battle" />
+        <title>$MINCU Fight - The Ultimate Battle</title>
+        <meta name="description" content="Engage in epic battles with $MINCU Fight, the premier blockchain-based fighting game on MultiversX. Compete against other players and claim your rewards." />
       </head>
       <body className="bg-black">
         <ThemeProvider attribute="class" defaultTheme="light">

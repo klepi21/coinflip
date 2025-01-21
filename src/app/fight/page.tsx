@@ -61,14 +61,17 @@ export default function Hot() {
       <div className="w-full max-w-7xl mx-auto flex-1">
         {/* Title Section */}
         <div className="flex flex-col items-center mb-12">
-          <AnimatedText 
-            text="HEADS OR TAILS"
-            textClassName="text-xl md:text-6xl font-bold text-white tracking-wider"
-            underlineClassName="text-[#75CBDD]"
-            underlinePath="M 0,10 Q 150,0 300,10 Q 450,20 600,10"
-            underlineHoverPath="M 0,10 Q 150,20 300,10 Q 450,0 600,10"
-            className="w-full md:w-[600px]"
-          />
+          <div className="flex flex-col items-center">
+            <AnimatedText 
+              text="$MINCU FIGHT"
+              textClassName="text-xl md:text-6xl font-bold text-white tracking-wider"
+              underlineClassName="text-gradient-gold"
+              underlinePath="M 0,10 Q 150,0 300,10 Q 450,20 600,10"
+              underlineHoverPath="M 0,10 Q 150,20 300,10 Q 450,0 600,10"
+              className="w-full md:w-[600px]"
+            />
+            <p className="text-lg md:text-2xl font-semibold text-white mt-4">Fight between $MINCU and Lower Expectations</p>
+          </div>
         </div>
 
 

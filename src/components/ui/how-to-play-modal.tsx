@@ -35,28 +35,28 @@ export const HowToPlayModal = ({ isOpen, onClose }: HowToPlayModalProps) => {
             </button>
 
             <div className="space-y-6">
-              <Dialog.Title className="text-3xl font-bold text-black font-doggie">
+              <Dialog.Title className="text-3xl font-bold text-black  gie">
                 how to play
               </Dialog.Title>
 
               <div className="space-y-6">
-                <div className="flex items-center gap-6 text-black font-doggie">
+                <div className="flex items-center gap-6 text-black  gie">
                   <span className="text-3xl">1.</span>
                   <p className="text-xl">connect your wallet</p>
                 </div>
-                <div className="flex items-center gap-6 text-black font-doggie">
+                <div className="flex items-center gap-6 text-black  gie">
                   <span className="text-3xl">2.</span>
                   <p className="text-xl">select an amount</p>
                 </div>
-                <div className="flex items-center gap-6 text-black font-doggie">
+                <div className="flex items-center gap-6 text-black  gie">
                   <span className="text-3xl">3.</span>
                   <p className="text-xl">buy and scratch tickets</p>
                 </div>
-                <div className="flex items-center gap-6 text-black font-doggie">
+                <div className="flex items-center gap-6 text-black  gie">
                   <span className="text-3xl">4.</span>
                   <p className="text-xl">if you find 3 identical symbols, you win the associated prize</p>
                 </div>
-                <div className="flex items-center gap-6 text-black font-doggie">
+                <div className="flex items-center gap-6 text-black  gie">
                   <span className="text-3xl">5.</span>
                   <p className="text-xl">if you're lucky, you can even win the Jackpot at any time!</p>
                 </div>
@@ -66,7 +66,7 @@ export const HowToPlayModal = ({ isOpen, onClose }: HowToPlayModalProps) => {
                 onClick={onClose}
                 className="w-full bg-[#FFA036] hover:bg-[#FFA036]/80 text-black rounded-full 
                             px-8 py-4 text-xl font-semibold transition-all duration-300 
-                            border-2 border-black font-doggie mt-8"
+                            border-2 border-black  gie mt-8"
               >
                 got it!
               </button>

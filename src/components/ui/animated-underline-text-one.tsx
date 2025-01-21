@@ -59,11 +59,11 @@ const AnimatedText = React.forwardRef<HTMLDivElement, AnimatedTextProps>(
             width="100%"
             height="20"
             viewBox="0 0 300 20"
-            className={cn("absolute -bottom-4 left-0", underlineClassName)}
+            className={cn("absolute -bottom-4 left-0", underlineClassName || "text-[#C99733]")}
           >
             <motion.path
               d={underlinePath}
-              stroke="currentColor"
+              stroke="url(#goldGradient)"
               strokeWidth="2"
               fill="none"
               variants={pathVariants}
@@ -74,6 +74,12 @@ const AnimatedText = React.forwardRef<HTMLDivElement, AnimatedTextProps>(
                 transition: { duration: 0.8 },
               }}
             />
+            <defs>
+              <linearGradient id="goldGradient" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#C99733" />
+                <stop offset="100%" stopColor="#FFD163" />
+              </linearGradient>
+            </defs>
           </motion.svg>
         </div>
       </div>

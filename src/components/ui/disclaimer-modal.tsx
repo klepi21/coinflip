@@ -38,11 +38,11 @@ export const DisclaimerModal = ({ isOpen, onClose }: DisclaimerModalProps) => {
 
             {/* Content */}
             <div className="space-y-6">
-              <Dialog.Title className="text-2xl font-bold text-black font-doggie">
+              <Dialog.Title className="text-2xl font-bold text-black  gie">
                 Disclaimer
               </Dialog.Title>
 
-              <div className="space-y-4 text-black font-doggie">
+              <div className="space-y-4 text-black  gie">
                 <p>
                   BOD Jackpot is an exciting platform offering a fair and transparent scratch lottery ticket experience. Players purchase tickets to reveal potential winnings, with outcomes determined by provable fairness.
                 </p>
@@ -54,7 +54,7 @@ export const DisclaimerModal = ({ isOpen, onClose }: DisclaimerModalProps) => {
               {/* Close button */}
               <button
                 onClick={onClose}
-                className="w-full bg-[#FFA036] hover:bg-[#FFA036]/80 text-black rounded-full px-8 py-3 font-semibold transition-all duration-300 border-2 border-black font-doggie"
+                className="w-full bg-[#FFA036] hover:bg-[#FFA036]/80 text-black rounded-full px-8 py-3 font-semibold transition-all duration-300 border-2 border-black  gie"
               >
                 I Understand
               </button>

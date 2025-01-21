@@ -164,10 +164,10 @@ export const GameNotifications = () => {
                 <img src="https://bod.gg/assets/bod-coin-BRtRTEUy.svg" alt="BOD Coin" className="text-sm opacity-90" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[16px] text-black font-doggie">
+                  <div className="truncate text-[16px] text-black  gie">
                     {formatAddress(game.player)}
                   </div>
-                  <div className="text-lg font-medium font-doggie text-black">
+                  <div className="text-lg font-medium  gie text-black">
                     {game.amount_won 
                       ? `Won ${(parseInt(game.amount_won) / 1e6).toFixed(2)} USDC`
                       : `Played ${(parseInt(game.amount_played) / 1e6).toFixed(2)} USDC`
@@ -175,7 +175,7 @@ export const GameNotifications = () => {
                   </div>
                 </div>
               </div>
-              <div className="text-[16px] text-black/70 font-doggie">
+              <div className="text-[16px] text-black/70  gie">
                 {getTimeAgo(game.timestamp)}
               </div>
             </div>
@@ -193,10 +193,10 @@ export const GameNotifications = () => {
                   <img src="https://bod.gg/assets/bod-coin-BRtRTEUy.svg" alt="BOD Coin" className="text-sm opacity-90" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[16px] text-black font-doggie font-black">
+                  <div className="truncate text-[16px] text-black  gie font-black">
                     {formatAddress(game.player)}
                   </div>
-                  <div className="text-lg font-medium font-doggie text-black">
+                  <div className="text-lg font-medium  gie text-black">
                     {game.amount_won 
                       ? `Won ${(parseInt(game.amount_won) / 1e6).toFixed(2)} USDC`
                       : `Played ${(parseInt(game.amount_played) / 1e6).toFixed(2)} USDC`
@@ -204,7 +204,7 @@ export const GameNotifications = () => {
                   </div>
                 </div>
               </div>
-              <div className="text-[16px] text-black/70 font-doggie">
+              <div className="text-[16px] text-black/70  gie">
                 {getTimeAgo(game.timestamp)}
               </div>
             </div>

@@ -17,12 +17,6 @@ const USDC_IDENTIFIER = 'USDC-350c4e';
 
 // Token data with images
 const TOKENS = {
-  EGLD: {
-    id: 'EGLD',
-    name: 'EGLD',
-    image: 'https://s2.coinmarketcap.com/static/img/coins/200x200/6892.png',
-    decimals: 18
-  },
   USDC: {
     id: 'USDC',
     name: 'USDC',
@@ -42,7 +36,7 @@ const GAME_MULTIPLIERS = [1, 2, 5, 10, 15];
 
 export default function Create() {
   const [amount, setAmount] = useState('');
-  const [selectedToken, setSelectedToken] = useState<'EGLD' | 'USDC'>('EGLD');
+  const [selectedToken] = useState<'USDC'>('USDC');
   const [multiplier, setMultiplier] = useState(1);
   const [selectedSide, setSelectedSide] = useState<'heads' | 'tails' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,9 +59,6 @@ export default function Create() {
   const { isLoggedIn, address } = useWallet();
   const { account } = useGetAccountInfo();
   const { balance: usdcBalance, isLoading: isLoadingUsdcBalance } = useTokenBalance(address || '', USDC_IDENTIFIER);
-  
-  // Use raw balance divided by 10^18 for EGLD
-  const egldBalance = account?.balance ? Number(account.balance) / Math.pow(10, 18) : 0;
   const isLoadingBalance = isLoadingUsdcBalance;
 
   // Reset popup when component mounts or when sessionId changes to null
@@ -91,7 +82,7 @@ export default function Create() {
       setIsSubmitting(true);
       setIsWaitingForTx(true);
 
-      const decimalAmount = selectedToken === 'USDC' ? 6 : 18;
+      const decimalAmount = 6; // USDC decimals
       // Calculate total amount (amount per game * number of games)
       const totalAmount = parseFloat(amount) * multiplier;
       const rawAmount = totalAmount * Math.pow(10, decimalAmount);
@@ -102,15 +93,13 @@ export default function Create() {
       // Create transaction data
       const { sessionId: newSessionId } = await sendTransactions({
         transactions: [{
-          value: selectedToken === 'EGLD' ? totalAmount.toString() : '0',
-          data: selectedToken === 'USDC' 
-            ? `ESDTTransfer@${Buffer.from(USDC_IDENTIFIER).toString('hex')}@${toHexEven(Math.floor(rawAmount))}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`
-            : `create@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
+          value: '0',
+          data: `ESDTTransfer@${Buffer.from(USDC_IDENTIFIER).toString('hex')}@${toHexEven(Math.floor(rawAmount))}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
           receiver: SC_ADDRESS,
           gasLimit: 100000000,
         }],
         transactionsDisplayInfo: {
-          processingMessage: `Creating ${multiplier} game${multiplier > 1 ? 's' : ''} with ${totalAmount} ${selectedToken}...`,
+          processingMessage: `Creating ${multiplier} game${multiplier > 1 ? 's' : ''} with ${totalAmount} USDC...`,
           errorMessage: 'Failed to create game',
           successMessage: `Successfully created ${multiplier} game${multiplier > 1 ? 's' : ''}!`
         }
@@ -121,7 +110,6 @@ export default function Create() {
       }
 
     } catch (error) {
-      // console.error('Game creation error:', error);
       toast.error('Failed to create game');
       setIsSubmitting(false);
       setIsWaitingForTx(false);
@@ -148,19 +136,19 @@ export default function Create() {
       text: 'Create Game'
     };
     
-    const currentBalance = selectedToken === 'USDC' ? usdcBalance : egldBalance;
+    const currentBalance = usdcBalance;
     const amountValue = parseFloat(amount);
     const totalAmount = amountValue * multiplier;
     
     if (currentBalance === 0) return { 
       disabled: true, 
-      message: `No ${selectedToken} tokens in wallet`,
+      message: 'No USDC tokens in wallet',
       action: handleCreateGame,
       text: 'Create Game'
     };
     if (currentBalance < totalAmount) return { 
       disabled: true, 
-      message: `Insufficient ${selectedToken} balance (${currentBalance.toFixed(2)} ${selectedToken} available)`,
+      message: `Insufficient USDC balance (${currentBalance.toFixed(2)} USDC available)`,
       action: handleCreateGame,
       text: 'Create Game'
     };
@@ -237,7 +225,7 @@ export default function Create() {
       <div className="p-6">
         {isWaitingForTx ? (
           <div className="flex flex-col items-center justify-center gap-4 py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#75CBDD] border-t-transparent"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#C99733] border-t-transparent"></div>
             <div className="text-center">
               <h3 className="text-xl font-bold text-white mb-2">Creating Your Game{multiplier > 1 ? 's' : ''}</h3>
               <p className="text-zinc-400">Transaction in progress...</p>
@@ -255,11 +243,24 @@ export default function Create() {
                 key={selectedSide}
               >
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-zinc-800 to-black shadow-2xl flex items-center justify-center">
-                  <div className="absolute inset-2 rounded-full bg-gradient-to-br from-[#75CBDD] to-[#5B9EA9] flex items-center justify-center overflow-hidden">
+                  <div className="absolute inset-2 rounded-full bg-gradient-to-br from-[#C99733] to-[#FFD163] flex items-center justify-center overflow-hidden">
                     {selectedSide === 'heads' ? (
-                      <div className="text-6xl">🍒</div>
+                      <Image
+                        src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
+                        alt="MINCU"
+                        width={64}
+                        height={64}
+                        className="w-16 h-16"
+                      />
                     ) : selectedSide === 'tails' ? (
-                      <div className="text-6xl">🍑</div>
+                      <Image
+                        src="https://i.ibb.co/2SdHttC/lower2.png"
+                        alt="Lower Expectations"
+                        width={64}
+                        height={64}
+                        className="w-16 h-16"
+                        style={{ transform: 'scaleX(-1)' }}
+                      />
                     ) : (
                       <div className="text-6xl">?</div>
                     )}
@@ -277,38 +278,21 @@ export default function Create() {
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white text-lg font-medium placeholder-zinc-500 outline-none focus:border-[#75CBDD]"
+                    className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white text-lg font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
                     placeholder="Enter amount"
                   />
                   <div className="relative">
-                    <select 
-                      value={selectedToken}
-                      onChange={(e) => setSelectedToken(e.target.value as 'EGLD' | 'USDC')}
-                      className="appearance-none bg-black text-white pl-10 pr-10 py-3 rounded-xl border border-zinc-800 outline-none focus:border-[#75CBDD] cursor-pointer hover:bg-zinc-900 transition-colors"
-                    >
-                      {Object.values(TOKENS).map((token) => (
-                        <option 
-                          key={token.id} 
-                          value={token.id}
-                          className="bg-black hover:bg-zinc-900"
-                        >
-                          {token.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full overflow-hidden">
-                      <Image
-                        src={TOKENS[selectedToken].image}
-                        alt={selectedToken}
-                        width={20}
-                        height={20}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
+                    <div className="flex items-center gap-2 bg-black text-white pl-4 pr-4 py-3 rounded-xl border border-zinc-800">
+                      <div className="w-5 h-5 rounded-full overflow-hidden">
+                        <Image
+                          src={TOKENS.USDC.image}
+                          alt="USDC"
+                          width={20}
+                          height={20}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span>USDC</span>
                     </div>
                   </div>
                 </div>
@@ -322,8 +306,8 @@ export default function Create() {
                       key={mult}
                       onClick={() => setMultiplier(mult)}
                       className={`flex-1 h-12 rounded-xl ${
-                        multiplier === mult ? 'bg-[#75CBDD] text-black' : 'bg-zinc-800 text-white'
-                      } font-medium transition-all hover:bg-[#75CBDD] hover:text-black`}
+                        multiplier === mult ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' : 'bg-zinc-800 text-white'
+                      } font-medium transition-all hover:bg-gradient-to-r hover:from-[#C99733] hover:to-[#FFD163] hover:text-black`}
                     >
                       {mult}x
                     </button>
@@ -338,21 +322,40 @@ export default function Create() {
                     onClick={() => setSelectedSide('heads')}
                     className={`flex-1 h-16 rounded-xl ${
                       selectedSide === 'heads' 
-                        ? 'bg-[#75CBDD] border-2 border-black text-black' 
+                        ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-2 border-black text-black' 
                         : 'bg-zinc-800 text-white'
-                    } font-medium transition-all flex items-center justify-center gap-2 hover:bg-[#75CBDD]/80 hover:text-black`}
+                    } font-medium transition-all flex items-center justify-center gap-3 hover:bg-gradient-to-r hover:from-[#C99733] hover:to-[#FFD163] hover:text-black`}
                   >
-                    <span>HEADS 🪙</span>
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-black/20 p-1">
+                      <Image
+                        src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
+                        alt="MINCU"
+                        width={32}
+                        height={32}
+                        className="w-full h-full object-contain rounded-full"
+                      />
+                    </div>
+                    <span>MINCU</span>
                   </button>
                   <button
                     onClick={() => setSelectedSide('tails')}
                     className={`flex-1 h-16 rounded-xl ${
                       selectedSide === 'tails' 
-                        ? 'bg-[#75CBDD] border-2 border-black text-black' 
+                        ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-2 border-black text-black' 
                         : 'bg-zinc-800 text-white'
-                    } font-medium transition-all flex items-center justify-center gap-2 hover:bg-[#75CBDD]/80 hover:text-black`}
+                    } font-medium transition-all flex items-center justify-center gap-3 hover:bg-gradient-to-r hover:from-[#C99733] hover:to-[#FFD163] hover:text-black`}
                   >
-                    <span>TAILS 🪙</span>
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-black/20 p-1">
+                      <Image
+                        src="https://i.ibb.co/2SdHttC/lower2.png"
+                        alt="Lower Expectations"
+                        width={32}
+                        height={32}
+                        className="w-full h-full object-contain rounded-full"
+                        style={{ transform: 'scaleX(-1)' }}
+                      />
+                    </div>
+                    <span>Lower Expectations</span>
                   </button>
                 </div>
               </div>
@@ -362,7 +365,7 @@ export default function Create() {
                 disabled={buttonState.disabled}
                 className={`w-full h-14 rounded-xl font-medium transition-all ${
                   !buttonState.disabled
-                    ? 'bg-[#75CBDD] hover:bg-[#75CBDD]/90 text-black'
+                    ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:opacity-90 text-black'
                     : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                 }`}
               >
@@ -375,10 +378,7 @@ export default function Create() {
                   <span className="text-zinc-400">Loading...</span>
                 ) : (
                   <span className="text-white font-medium">
-                    {selectedToken === 'USDC' 
-                      ? `${usdcBalance.toFixed(2)} USDC`
-                      : `${egldBalance} EGLD`
-                    }
+                    {usdcBalance.toFixed(2)} USDC
                   </span>
                 )}
               </div>
@@ -395,23 +395,23 @@ export default function Create() {
       {/* Success Popup */}
       {popup.isOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] animate-in fade-in duration-300">
-          <div className="bg-[#1A1A1A] rounded-3xl p-8 max-w-md w-full mx-4 relative border border-zinc-800 shadow-[0_0_50px_-12px] shadow-[#75CBDD]/20">
+          <div className="bg-[#1A1A1A] rounded-3xl p-8 max-w-md w-full mx-4 relative border border-zinc-800 shadow-[0_0_50px_-12px] shadow-[#C99733]/20">
             <div className="flex flex-col items-center gap-6 py-4">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full flex items-center justify-center bg-[#75CBDD]/10">
+                <div className="w-24 h-24 rounded-full flex items-center justify-center bg-[#C99733]/10">
                   <span className="text-5xl animate-bounce">🎲</span>
                 </div>
-                <div className="absolute -inset-2 rounded-full border-2 border-[#75CBDD]/30 animate-pulse"></div>
+                <div className="absolute -inset-2 rounded-full border-2 border-[#FFD163]/30 animate-pulse"></div>
               </div>
               <div className="space-y-2 text-center">
-                <h3 className="text-2xl font-bold text-[#75CBDD]">Game Created!</h3>
+                <h3 className="text-2xl font-bold text-[#FFD163]">Game Created!</h3>
                 <p className="text-zinc-400">Your game has been created successfully. Good luck!</p>
               </div>
               <button
                 onClick={() => setPopup(prev => ({ ...prev, isOpen: false }))}
                 className="mt-4 group relative px-8 py-3 bg-[#1A1A1A] text-white font-semibold rounded-full overflow-hidden transition-all hover:scale-105"
               >
-                <div className="absolute inset-0 w-0 bg-[#75CBDD] transition-all duration-300 ease-out group-hover:w-full"></div>
+                <div className="absolute inset-0 w-0 bg-gradient-to-r from-[#C99733] to-[#FFD163] transition-all duration-300 ease-out group-hover:w-full"></div>
                 <span className="relative group-hover:text-black">Close</span>
               </button>
             </div>

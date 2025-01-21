@@ -61,11 +61,11 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletModalProps) => {
       <div className="fixed inset-0" aria-hidden="true" />
       
       <div className="fixed inset-0 flex items-center justify-end p-4">
-        <Dialog.Panel className="relative h-full w-full md:w-[400px] bg-[#69B7C7] 
+        <Dialog.Panel className="relative h-full w-full md:w-[400px] bg-gradient-to-br from-[#C99733] to-[#FFD163] 
           rounded-2xl overflow-auto border-2 border-black">
           <div className="flex flex-col px-5 py-3 max-md:px-4 max-md:py-2 gap-0 rounded-xl w-full h-full">
             <div className="flex flex-row justify-between items-center gap-2">
-              <h2 className="flex justify-center items-center text-xl md:text-2xl font-medium text-black font-doggie">
+              <h2 className="flex justify-center items-center text-xl md:text-2xl font-medium text-black">
                 Connect your wallet
               </h2>
               <button onClick={onClose} className="rounded-full h-full w-fit py-1">
@@ -111,10 +111,10 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletModalProps) => {
                 />
 
                 <div className="flex flex-row gap-1 justify-between items-center px-4 text-sm font-normal mt-3 md:mt-5">
-                  <p className="flex items-center justify-center">Don't have xPortal?</p>
+                  <p className="flex items-center justify-center text-black">Don't have xPortal?</p>
                   <a
                     target="_blank"
-                    className="flex items-center justify-center hover:underline text-xportalteal w-fit"
+                    className="flex items-center justify-center hover:underline text-black font-bold w-fit"
                     href="https://xportal.com/app"
                   >
                     Get it now
