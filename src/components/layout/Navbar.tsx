@@ -20,17 +20,17 @@ export const Navbar = () => {
   const { isLoggedIn } = useWallet();
 
   const navItems = [
-    { name: 'Hot', url: '/hot', icon: Coins }
+    { name: 'Fight', url: '/fight', icon: Coins }
   ];
 
   return (
     <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-[#C99733] to-[#FFD163] backdrop-blur-lg border-b border-black/20 h-10"
+      className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-[#C99733] to-[#FFD163] backdrop-blur-lg border-b border-black/20"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3">
               
@@ -43,7 +43,7 @@ export const Navbar = () => {
 
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:opacity-80 transition-opacity border-2 border-black"
+            className="md:hidden p-2 rounded-lg bg-black/10 hover:bg-black/20 transition-colors"
           >
             {isMobileMenuOpen ? (
               <X className="h-6 w-6 text-black" />
@@ -70,7 +70,7 @@ export const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-gradient-to-r from-[#C99733] to-[#FFD163] border-t border-black/20"
+            className="md:hidden bg-gradient-to-r from-[#C99733] to-[#FFD163] border-t border-black/20 shadow-lg"
           >
             <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
               {navItems.map((item) => (
