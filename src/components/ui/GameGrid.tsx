@@ -38,19 +38,13 @@ const formatTokenAmount = (amount: string): string => {
       ? amount.replace(/e\+?/, 'e')  // normalize scientific notation
       : amount;
     
-    // Parse the amount as a regular number first
-    const num = parseFloat(rawAmount);
+    // Parse the amount and divide by 10^18 for MINCU decimals
+    const decimalAmount = Number(rawAmount) / Math.pow(10, TOKEN_DECIMALS);
     
-    // Convert to regular decimal number
-    const decimalAmount = num / Math.pow(10, TOKEN_DECIMALS);
-    
-    // Check if the number has decimals
-    const hasDecimals = decimalAmount % 1 !== 0;
-    
-    // Format with commas and conditionally show decimals
+    // Format with commas but no forced decimals
     return decimalAmount.toLocaleString(undefined, {
-      minimumFractionDigits: hasDecimals ? 2 : 0,
-      maximumFractionDigits: 2
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     });
   } catch (error) {
     console.error('Error formatting amount:', error);
