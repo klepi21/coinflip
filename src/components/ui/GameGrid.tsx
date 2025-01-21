@@ -350,8 +350,17 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
   const canJoinGame = (gameAmount: string): boolean => {
     if (!connectedAddress || isLoadingBalance) return false;
-    const requiredAmount = parseFloat(formatTokenAmount(gameAmount));
-    return mincuBalance >= requiredAmount;
+    
+    try {
+      // Convert game amount to regular number first (from raw form)
+      const requiredAmount = parseFloat(gameAmount) / Math.pow(10, TOKEN_DECIMALS);
+      
+      // Compare with mincuBalance directly (it's already in the correct format)
+      return mincuBalance >= requiredAmount;
+    } catch (error) {
+      console.error('Error checking balance:', error);
+      return false;
+    }
   };
 
   // Filter games based on selection and sort by newest first
