@@ -12,7 +12,7 @@ import { useGetNetworkConfig } from "@multiversx/sdk-dapp/hooks";
 import flipcoinAbi from '@/config/flipcoin.abi.json';
 
 // Constants
-const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqjksmaalhed4gu59tfn0gtkscl8s2090du7zs6nrdts';
+const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
 
 export type Game = {
   id: number;

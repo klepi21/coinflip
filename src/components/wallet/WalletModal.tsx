@@ -49,7 +49,7 @@ export const WalletModal = ({ isOpen, onClose }: WalletModalProps) => {
         setIsLoading(true);
         
         // Fetch EGLD balance
-        const proxy = new ProxyNetworkProvider('https://devnet-gateway.multiversx.com');
+        const proxy = new ProxyNetworkProvider('https://gateway.multiversx.com');
         const account = await proxy.getAccount(new Address(address));
         const egldBalance = account.balance.toString();
         
@@ -71,7 +71,7 @@ export const WalletModal = ({ isOpen, onClose }: WalletModalProps) => {
 
         // Fetch ESDT tokens
         const response = await fetch(
-          `https://devnet-api.multiversx.com/accounts/${address}/tokens?size=100&includeMetaESDT=true`
+          `https://api.multiversx.com/accounts/${address}/tokens?size=100&includeMetaESDT=true`
         );
         const tokensData = await response.json();
         
@@ -227,7 +227,7 @@ export const WalletModal = ({ isOpen, onClose }: WalletModalProps) => {
                           <ClipboardCopy className="w-4 h-4 text-white/60 group-hover:text-white transition-colors" />
                         </button>
                         <a 
-                          href={`https://devnet-explorer.multiversx.com/accounts/${address}`}
+                          href={`https://explorer.multiversx.com/accounts/${address}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-1.5 hover:bg-white/10 rounded-lg transition-colors group"

@@ -27,7 +27,7 @@ export const TransactionToast = ({ status, message, hash, onClose }: Transaction
             <div className="text-white font-medium mb-1">{message}</div>
             {hash && (
               <a 
-                href={`https://devnet-explorer.multiversx.com/transactions/${hash}`}
+                href={`https://explorer.multiversx.com/transactions/${hash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-white/60 hover:text-white flex items-center gap-1.5"

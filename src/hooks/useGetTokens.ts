@@ -19,7 +19,7 @@ export const useGetTokens = () => {
       }
 
       try {
-        const response = await fetch(`https://devnet-api.multiversx.com/accounts/${address}/tokens`);
+        const response = await fetch(`https://api.multiversx.com/accounts/${address}/tokens`);
         if (!response.ok) throw new Error('Failed to fetch tokens');
         
         const data = await response.json();

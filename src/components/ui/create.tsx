@@ -12,16 +12,16 @@ import { WalletConnectModal } from "@/components/wallet/WalletConnectModal";
 import { useGetAccountInfo } from "@multiversx/sdk-dapp/hooks";
 
 // Constants
-const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqjksmaalhed4gu59tfn0gtkscl8s2090du7zs6nrdts';
-const USDC_IDENTIFIER = 'USDC-350c4e';
+const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
+const USDC_IDENTIFIER = 'MINCU-38e93d';
 
 // Token data with images
 const TOKENS = {
-  USDC: {
-    id: 'USDC',
-    name: 'USDC',
-    image: `https://tools.multiversx.com/assets-cdn/devnet/tokens/${USDC_IDENTIFIER}/icon.svg`,
-    decimals: 6
+  MINCU: {
+    id: 'MINCU',
+    name: 'MINCU',
+    image: `https://tools.multiversx.com/assets-cdn/tokens/${USDC_IDENTIFIER}/icon.svg`,
+    decimals: 18
   }
 };
 
@@ -36,7 +36,7 @@ const GAME_MULTIPLIERS = [1, 2, 5, 10, 15];
 
 export default function Create() {
   const [amount, setAmount] = useState('');
-  const [selectedToken] = useState<'USDC'>('USDC');
+  const [selectedToken] = useState<'MINCU'>('MINCU');
   const [multiplier, setMultiplier] = useState(1);
   const [selectedSide, setSelectedSide] = useState<'heads' | 'tails' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,6 +44,7 @@ export default function Create() {
   const [isWaitingForTx, setIsWaitingForTx] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [popup, setPopup] = useState<{
     isOpen: boolean;
     message: string;
@@ -99,7 +100,7 @@ export default function Create() {
           gasLimit: 100000000,
         }],
         transactionsDisplayInfo: {
-          processingMessage: `Creating ${multiplier} game${multiplier > 1 ? 's' : ''} with ${totalAmount} USDC...`,
+          processingMessage: `Creating ${multiplier} game${multiplier > 1 ? 's' : ''} with ${totalAmount} MINCU...`,
           errorMessage: 'Failed to create game',
           successMessage: `Successfully created ${multiplier} game${multiplier > 1 ? 's' : ''}!`
         }
@@ -142,13 +143,13 @@ export default function Create() {
     
     if (currentBalance === 0) return { 
       disabled: true, 
-      message: 'No USDC tokens in wallet',
+      message: 'No MINCU tokens in wallet',
       action: handleCreateGame,
       text: 'Create Game'
     };
     if (currentBalance < totalAmount) return { 
       disabled: true, 
-      message: `Insufficient USDC balance (${currentBalance.toFixed(2)} USDC available)`,
+      message: `Insufficient USDC balance (${currentBalance.toFixed(2)} MINCU available)`,
       action: handleCreateGame,
       text: 'Create Game'
     };
@@ -225,7 +226,7 @@ export default function Create() {
       {/* Mobile Create Button */}
       <div className="md:hidden fixed bottom-24 right-4 z-[90]">
         <button
-          onClick={() => setShowWalletModal(true)}
+          onClick={() => isLoggedIn ? setShowCreateModal(true) : setShowWalletModal(true)}
           className="w-14 h-14 rounded-full bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black flex items-center justify-center shadow-lg border-4 border-black hover:scale-105 transition-transform"
         >
           <span className="text-3xl font-bold">+</span>
@@ -233,12 +234,12 @@ export default function Create() {
       </div>
 
       {/* Mobile Create Form Modal */}
-      {showWalletModal && (
+      {showCreateModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] md:hidden">
           <div className="w-full h-full flex flex-col">
             <div className="flex justify-end p-4">
               <button 
-                onClick={() => setShowWalletModal(false)}
+                onClick={() => setShowCreateModal(false)}
                 className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-white"
               >
                 ×
@@ -299,14 +300,14 @@ export default function Create() {
                             <div className="flex items-center gap-2 bg-black text-white px-3 py-2 rounded-xl border border-zinc-800">
                               <div className="w-4 h-4 rounded-full overflow-hidden">
                                 <Image
-                                  src={TOKENS.USDC.image}
-                                  alt="USDC"
+                                  src={TOKENS.MINCU.image}
+                                  alt="MINCU"
                                   width={16}
                                   height={16}
                                   className="w-full h-full object-cover"
                                 />
                               </div>
-                              <span className="text-sm">USDC</span>
+                              <span className="text-sm">MINCU</span>
                             </div>
                           </div>
                         </div>
@@ -404,6 +405,12 @@ export default function Create() {
         </div>
       )}
 
+      {/* Wallet Connect Modal */}
+      <WalletConnectModal
+        isOpen={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+      />
+
       {/* Desktop Version */}
       <div className="hidden md:block bg-[#1A1A1A] rounded-3xl border border-zinc-800 shadow-xl mb-8 overflow-hidden">
         <div className="p-6">
@@ -469,8 +476,8 @@ export default function Create() {
                       <div className="flex items-center gap-2 bg-black text-white pl-4 pr-4 py-3 rounded-xl border border-zinc-800">
                         <div className="w-5 h-5 rounded-full overflow-hidden">
                           <Image
-                            src={TOKENS.USDC.image}
-                            alt="USDC"
+                            src={TOKENS.MINCU.image}
+                            alt="MINCU"
                             width={20}
                             height={20}
                             className="w-full h-full object-cover"
@@ -571,11 +578,6 @@ export default function Create() {
           )}
         </div>
       </div>
-
-      <WalletConnectModal
-        isOpen={showWalletModal}
-        onClose={() => setShowWalletModal(false)}
-      />
 
       {/* Success Popup */}
       {popup.isOpen && (

@@ -16,7 +16,7 @@ import GameGrid from '@/components/ui/GameGrid';
 import { AnimatedText } from "@/components/ui/animated-underline-text-one";
 
 // Constants
-const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqjksmaalhed4gu59tfn0gtkscl8s2090du7zs6nrdts';
+const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
 
 export default function Hot() {
   const [totalGamesPlayed, setTotalGamesPlayed] = useState<number>(0);
