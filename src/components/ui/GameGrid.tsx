@@ -44,14 +44,17 @@ const formatTokenAmount = (amount: string): string => {
     // Convert to regular decimal number
     const decimalAmount = num / Math.pow(10, TOKEN_DECIMALS);
     
-    // Format with commas and 2 decimal places
+    // Check if the number has decimals
+    const hasDecimals = decimalAmount % 1 !== 0;
+    
+    // Format with commas and conditionally show decimals
     return decimalAmount.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
+      minimumFractionDigits: hasDecimals ? 2 : 0,
       maximumFractionDigits: 2
     });
   } catch (error) {
     console.error('Error formatting amount:', error);
-    return '0.00';
+    return '0';
   }
 };
 

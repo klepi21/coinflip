@@ -153,9 +153,9 @@ export default function Create() {
       action: handleCreateGame,
       text: 'Create Game'
     };
-    if (amountValue < 1001) return {
+    if (amountValue < 1000) return {
       disabled: true,
-      message: 'Minimum amount is 1001 MINCU',
+      message: 'Minimum amount is 1000 MINCU',
       action: handleCreateGame,
       text: 'Create Game'
     };
@@ -298,7 +298,19 @@ export default function Create() {
                           <input
                             type="number"
                             value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
+                            onChange={(e) => {
+                              // Only allow whole numbers
+                              const value = e.target.value.replace(/\D/g, '');
+                              setAmount(value);
+                            }}
+                            onKeyDown={(e) => {
+                              // Prevent decimal point
+                              if (e.key === '.' || e.key === ',') {
+                                e.preventDefault();
+                              }
+                            }}
+                            step="1"
+                            min="1001"
                             className="flex-1 bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
                             placeholder="Enter amount (min. 1001 MINCU)"
                           />
@@ -319,7 +331,7 @@ export default function Create() {
                         </div>
                         {/* Helper message */}
                         <div className="text-sm text-zinc-500 mt-1">
-                          Minimum amount: 1001 MINCU
+                          Minimum amount: 1000 MINCU
                         </div>
                       </div>
 
@@ -478,7 +490,19 @@ export default function Create() {
                     <input
                       type="number"
                       value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
+                      onChange={(e) => {
+                        // Only allow whole numbers
+                        const value = e.target.value.replace(/\D/g, '');
+                        setAmount(value);
+                      }}
+                      onKeyDown={(e) => {
+                        // Prevent decimal point
+                        if (e.key === '.' || e.key === ',') {
+                          e.preventDefault();
+                        }
+                      }}
+                      step="1"
+                      min="1001"
                       className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white text-lg font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
                       placeholder="Enter amount (min. 1001 MINCU)"
                     />
@@ -499,7 +523,7 @@ export default function Create() {
                   </div>
                   {/* Helper message */}
                   <div className="text-sm text-zinc-500 mt-1">
-                    Minimum amount: 1001 MINCU
+                    Minimum amount: 1000 MINCU
                   </div>
                 </div>
 
