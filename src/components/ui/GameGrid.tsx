@@ -41,11 +41,12 @@ const formatTokenAmount = (amount: string): string => {
     // Parse the amount and divide by 10^18 for MINCU decimals
     const decimalAmount = Number(rawAmount) / Math.pow(10, TOKEN_DECIMALS);
     
-    // Format with commas but no forced decimals
-    return decimalAmount.toLocaleString(undefined, {
+    // Format with commas and preserve all significant digits
+    return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    });
+      maximumFractionDigits: 20, // Allow more decimal places to show exact amounts
+      useGrouping: true // Keep the comma separators
+    }).format(decimalAmount);
   } catch (error) {
     console.error('Error formatting amount:', error);
     return '0';
@@ -518,7 +519,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-zinc-400 text-sm font-medium">
-                            {formatTokenAmount(game.amount)}
+                            {formatTokenAmount(game.amount).split('.')[0]}
                           </span>
                           <Image
                             src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
@@ -558,7 +559,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-zinc-400 text-sm font-medium">
-                            {formatTokenAmount(game.amount)}
+                          {formatTokenAmount(game.amount).split('.')[0]}
                           </span>
                           <Image
                             src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
@@ -629,7 +630,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-zinc-400 text-sm font-medium">
-                            {formatTokenAmount(game.amount)}
+                          {formatTokenAmount(game.amount).split('.')[0]}
                           </span>
                           <Image
                             src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
@@ -671,7 +672,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-zinc-400 text-sm font-medium">
-                            {formatTokenAmount(game.amount)}
+                          {formatTokenAmount(game.amount).split('.')[0]}
                           </span>
                           <Image
                             src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
