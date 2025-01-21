@@ -103,7 +103,7 @@ export function useGames() {
           // Add console log for active games
           processedGames.forEach(game => {
             if (!game.rival) {  // Only log active (open) games
-              console.log(`Game ${game.id} side: ${game.side}`);
+              //console.log(`Game ${game.id} side: ${game.side}`);
             }
           });
 
