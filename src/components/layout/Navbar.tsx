@@ -37,6 +37,16 @@ export const Navbar = () => {
             </Link>
           </div>
 
+          {/* Center Buy Link */}
+          <a 
+            href="https://xexchange.com/trade?firstToken=EGLD&secondToken=MINCU-38e93d"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:flex items-center gap-2 px-4 py-2 bg-black/10 hover:bg-black/20 rounded-full transition-colors text-black font-semibold"
+          >
+            Buy $MINCU
+          </a>
+
           <div className="hidden md:flex items-center gap-6">
             <WalletButton />
           </div>
@@ -73,6 +83,18 @@ export const Navbar = () => {
             className="md:hidden bg-gradient-to-r from-[#C99733] to-[#FFD163] border-t border-black/20 shadow-lg"
           >
             <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
+              {/* Buy Link for Mobile */}
+              <a
+                href="https://xexchange.com/trade?firstToken=EGLD&secondToken=MINCU-38e93d"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-black/10 hover:bg-black/20 transition-colors text-black font-medium"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Coins className="h-5 w-5" />
+                <span>Buy $MINCU</span>
+              </a>
+
               {navItems.map((item) => (
                 <Link
                   key={item.name}
