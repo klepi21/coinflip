@@ -29,7 +29,7 @@ const DEFAULT_TOKEN_COLORS: Record<string, string> = {
 export const getTokenIconUrl = (tokenIdentifier: string) => {
   try {
     // Use the full token identifier directly
-    return `https://tools.multiversx.com/assets-cdn/devnet/tokens/${tokenIdentifier}/icon.png`;
+    return `https://tools.multiversx.com/assets-cdn/tokens/${tokenIdentifier}/icon.png`;
   } catch (error) {
     // Fallback to a generic token icon with first letter
     const letter = tokenIdentifier.charAt(0);

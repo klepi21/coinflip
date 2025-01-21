@@ -39,7 +39,7 @@ export default function RootLayout({
       <body className="bg-black">
         <ThemeProvider attribute="class" defaultTheme="light">
           <DappProvider
-            environment="devnet"
+            environment="mainnet"
             customNetworkConfig={{
               name: 'customConfig',
               apiTimeout: 6000,

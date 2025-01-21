@@ -27,25 +27,30 @@ const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28n
 const GAMES_PER_PAGE = 9;
 
 // Token configuration
-const TOKEN_DECIMALS: { [key: string]: number } = {
-  'EGLD': 18,
-  'MINCU': 18,
-  'WEGLD': 18,
-};
+const TOKEN_DECIMALS = 18;
 
-const getTokenDecimals = (token: string): number => {
-  const baseToken = token.split('-')[0];
-  return TOKEN_DECIMALS[baseToken] || 18; // Default to 18 decimals if not found
-};
-
-const formatTokenAmount = (amount: string, token: string): string => {
-  const decimals = getTokenDecimals(token);
-  return formatAmount({
-    input: amount,
-    decimals: decimals,
-    digits: 2,
-    showLastNonZeroDecimal: true,
-  });
+const formatTokenAmount = (amount: string): string => {
+  try {
+    // Convert scientific notation to a regular string
+    const rawAmount = amount.includes('e') 
+      ? amount.replace(/e\+?/, 'e')  // normalize scientific notation
+      : amount;
+    
+    // Parse the amount as a regular number first
+    const num = parseFloat(rawAmount);
+    
+    // Convert to regular decimal number
+    const decimalAmount = num / Math.pow(10, TOKEN_DECIMALS);
+    
+    // Format with commas and 2 decimal places
+    return decimalAmount.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  } catch (error) {
+    console.error('Error formatting amount:', error);
+    return '0.00';
+  }
 };
 
 type GameResult = 'win' | 'lose' | null;
@@ -454,17 +459,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-zinc-400 text-sm font-medium">
-                            {formatTokenAmount(game.amount, game.token)}
+                            {formatTokenAmount(game.amount)}
                           </span>
-                          {game.token === 'MINCU' && (
-                            <Image
-                              src={`https://tools.multiversx.com/assets-cdn//tokens/${game.token}/icon.svg`}
-                              alt={game.token}
-                              width={20}
-                              height={20}
-                              className="rounded-full"
-                            />
-                          )}
                         </div>
                       </div>
 
@@ -497,17 +493,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         {game.rival && (
                           <div className="flex items-center gap-2">
                             <span className="text-zinc-400 text-sm font-medium">
-                              {formatTokenAmount(game.amount, game.token)}
+                              {formatTokenAmount(game.amount)}
                             </span>
-                            {game.token === 'MINCU' && (
-                              <Image
-                                src={`https://tools.multiversx.com/assets-cdn/tokens/${game.token}/icon.svg`}
-                                alt={game.token}
-                                width={20}
-                                height={20}
-                                className="rounded-full"
-                              />
-                            )}
                           </div>
                         )}
                       </div>
@@ -569,17 +556,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-zinc-400 text-sm font-medium">
-                            {formatTokenAmount(game.amount, game.token)}
+                            {formatTokenAmount(game.amount)}
                           </span>
-                          {game.token === 'MINCU' && (
-                            <Image
-                              src={`https://tools.multiversx.com/assets-cdn/tokens/${game.token}/icon.svg`}
-                              alt={game.token}
-                              width={20}
-                              height={20}
-                              className="rounded-full"
-                            />
-                          )}
                         </div>
                       </div>
 
@@ -611,32 +589,14 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-zinc-400 text-sm font-medium">
-                            {formatTokenAmount(game.amount, game.token)}
+                            {formatTokenAmount(game.amount)}
                           </span>
-                          {game.token === 'MINCU' && (
-                            <Image
-                              src={`https://tools.multiversx.com/assets-cdn/tokens/${game.token}/icon.svg`}
-                              alt={game.token}
-                              width={20}
-                              height={20}
-                              className="rounded-full"
-                            />
-                          )}
                         </div>
                         {game.rival && (
                           <div className="flex items-center gap-2">
                             <span className="text-zinc-400 text-sm font-medium">
-                              {formatTokenAmount(game.amount, game.token)}
+                              {formatTokenAmount(game.amount)}
                             </span>
-                            {game.token === 'MINCU' && (
-                              <Image
-                                src={`https://tools.multiversx.com/assets-cdn/tokens/${game.token}/icon.svg`}
-                                alt={game.token}
-                                width={20}
-                                height={20}
-                                className="rounded-full"
-                              />
-                            )}
                           </div>
                         )}
                       </div>

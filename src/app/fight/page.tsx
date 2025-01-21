@@ -62,15 +62,19 @@ export default function Hot() {
         {/* Title Section */}
         <div className="flex flex-col items-center mb-12">
           <div className="flex flex-col items-center">
-            <AnimatedText 
-              text="$MINCU FIGHT"
-              textClassName="text-xl md:text-6xl font-bold text-white tracking-wider"
-              underlineClassName="text-gradient-gold"
-              underlinePath="M 0,10 Q 150,0 300,10 Q 450,20 600,10"
-              underlineHoverPath="M 0,10 Q 150,20 300,10 Q 450,0 600,10"
-              className="w-full md:w-[600px]"
-            />
+            <div className="flex flex-col items-center">
+              <AnimatedText 
+                text="$MINCU FIGHT"
+                textClassName="text-xl md:text-6xl font-bold text-white tracking-wider"
+                underlineClassName="text-gradient-gold"
+                underlinePath="M 0,10 Q 150,0 300,10 Q 450,20 600,10"
+                underlineHoverPath="M 0,10 Q 150,20 300,10 Q 450,0 600,10"
+                className="w-full md:w-[600px]"
+              />
+              <span className="text-sm text-white font-semibold mt-4">P2P Game</span>
+            </div>
             <p className="text-lg md:text-2xl font-semibold text-white mt-4">Fight between $MINCU and Lower Expectations</p>
+            
           </div>
         </div>
 

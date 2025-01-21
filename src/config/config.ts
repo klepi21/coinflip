@@ -1,5 +1,5 @@
 export const mvxConfig = {
-  chainId: '1',
+  chainId: '1', 
   apiUrl: 'https://api.multiversx.com',
   gatewayUrl: 'https://gateway.multiversx.com',
   explorerUrl: 'https://explorer.multiversx.com',

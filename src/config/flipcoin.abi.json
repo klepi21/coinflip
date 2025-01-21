@@ -255,6 +255,18 @@
                     "type": "State"
                 }
             ]
+        },
+        {
+            "name": "setFee",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "fee",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
         }
     ],
     "esdtAttributes": [],

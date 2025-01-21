@@ -270,17 +270,17 @@ export default function Create() {
                               <Image
                                 src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
                                 alt="MINCU"
-                                width={40}
-                                height={40}
-                                className="w-10 h-10"
+                                width={60}
+                                height={60}
+                                className="w-20 h-20"
                               />
                             ) : selectedSide === 'tails' ? (
                               <Image
                                 src="https://i.ibb.co/2SdHttC/lower2.png"
                                 alt="Lower Expectations"
-                                width={40}
-                                height={40}
-                                className="w-10 h-10"
+                                width={60}
+                                height={60}
+                                className="w-20 h-20"
                               />
                             ) : (
                               <div className="text-4xl">?</div>
@@ -300,7 +300,7 @@ export default function Create() {
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             className="flex-1 bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
-                            placeholder="Enter amount"
+                            placeholder="Enter amount (min. 1001 MINCU)"
                           />
                           <div className="relative">
                             <div className="flex items-center gap-2 bg-black text-white px-3 py-2 rounded-xl border border-zinc-800">
@@ -316,6 +316,10 @@ export default function Create() {
                               <span className="text-sm">MINCU</span>
                             </div>
                           </div>
+                        </div>
+                        {/* Helper message */}
+                        <div className="text-sm text-zinc-500 mt-1">
+                          Minimum amount: 1001 MINCU
                         </div>
                       </div>
 
@@ -447,7 +451,7 @@ export default function Create() {
                           alt="MINCU"
                           width={64}
                           height={64}
-                          className="w-16 h-16"
+                          className="w-24 h-24"
                         />
                       ) : selectedSide === 'tails' ? (
                         <Image
@@ -455,7 +459,7 @@ export default function Create() {
                           alt="Lower Expectations"
                           width={64}
                           height={64}
-                          className="w-16 h-16"
+                          className="w-24 h-24"
                           style={{ transform: 'scaleX(-1)' }}
                         />
                       ) : (
@@ -476,7 +480,7 @@ export default function Create() {
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white text-lg font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
-                      placeholder="Enter amount"
+                      placeholder="Enter amount (min. 1001 MINCU)"
                     />
                     <div className="relative">
                       <div className="flex items-center gap-2 bg-black text-white pl-4 pr-4 py-3 rounded-xl border border-zinc-800">
@@ -492,6 +496,10 @@ export default function Create() {
                         <span>MINCU</span>
                       </div>
                     </div>
+                  </div>
+                  {/* Helper message */}
+                  <div className="text-sm text-zinc-500 mt-1">
+                    Minimum amount: 1001 MINCU
                   </div>
                 </div>
 
