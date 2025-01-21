@@ -312,7 +312,7 @@ export default function Create() {
                             step="1"
                             min="1001"
                             className="flex-1 bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
-                            placeholder="Enter amount (min. 1001 MINCU)"
+                            placeholder="Enter amount"
                           />
                           <div className="relative">
                             <div className="flex items-center gap-2 bg-black text-white px-3 py-2 rounded-xl border border-zinc-800">
@@ -504,7 +504,7 @@ export default function Create() {
                       step="1"
                       min="1001"
                       className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white text-lg font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
-                      placeholder="Enter amount (min. 1001 MINCU)"
+                      placeholder="Enter amount"
                     />
                     <div className="relative">
                       <div className="flex items-center gap-2 bg-black text-white pl-4 pr-4 py-3 rounded-xl border border-zinc-800">
