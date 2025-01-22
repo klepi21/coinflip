@@ -38,8 +38,14 @@ export const Navbar = () => {
             </Link>
           </div>
 
-          {/* Remove the center Buy Link */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
+            <button
+              onClick={() => setIsHowToPlayOpen(true)}
+              className="text-black font-medium hover:underline"
+            >
+              How to Play
+            </button>
             <a 
               href="https://xexchange.com/trade?firstToken=EGLD&secondToken=MINCU-38e93d"
               target="_blank"
@@ -83,6 +89,18 @@ export const Navbar = () => {
             className="md:hidden bg-gradient-to-r from-[#C99733] to-[#FFD163] border-t border-black/20 shadow-lg"
           >
             <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
+              {/* How to Play Link for Mobile */}
+              <button
+                onClick={() => {
+                  setIsHowToPlayOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-black/10 hover:bg-black/20 transition-colors text-black font-medium w-full"
+              >
+                <User className="h-5 w-5" />
+                <span>How to Play</span>
+              </button>
+
               {/* Buy Link for Mobile */}
               <a
                 href="https://xexchange.com/trade?firstToken=EGLD&secondToken=MINCU-38e93d"
