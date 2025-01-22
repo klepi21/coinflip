@@ -33,21 +33,20 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-[60px]">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3 text-black font-bold">
-              $MINCU FIGHT
+              MINCU FIGHT
             </Link>
           </div>
 
-          {/* Center Buy Link */}
-          <a 
-            href="https://xexchange.com/trade?firstToken=EGLD&secondToken=MINCU-38e93d"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden md:flex items-center gap-2 px-4 py-2 bg-black/10 hover:bg-black/20 rounded-full transition-colors text-black font-semibold"
-          >
-            Buy $MINCU
-          </a>
-
-          <div className="hidden md:flex items-center gap-6">
+          {/* Remove the center Buy Link */}
+          <div className="hidden md:flex items-center gap-4">
+            <a 
+              href="https://xexchange.com/trade?firstToken=EGLD&secondToken=MINCU-38e93d"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-black font-medium hover:underline"
+            >
+              Buy MINCU
+            </a>
             <WalletButton />
           </div>
 

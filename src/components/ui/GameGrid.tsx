@@ -142,11 +142,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     }
   };
 
-  // Fetch total games on mount and every minute
+  // Fetch total games only on mount
   useEffect(() => {
     fetchTotalGames();
-    const interval = setInterval(fetchTotalGames, 60000);
-    return () => clearInterval(interval);
   }, [network.apiAddress]);
 
   const fetchHerotag = async (address: string): Promise<string | undefined> => {
@@ -272,8 +270,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         gameResult: isWinner ? 'win' : 'lose'
       });
 
-      // Refresh games in the background
+      // Refresh games and total games count
       refetchGames();
+      fetchTotalGames(); // Refresh total games after game completion
 
     } catch (error) {
       console.error('Join game error:', error);
@@ -343,8 +342,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         setPopup(prev => ({ ...prev, isOpen: false }));
       }, 3000);
 
-      // Refresh games in the background
+      // Refresh games and total games count
       refetchGames();
+      fetchTotalGames(); // Refresh total games after cancellation
 
     } catch (error) {
       console.error('Cancel game error:', error);
