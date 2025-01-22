@@ -145,7 +145,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   // Fetch total games only on mount
   useEffect(() => {
     fetchTotalGames();
-  }, [network.apiAddress]);
+  }, []);
 
   const fetchHerotag = async (address: string): Promise<string | undefined> => {
     try {

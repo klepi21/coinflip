@@ -92,8 +92,6 @@ export default function Hot() {
 
   useEffect(() => {
     fetchTotalGames();
-    const interval = setInterval(fetchTotalGames, 10000);
-    return () => clearInterval(interval);
   }, [network.apiAddress]);
 
   return (
