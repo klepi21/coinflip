@@ -97,7 +97,7 @@ export default function Create() {
           value: '0',
           data: `ESDTTransfer@${Buffer.from(USDC_IDENTIFIER).toString('hex')}@${toHexEven(Math.floor(rawAmount))}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
           receiver: SC_ADDRESS,
-          gasLimit: 100000000,
+          gasLimit: 10000000,
         }],
         transactionsDisplayInfo: {
           processingMessage: `Creating ${multiplier} game${multiplier > 1 ? 's' : ''} with ${totalAmount} MINCU...`,
