@@ -33,7 +33,8 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-[60px]">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3 text-black font-bold">
-              MINCU FIGHT
+              <img src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg" alt="MINCU Logo" className="w-8 h-8" />
+              $MINCUFIGHT
             </Link>
           </div>
 
