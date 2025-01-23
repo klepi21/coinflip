@@ -4,13 +4,14 @@ import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WalletButton } from '../wallet/WalletButton';
-import { Coins, Menu, X, User } from 'lucide-react';
+import { Coins, Menu, X, Vote } from 'lucide-react';
 import { HyperText } from '../ui/hyper-text';
 import Link from 'next/link';
 import { useWallet } from '@/context/WalletContext';
 import { WalletModal } from '../wallet/WalletModal';
 import { HowToPlayModal } from '@/components/ui/how-to-play-modal';
 import { cn } from '@/lib/utils';
+import { NavBar as TubelightNavbar } from '@/components/ui/tubelight-navbar';
 
 export const Navbar = () => {
   const pathname = usePathname();
@@ -20,7 +21,8 @@ export const Navbar = () => {
   const { isLoggedIn } = useWallet();
 
   const navItems = [
-    { name: 'Fight', url: '/fight', icon: Coins }
+    { name: 'Fight', url: '/fight', icon: Coins },
+    { name: 'Vote', url: '/vote', icon: Vote }
   ];
 
   return (
@@ -38,8 +40,12 @@ export const Navbar = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-4">
-            <WalletButton />
+          <div className="hidden md:flex items-center justify-between w-full px-32">
+            <div className="flex-1" />
+            <TubelightNavbar items={navItems} activeTextColor="text-black" />
+            <div className="flex-1 flex justify-end">
+              <WalletButton />
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -90,6 +96,12 @@ export const Navbar = () => {
       <HowToPlayModal 
         isOpen={isHowToPlayOpen} 
         onClose={() => setIsHowToPlayOpen(false)} 
+      />
+
+      {/* Wallet Modal */}
+      <WalletModal 
+        isOpen={false} 
+        onClose={() => {}} 
       />
     </motion.nav>
   );

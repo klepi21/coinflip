@@ -70,7 +70,7 @@ export default function RootLayout({
             <WalletProvider>
               <div className="min-h-screen relative">
                 {/* Optional pattern overlay */}
-                <div className="fixed inset-0 bg-white/5 pattern-grid-white/5 pointer-events-none" />
+                <div className="fixed inset-0 bg-black pointer-events-none" />
                 {/* Content */}
                 <div className="relative z-10">
                   <Navbar />

@@ -61,8 +61,7 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletModalProps) => {
       <div className="fixed inset-0" aria-hidden="true" />
       
       <div className="fixed inset-0 flex items-center justify-end p-4">
-        <Dialog.Panel className="relative h-full w-full md:w-[400px] bg-gradient-to-br from-[#C99733] to-[#FFD163] 
-          rounded-2xl overflow-auto border-2 border-black">
+        <Dialog.Panel className="relative h-full w-full md:w-[400px] bg-white rounded-2xl overflow-auto border-2 border-black">
           <div className="flex flex-col px-5 py-3 max-md:px-4 max-md:py-2 gap-0 rounded-xl w-full h-full">
             <div className="flex flex-row justify-between items-center gap-2">
               <h2 className="flex justify-center items-center text-xl md:text-2xl font-medium text-black">
