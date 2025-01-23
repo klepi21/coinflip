@@ -32,23 +32,23 @@ export default function RootLayout({
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="$MINCU Fight - The Ultimate Battle" />
-        <title>$MINCU Fight - The Ultimate Battle</title>
-        <meta name="description" content="Engage in epic battles with $MINCU Fight, the premier blockchain-based fighting game on MultiversX. Compete against other players and claim your rewards." />
-        <meta property="og:title" content="$MINCU Fight - P2P Game" />
-        <meta property="og:description" content="Fight between $MINCU and Lower Expectations | P2P Game on MultiversX" />
-        <meta property="og:image" content="https://mincufight.vercel.app/img/mincufight.png" />
-        <meta property="og:image:alt" content="MINCU Fight Game Logo" />
+        <meta name="description" content="F.0. - Fud Out, a blockchain-based PvP coin flip fighting game" />
+        <title>F.0. - Fud Out, a blockchain-based PvP coin flip fighting game</title>
+        <meta name="description" content="Experience the thrill of PvP combat with F.0. - Fud Out, a blockchain-based coin flip fighting game. Compete against other players and claim your rewards." />
+        <meta property="og:title" content="F.0. - Fud Out, a blockchain-based PvP coin flip fighting game" />
+        <meta property="og:description" content="Compete in PvP coin flip battles with F.0. - Fud Out, a blockchain-based fighting game" />
+        <meta property="og:image" content="https://fudout.vercel.app/img/fudout.png" />
+        <meta property="og:image:alt" content="F.0. - Fud Out Game Logo" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:url" content="https://mincufight.vercel.app/fight" />
+        <meta property="og:url" content="https://fudout.vercel.app/fight" />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="$MINCU Fight - P2P Game" />
-        <meta name="twitter:description" content="Fight between $MINCU and Lower Expectations | P2P Game on MultiversX" />
-        <meta name="twitter:image" content="https://mincufight.vercel.app/img/mincufight.png" />
-        <meta name="twitter:image:alt" content="MINCU Fight Game Logo" />
-        <meta name="twitter:url" content="https://mincufight.vercel.app/fight" />
+        <meta name="twitter:title" content="F.0. - Fud Out, a blockchain-based PvP coin flip fighting game" />
+        <meta name="twitter:description" content="Compete in PvP coin flip battles with F.0. - Fud Out, a blockchain-based fighting game" />
+        <meta name="twitter:image" content="https://fudout.vercel.app/img/fudout.png" />
+        <meta name="twitter:image:alt" content="F.0. - Fud Out Game Logo" />
+        <meta name="twitter:url" content="https://fudout.vercel.app/fight" />
         <style>
           {`
             * {

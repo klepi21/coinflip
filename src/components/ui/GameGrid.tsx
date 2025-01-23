@@ -27,9 +27,52 @@ import { useTokenBalance } from '@/hooks/useTokenBalance';
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
 const GAMES_PER_PAGE = 9;
 const MINCU_IDENTIFIER = 'MINCU-38e93d';
+const LUCIAN_IDENTIFIER = 'LUCIAN-e61415';
+const RARE_IDENTIFIER = 'RARE-123456';
+const BOD_IDENTIFIER = 'BOD-654321';
 
 // Token configuration
 const TOKEN_DECIMALS = 18;
+
+// Token data with images
+const TOKENS = {
+  MINCU: {
+    id: 'MINCU',
+    name: 'MINCU',
+    image: `https://tools.multiversx.com/assets-cdn/tokens/${MINCU_IDENTIFIER}/icon.svg`,
+    decimals: 18
+  },
+  LUCIAN: {
+    id: 'LUCIAN',
+    name: 'LUCIAN',
+    image: 'https://pbs.twimg.com/media/Gh5Ylu9WAAAFfCE?format=jpg&name=large',
+    decimals: 18
+  },
+  RARE: {
+    id: 'RARE',
+    name: 'RARE',
+    image: '/img/rare.png',
+    decimals: 18
+  },
+  BOD: {
+    id: 'BOD',
+    name: 'BOD',
+    image: '/img/bod.png',
+    decimals: 18
+  }
+};
+
+// Add SIDES constant at the top with other constants
+const SIDES = {
+  GRM: {
+    name: 'GRM',
+    image: '/img/grm.png'
+  },
+  SASU: {
+    name: 'SASU',
+    image: '/img/sasu.png'
+  }
+};
 
 const formatTokenAmount = (amount: string): string => {
   try {
@@ -478,26 +521,20 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
             Array.from({ length: 6 }).map((_, index) => (
               <div key={`placeholder-${index}`} className="relative pb-6">
                 <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg animate-pulse">
-                  <div className="flex relative min-h-[140px]">
+                  <div className="flex relative min-h-[160px]" style={{
+                    backgroundImage: "url('/img/fightback.jpg')",
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}>
                     {/* Left Player Placeholder */}
-                    <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                    <div className="flex-1 p-4 flex flex-col items-center justify-center  bg-black/30">
                       <div className="w-12 h-12 rounded-full bg-zinc-800 mb-2"></div>
                       <div className="h-4 w-20 bg-zinc-800 rounded mb-2"></div>
                       <div className="h-4 w-16 bg-zinc-800 rounded"></div>
                     </div>
 
-                    {/* VS Badge */}
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                      <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-zinc-800">
-                        <span className="text-zinc-500 text-xs">VS</span>
-                      </div>
-                    </div>
-
-                    {/* Vertical Divider */}
-                    <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-800 transform -translate-x-1/2"></div>
-
                     {/* Right Player Placeholder */}
-                    <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                    <div className="flex-1 p-4 flex flex-col items-center justify-center bg-black/30">
                       <div className="w-12 h-12 rounded-full bg-zinc-800 mb-2"></div>
                       <div className="h-4 w-20 bg-zinc-800 rounded mb-2"></div>
                       <div className="h-4 w-16 bg-zinc-800 rounded"></div>
@@ -549,8 +586,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </div>
                       </div>
 
-                      {/* Vertical Divider */}
-                      <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-800 transform -translate-x-1/2"></div>
+       
 
                       {/* Right Player (Rival) */}
                       <div className="flex-1 p-4 flex flex-col items-center justify-center">
@@ -563,13 +599,13 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
+                        <span className="text-black text-xs font-medium mb-1 truncate w-full text-center">
                           {game.rival 
                             ? (game.rivalHerotag || `${game.rival.slice(0, 5)}...${game.rival.slice(-4)}`)
                             : 'Waiting...'}
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-zinc-400 text-sm font-medium">
+                          <span className="text-black text-sm font-medium">
                           {formatTokenAmount(game.amount).split('.')[0]}
                           </span>
                           <Image
@@ -622,75 +658,65 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                 >
                   {/* Main box with players */}
                   <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg">
-                    <div className="flex relative min-h-[140px]">
+                    <div className="flex relative min-h-[160px]" style={{
+                      backgroundImage: "url('/img/fightback.jpg')",
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                    }}>
                       {/* Left Player (Creator) */}
                       <div className="flex-1 p-4 flex flex-col items-center justify-center">
-                        <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
+                        <div className="w-24 h-24">
                           <Image
-                            src={game.side === 0 
-                              ? "https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
-                              : "https://i.ibb.co/2SdHttC/lower2.png"}
-                            alt="Creator"
-                            width={48}
-                            height={48}
-                            className="w-full h-full object-cover"
+                            src={game.side === 0 ? SIDES.GRM.image : SIDES.SASU.image}
+                            alt={game.side === 0 ? "GRM" : "SASU"}
+                            width={128}
+                            height={128}
+                            className="w-full h-full object-contain"
                           />
                         </div>
-                        <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
+                        <span className="text-black text-xs font-medium mb-1 truncate w-full text-center">
                           {game.creatorHerotag || `${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-zinc-400 text-sm font-medium">
-                          {formatTokenAmount(game.amount).split('.')[0]}
+                          <span className="text-black text-sm font-medium">
+                            {formatTokenAmount(game.amount).split('.')[0]}
                           </span>
                           <Image
-                            src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
-                            alt="MINCU"
+                            src={game.token === RARE_IDENTIFIER ? TOKENS.RARE.image : TOKENS.BOD.image}
+                            alt={game.token === RARE_IDENTIFIER ? "RARE" : "BOD"}
                             width={16}
                             height={16}
-                            className="w-4 h-4 rounded-full"
+                            className="w-4 h-4"
                           />
                         </div>
                       </div>
-
-                      {/* VS Badge */}
-                      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                        <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center border border-zinc-800">
-                          <span className="text-zinc-500 text-xs">VS</span>
-                        </div>
-                      </div>
-
-                      {/* Vertical Divider */}
-                      <div className="absolute left-1/2 top-0 bottom-0 w-px bg-zinc-800 transform -translate-x-1/2"></div>
 
                       {/* Right Player (Rival) */}
-                      <div className="flex-1 p-4 flex flex-col items-center justify-center">
-                        <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
+                      <div className="flex-1 p-4 flex flex-col items-center justify-center  ">
+                        <div className="w-24 h-24">
                           <Image
-                            src={game.side === 0 
-                              ? "https://i.ibb.co/2SdHttC/lower2.png"
-                              : "https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"}
-                            alt="Rival"
-                            width={48}
-                            height={48}
-                            className="w-full h-full object-cover"
+                            src={game.side === 0 ? SIDES.SASU.image : SIDES.GRM.image}
+                            alt={game.side === 0 ? "SASU" : "GRM"}
+                            width={128}
+                            height={128}
+                            className="w-full h-full object-contain"
                           />
                         </div>
-                        <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
+                        <span className="text-black text-xs font-medium mb-1 truncate w-full text-center">
                           {game.rival 
                             ? (game.rivalHerotag || `${game.rival.slice(0, 5)}...${game.rival.slice(-4)}`)
                             : 'Waiting...'}
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-zinc-400 text-sm font-medium">
-                          {formatTokenAmount(game.amount).split('.')[0]}
+                          <span className="text-black text-sm font-medium">
+                            {formatTokenAmount(game.amount).split('.')[0]}
                           </span>
                           <Image
-                            src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
-                            alt="MINCU"
+                            src={game.token === RARE_IDENTIFIER ? TOKENS.RARE.image : TOKENS.BOD.image}
+                            alt={game.token === RARE_IDENTIFIER ? "RARE" : "BOD"}
                             width={16}
                             height={16}
-                            className="w-4 h-4 rounded-full"
+                            className="w-4 h-4"
                           />
                         </div>
                       </div>
@@ -699,7 +725,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
                   {/* Join/Cancel Button - Only show if no rival */}
                   {!game.rival && (
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[calc(50%)] border-[#1A1A1A]">
+                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-[calc(50%)] border-[#1A1A1A] mt-8">
                       {!connectedAddress ? (
                         <button 
                           disabled

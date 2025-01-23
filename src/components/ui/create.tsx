@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { useWallet } from '@/context/WalletContext';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
@@ -13,15 +14,35 @@ import { useGetAccountInfo } from "@multiversx/sdk-dapp/hooks";
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
-const USDC_IDENTIFIER = 'MINCU-38e93d';
+const RARE_IDENTIFIER = 'RARE-99e8b0';
+const BOD_IDENTIFIER = 'BOD-204877';
 
 // Token data with images
 const TOKENS = {
-  MINCU: {
-    id: 'MINCU',
-    name: 'MINCU',
-    image: `https://tools.multiversx.com/assets-cdn/tokens/${USDC_IDENTIFIER}/icon.svg`,
-    decimals: 18
+  RARE: {
+    id: 'RARE',
+    name: 'RARE',
+    image: `https://tools.multiversx.com/assets-cdn/tokens/${RARE_IDENTIFIER}/icon.svg`,
+    decimals: 18,
+    minAmount: 500
+  },
+  BOD: {
+    id: 'BOD',
+    name: 'BOD',
+    image: `https://tools.multiversx.com/assets-cdn/tokens/${BOD_IDENTIFIER}/icon.svg`,
+    decimals: 18,
+    minAmount: 100000
+  }
+};
+
+const SIDES = {
+  GRM: {
+    name: 'GRM',
+    image: '/img/grm.png'
+  },
+  SASU: {
+    name: 'SASU',
+    image: '/img/sasu.png'
   }
 };
 
@@ -36,9 +57,9 @@ const GAME_MULTIPLIERS = [1, 2, 5, 10, 15];
 
 export default function Create() {
   const [amount, setAmount] = useState('');
-  const [selectedToken] = useState<'MINCU'>('MINCU');
+  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD'>('RARE');
   const [multiplier, setMultiplier] = useState(1);
-  const [selectedSide, setSelectedSide] = useState<'heads' | 'tails' | null>(null);
+  const [selectedSide, setSelectedSide] = useState<'GRM' | 'SASU' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isWaitingForTx, setIsWaitingForTx] = useState(false);
@@ -59,8 +80,9 @@ export default function Create() {
 
   const { isLoggedIn, address } = useWallet();
   const { account } = useGetAccountInfo();
-  const { balance: usdcBalance, isLoading: isLoadingUsdcBalance } = useTokenBalance(address || '', USDC_IDENTIFIER);
-  const isLoadingBalance = isLoadingUsdcBalance;
+  const { balance: rareBalance, isLoading: isLoadingRareBalance } = useTokenBalance(address || '', RARE_IDENTIFIER);
+  const { balance: bodBalance, isLoading: isLoadingBodBalance } = useTokenBalance(address || '', BOD_IDENTIFIER);
+  const isLoadingBalance = isLoadingRareBalance || isLoadingBodBalance;
 
   // Reset popup when component mounts or when sessionId changes to null
   useEffect(() => {
@@ -83,24 +105,22 @@ export default function Create() {
       setIsSubmitting(true);
       setIsWaitingForTx(true);
 
-      const decimalAmount = 18; // USDC decimals
-      // Calculate total amount (amount per game * number of games)
+      const decimalAmount = 18;
       const totalAmount = parseFloat(amount) * multiplier;
       const rawAmount = totalAmount * Math.pow(10, decimalAmount);
+      const sideValue = selectedSide === 'GRM' ? 0 : 1;
 
-      // Convert side to u8 value (0 for heads, 1 for tails)
-      const sideValue = selectedSide === 'heads' ? 0 : 1;
+      const tokenIdentifier = selectedToken === 'RARE' ? RARE_IDENTIFIER : BOD_IDENTIFIER;
 
-      // Create transaction data
       const { sessionId: newSessionId } = await sendTransactions({
         transactions: [{
           value: '0',
-          data: `ESDTTransfer@${Buffer.from(USDC_IDENTIFIER).toString('hex')}@${toHexEven(Math.floor(rawAmount))}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
+          data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${toHexEven(Math.floor(rawAmount))}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
           receiver: SC_ADDRESS,
           gasLimit: 10000000,
         }],
         transactionsDisplayInfo: {
-          processingMessage: `Creating ${multiplier} game${multiplier > 1 ? 's' : ''} with ${totalAmount} MINCU...`,
+          processingMessage: `Creating ${multiplier} game${multiplier > 1 ? 's' : ''} with ${totalAmount} ${selectedToken}...`,
           errorMessage: 'Failed to create game',
           successMessage: `Successfully created ${multiplier} game${multiplier > 1 ? 's' : ''}!`
         }
@@ -128,55 +148,55 @@ export default function Create() {
       disabled: true, 
       message: null,
       action: handleCreateGame,
-      text: 'Creating Game...'
+      text: 'Creating Battle...'
     };
     if (isLoadingBalance) return { 
       disabled: true, 
       message: 'Loading balance...',
       action: handleCreateGame,
-      text: 'Create Game'
+      text: 'Create Battle'
     };
     
-    const currentBalance = usdcBalance;
+    const currentBalance = selectedToken === 'RARE' ? rareBalance : bodBalance;
     const amountValue = parseFloat(amount);
     const totalAmount = amountValue * multiplier;
     
     if (currentBalance === 0) return { 
       disabled: true, 
-      message: 'No MINCU tokens in wallet',
+      message: `No ${selectedToken} tokens in wallet`,
       action: handleCreateGame,
-      text: 'Create Game'
+      text: 'Create Battle'
     };
     if (!amount || amountValue <= 0) return { 
       disabled: true, 
       message: 'Enter an amount',
       action: handleCreateGame,
-      text: 'Create Game'
+      text: 'Create Battle'
     };
     if (amountValue < 1000) return {
       disabled: true,
-      message: 'Minimum amount is 1000 MINCU',
+      message: `Minimum amount is 1000 ${selectedToken}`,
       action: handleCreateGame,
-      text: 'Create Game'
+      text: 'Create Battle'
     };
     if (currentBalance < totalAmount) return { 
       disabled: true, 
-      message: `Insufficient USDC balance (${currentBalance.toFixed(2)} MINCU available)`,
+      message: `Insufficient balance (${currentBalance.toFixed(2)} ${selectedToken} available)`,
       action: handleCreateGame,
-      text: 'Create Game'
+      text: 'Create Battle'
     };
     if (!selectedSide) return { 
       disabled: true, 
       message: 'Select a side',
       action: handleCreateGame,
-      text: 'Create Game'
+      text: 'Create Battle'
     };
     
     return { 
       disabled: false, 
       message: null,
       action: handleCreateGame,
-      text: 'Create Game'
+      text: 'Create Battle'
     };
   };
 
@@ -261,39 +281,42 @@ export default function Create() {
               <div className="px-4 pb-8">
                 {/* Mobile Form Content */}
                 <div className="space-y-6">
-                  {/* Smaller Coin Animation */}
+                  {/* Updated Side-by-Side Animation */}
                   <div className="flex justify-center">
-                    <motion.div 
-                      className="relative w-32 h-32"
-                      animate={{ rotateY: selectedSide ? 180 : 0 }}
-                      transition={{ duration: 0.6, type: "spring" }}
-                      key={selectedSide}
-                    >
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-zinc-800 to-black shadow-2xl flex items-center justify-center">
-                        <div className="absolute inset-2 rounded-full bg-gradient-to-br from-[#C99733] to-[#FFD163] flex items-center justify-center overflow-hidden">
-                          {selectedSide === 'heads' ? (
-                            <Image
-                              src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
-                              alt="MINCU"
-                              width={60}
-                              height={60}
-                              className="w-20 h-20"
-                            />
-                          ) : selectedSide === 'tails' ? (
-                            <Image
-                              src="https://i.ibb.co/2SdHttC/lower2.png"
-                              alt="Lower Expectations"
-                              width={60}
-                              height={60}
-                              className="w-20 h-20"
-                              style={{ transform: 'scaleX(-1)' }}
-                            />
-                          ) : (
-                            <div className="text-4xl">?</div>
-                          )}
+                    <div className="relative w-full max-w-md h-48 flex items-center justify-between" style={{
+                      backgroundImage: "url('/img/pick.jpg')",
+                      backgroundSize: 'contain',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat'
+                    }}>
+                      {/* GRM Side */}
+                      <div className={`w-32 h-40 transition-all duration-300 flex flex-col items-center ${selectedSide === 'GRM' ? 'opacity-100' : 'opacity-40 blur-sm'}`}>
+                        <div className="w-32 h-32 flex items-center justify-center">
+                          <Image
+                            src={SIDES.GRM.image}
+                            alt="GRM"
+                            width={100}
+                            height={100}
+                            className="w-28 h-28 object-contain"
+                          />
                         </div>
+                        <span className="text-black font-bold text-lg mt-2">GRM</span>
                       </div>
-                    </motion.div>
+
+                      {/* SASU Side */}
+                      <div className={`w-32 h-40 transition-all duration-300 flex flex-col items-center ${selectedSide === 'SASU' ? 'opacity-100' : 'opacity-40 blur-sm'}`}>
+                        <div className="w-32 h-32 flex items-center justify-center">
+                          <Image
+                            src={SIDES.SASU.image}
+                            alt="SASU"
+                            width={100}
+                            height={100}
+                            className="w-28 h-28 object-contain"
+                          />
+                        </div>
+                        <span className="text-black font-bold text-lg mt-2">SASU</span>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Mobile Form Fields */}
@@ -305,12 +328,10 @@ export default function Create() {
                           type="number"
                           value={amount}
                           onChange={(e) => {
-                            // Only allow whole numbers
                             const value = e.target.value.replace(/[^0-9]/g, '');
                             setAmount(value);
                           }}
                           onKeyDown={(e) => {
-                            // Prevent decimal point and e (scientific notation)
                             if (e.key === '.' || e.key === ',' || e.key.toLowerCase() === 'e') {
                               e.preventDefault();
                             }
@@ -318,31 +339,39 @@ export default function Create() {
                           step="1"
                           min="1001"
                           className="flex-1 bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
-                          placeholder="Enter amount (min. 1001 MINCU)"
+                          placeholder={`Enter amount (min. 1001 ${selectedToken})`}
                         />
                         <div className="relative">
-                          <div className="flex items-center gap-2 bg-black text-white px-3 py-2 rounded-xl border border-zinc-800">
-                            <div className="w-4 h-4 rounded-full overflow-hidden">
-                              <Image
-                                src={TOKENS.MINCU.image}
-                                alt="MINCU"
-                                width={16}
-                                height={16}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <span className="text-sm">MINCU</span>
+                          <select
+                            value={selectedToken}
+                            onChange={(e) => setSelectedToken(e.target.value as 'RARE' | 'BOD')}
+                            className="flex items-center gap-2 bg-black text-white pl-10 pr-10 py-3 rounded-xl border border-zinc-800 appearance-none cursor-pointer hover:border-[#C99733] transition-colors"
+                          >
+                            <option value="RARE">RARE</option>
+                            <option value="BOD">BOD</option>
+                          </select>
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full overflow-hidden pointer-events-none">
+                            <Image
+                              src={TOKENS[selectedToken].image}
+                              alt={selectedToken}
+                              width={20}
+                              height={20}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+                            <ChevronDown className="w-4 h-4" />
                           </div>
                         </div>
                       </div>
                       {/* Helper message */}
                       <div className="text-sm text-zinc-500 mt-1">
-                        Minimum amount: 1000 MINCU
+                        Minimum amount: {TOKENS[selectedToken].minAmount} {selectedToken}
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-zinc-400 text-sm mb-2">Games to create</label>
+                      <label className="block text-zinc-400 text-sm mb-2">How many Battles to create?</label>
                       <div className="flex gap-1">
                         {GAME_MULTIPLIERS.map((mult) => (
                           <button
@@ -359,46 +388,47 @@ export default function Create() {
                     </div>
 
                     <div>
-                      <label className="block text-zinc-400 text-sm mb-2">Pick a side</label>
-                      <div className="flex gap-2">
+                      <label className="block text-zinc-400 text-sm mb-2">Pick your side</label>
+                      <div className="flex gap-4">
                         <button
-                          onClick={() => setSelectedSide('heads')}
-                          className={`flex-1 h-12 rounded-xl ${
-                            selectedSide === 'heads' 
+                          onClick={() => setSelectedSide('GRM')}
+                          className={`flex-1 h-16 rounded-xl ${
+                            selectedSide === 'GRM' 
                               ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-2 border-black text-black' 
                               : 'bg-zinc-800 text-white'
-                          } font-medium transition-all flex items-center justify-center gap-2`}
+                          } font-medium transition-all flex items-center justify-center gap-3 hover:bg-gradient-to-r hover:from-[#C99733] hover:to-[#FFD163] hover:text-black`}
                         >
-                          <div className="w-8 h-8 rounded-full overflow-hidden bg-black/20 p-1">
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-black/20 p-1">
                             <Image
-                              src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
-                              alt="MINCU"
-                              width={24}
-                              height={24}
+                              src={SIDES.GRM.image}
+                              alt="GRM"
+                              width={32}
+                              height={32}
                               className="w-full h-full object-contain rounded-full"
                             />
                           </div>
-                          <span className="text-sm">MINCU</span>
+                          <span>GRM</span>
                         </button>
                         <button
-                          onClick={() => setSelectedSide('tails')}
-                          className={`flex-1 h-12 rounded-xl ${
-                            selectedSide === 'tails' 
+                          onClick={() => setSelectedSide('SASU')}
+                          className={`flex-1 h-16 rounded-xl ${
+                            selectedSide === 'SASU' 
                               ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-2 border-black text-black' 
                               : 'bg-zinc-800 text-white'
-                          } font-medium transition-all flex items-center justify-center gap-2`}
+                          } font-medium transition-all flex items-center justify-center gap-3 hover:bg-gradient-to-r hover:from-[#C99733] hover:to-[#FFD163] hover:text-black`}
                         >
-                          <div className="w-8 h-8 rounded-full overflow-hidden bg-black/20 p-1">
-                            <Image
-                              src="https://i.ibb.co/2SdHttC/lower2.png"
-                              alt="Lower Expectations"
-                              width={24}
-                              height={24}
-                              className="w-full h-full object-contain rounded-full"
-                              style={{ transform: 'scaleX(-1)' }}
-                            />
+                          <div className="flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full overflow-hidden bg-black/20 p-1">
+                              <Image
+                                src={SIDES.SASU.image}
+                                alt="SASU"
+                                width={32}
+                                height={32}
+                                className="w-full h-full object-contain rounded-full"
+                              />
+                            </div>
+                            <span className="ml-3">SASU</span>
                           </div>
-                          <span className="text-sm">Lower Expectations</span>
                         </button>
                       </div>
                     </div>
@@ -421,7 +451,7 @@ export default function Create() {
                         <span className="text-zinc-400">Loading...</span>
                       ) : (
                         <span className="text-white font-medium">
-                          {usdcBalance.toFixed(2)} MINCU
+                          {(selectedToken === 'RARE' ? rareBalance : bodBalance).toFixed(2)} {selectedToken}
                         </span>
                       )}
                     </div>
@@ -453,39 +483,42 @@ export default function Create() {
             </div>
           ) : (
             <div className="space-y-8">
-              {/* Animated Coin at the top */}
-              <div className="flex justify-center">
-                <motion.div 
-                  className="relative w-48 h-48"
-                  animate={{ rotateY: selectedSide ? 180 : 0 }}
-                  transition={{ duration: 0.6, type: "spring" }}
-                  key={selectedSide}
-                >
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-zinc-800 to-black shadow-2xl flex items-center justify-center">
-                    <div className="absolute inset-2 rounded-full bg-gradient-to-br from-[#C99733] to-[#FFD163] flex items-center justify-center overflow-hidden">
-                      {selectedSide === 'heads' ? (
-                        <Image
-                          src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
-                          alt="MINCU"
-                          width={64}
-                          height={64}
-                          className="w-24 h-24"
-                        />
-                      ) : selectedSide === 'tails' ? (
-                        <Image
-                          src="https://i.ibb.co/2SdHttC/lower2.png"
-                          alt="Lower Expectations"
-                          width={64}
-                          height={64}
-                          className="w-24 h-24"
-                          style={{ transform: 'scaleX(-1)' }}
-                        />
-                      ) : (
-                        <div className="text-6xl">?</div>
-                      )}
+              {/* Updated Side-by-Side Animation */}
+              <div className="flex justify-center ">
+                <div className="relative w-full max-w-lg h-48 flex items-center justify-between " style={{
+                  backgroundImage: "url('/img/pick.jpg')",
+                  backgroundSize: 'contain',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }}>
+                  {/* GRM Side */}
+                  <div className={`w-32 h-40 ml-8 transition-all duration-300 flex flex-col items-center ${selectedSide === 'GRM' ? 'opacity-100' : 'opacity-40 blur-sm'}`}>
+                    <div className="w-32 h-32 flex items-center justify-center">
+                      <Image
+                        src={SIDES.GRM.image}
+                        alt="GRM"
+                        width={100}
+                        height={100}
+                        className="w-28 h-28 object-contain"
+                      />
                     </div>
+                    <span className="text-black font-bold text-lg mb-8">GRM</span>
                   </div>
-                </motion.div>
+
+                  {/* SASU Side */}
+                  <div className={`w-32 h-40 transition-all mr-8 duration-300 flex flex-col items-center ${selectedSide === 'SASU' ? 'opacity-100' : 'opacity-40 blur-sm'}`}>
+                    <div className="w-32 h-32 flex items-center justify-center">
+                      <Image
+                        src={SIDES.SASU.image}
+                        alt="SASU"
+                        width={100}
+                        height={100}
+                        className="w-28 h-28 object-contain"
+                      />
+                    </div>
+                    <span className="text-black font-bold text-lg mb-8">SASU</span>
+                  </div>
+                </div>
               </div>
 
               {/* Form */}
@@ -497,12 +530,10 @@ export default function Create() {
                       type="number"
                       value={amount}
                       onChange={(e) => {
-                        // Only allow whole numbers
                         const value = e.target.value.replace(/[^0-9]/g, '');
                         setAmount(value);
                       }}
                       onKeyDown={(e) => {
-                        // Prevent decimal point and e (scientific notation)
                         if (e.key === '.' || e.key === ',' || e.key.toLowerCase() === 'e') {
                           e.preventDefault();
                         }
@@ -510,39 +541,47 @@ export default function Create() {
                       step="1"
                       min="1001"
                       className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white text-lg font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
-                      placeholder="Enter amount (min. 1001 MINCU)"
+                      placeholder={`Enter amount`}
                     />
                     <div className="relative">
-                      <div className="flex items-center gap-2 bg-black text-white pl-4 pr-4 py-3 rounded-xl border border-zinc-800">
-                        <div className="w-5 h-5 rounded-full overflow-hidden">
-                          <Image
-                            src={TOKENS.MINCU.image}
-                            alt="MINCU"
-                            width={20}
-                            height={20}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <span>MINCU</span>
+                      <select
+                        value={selectedToken}
+                        onChange={(e) => setSelectedToken(e.target.value as 'RARE' | 'BOD')}
+                        className="flex items-center gap-2 bg-black text-white pl-10 pr-10 py-3 rounded-xl border border-zinc-800 appearance-none cursor-pointer hover:border-[#C99733] transition-colors"
+                      >
+                        <option value="RARE">RARE</option>
+                        <option value="BOD">BOD</option>
+                      </select>
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full overflow-hidden pointer-events-none">
+                        <Image
+                          src={TOKENS[selectedToken].image}
+                          alt={selectedToken}
+                          width={20}
+                          height={20}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+                        <ChevronDown className="w-4 h-4" />
                       </div>
                     </div>
                   </div>
                   {/* Helper message */}
                   <div className="text-sm text-zinc-500 mt-1">
-                    Minimum amount: 1000 MINCU
+                    Minimum amount: {TOKENS[selectedToken].minAmount} {selectedToken}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-zinc-400 text-sm mb-2">How many games to create?</label>
-                  <div className="flex gap-2">
+                  <label className="block text-zinc-400 text-sm mb-2">How many Battles to create?</label>
+                  <div className="flex gap-1">
                     {GAME_MULTIPLIERS.map((mult) => (
                       <button
                         key={mult}
                         onClick={() => setMultiplier(mult)}
-                        className={`flex-1 h-12 rounded-xl ${
+                        className={`flex-1 h-10 rounded-xl text-sm ${
                           multiplier === mult ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' : 'bg-zinc-800 text-white'
-                        } font-medium transition-all hover:bg-gradient-to-r hover:from-[#C99733] hover:to-[#FFD163] hover:text-black`}
+                        } font-medium transition-all`}
                       >
                         {mult}x
                       </button>
@@ -551,31 +590,31 @@ export default function Create() {
                 </div>
 
                 <div>
-                  <label className="block text-zinc-400 text-sm mb-2">Pick a side</label>
+                  <label className="block text-zinc-400 text-sm mb-2">Pick your side</label>
                   <div className="flex gap-4">
                     <button
-                      onClick={() => setSelectedSide('heads')}
+                      onClick={() => setSelectedSide('GRM')}
                       className={`flex-1 h-16 rounded-xl ${
-                        selectedSide === 'heads' 
+                        selectedSide === 'GRM' 
                           ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-2 border-black text-black' 
                           : 'bg-zinc-800 text-white'
                       } font-medium transition-all flex items-center justify-center gap-3 hover:bg-gradient-to-r hover:from-[#C99733] hover:to-[#FFD163] hover:text-black`}
                     >
                       <div className="w-10 h-10 rounded-full overflow-hidden bg-black/20 p-1">
                         <Image
-                          src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
-                          alt="MINCU"
+                          src={SIDES.GRM.image}
+                          alt="GRM"
                           width={32}
                           height={32}
                           className="w-full h-full object-contain rounded-full"
                         />
                       </div>
-                      <span>MINCU</span>
+                      <span>GRM</span>
                     </button>
                     <button
-                      onClick={() => setSelectedSide('tails')}
+                      onClick={() => setSelectedSide('SASU')}
                       className={`flex-1 h-16 rounded-xl ${
-                        selectedSide === 'tails' 
+                        selectedSide === 'SASU' 
                           ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-2 border-black text-black' 
                           : 'bg-zinc-800 text-white'
                       } font-medium transition-all flex items-center justify-center gap-3 hover:bg-gradient-to-r hover:from-[#C99733] hover:to-[#FFD163] hover:text-black`}
@@ -583,15 +622,14 @@ export default function Create() {
                       <div className="flex items-center justify-center">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-black/20 p-1">
                           <Image
-                            src="https://i.ibb.co/2SdHttC/lower2.png"
-                            alt="Lower Expectations"
+                            src={SIDES.SASU.image}
+                            alt="SASU"
                             width={32}
                             height={32}
                             className="w-full h-full object-contain rounded-full"
-                            style={{ transform: 'scaleX(-1)' }}
                           />
                         </div>
-                        <span className="ml-0">Lower Expectations</span>
+                        <span className="ml-3">SASU</span>
                       </div>
                     </button>
                   </div>
@@ -615,7 +653,7 @@ export default function Create() {
                     <span className="text-zinc-400">Loading...</span>
                   ) : (
                     <span className="text-white font-medium">
-                      {usdcBalance.toFixed(2)} MINCU
+                      {(selectedToken === 'RARE' ? rareBalance : bodBalance).toFixed(2)} {selectedToken}
                     </span>
                   )}
                 </div>

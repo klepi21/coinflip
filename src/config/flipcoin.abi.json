@@ -82,6 +82,24 @@
         },
         {
             "docs": [
+                "Force-cancel a game.",
+                "",
+                "Parameters:",
+                "- `game_id`: The game's unique identifier."
+            ],
+            "name": "forceCancel",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "docs": [
                 "Accepts a payment and joins a game.",
                 "",
                 "Parameters:",
@@ -108,6 +126,24 @@
                 }
             ],
             "outputs": []
+        },
+        {
+            "docs": [
+                "Returns all WL tokens and amounts.",
+                "",
+                "The returned type is a MultiValueEncoded of WhitelistedToken Structure, which contains the following fields:",
+                "- `token`: The token's identifier",
+                "- `amount`: The amount of the token"
+            ],
+            "name": "getWhitelistedTokens",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<WhitelistedToken>",
+                    "multi_result": true
+                }
+            ]
         },
         {
             "docs": [
@@ -193,6 +229,19 @@
             "outputs": []
         },
         {
+            "name": "removeTokens",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "tokens",
+                    "type": "variadic<EgldOrEsdtTokenIdentifier>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
             "name": "getTokens",
             "mutability": "readonly",
             "inputs": [],
@@ -220,19 +269,17 @@
             "outputs": []
         },
         {
-            "name": "getMinimumAmount",
-            "mutability": "readonly",
+            "name": "clearMinimumAmounts",
+            "onlyOwner": true,
+            "mutability": "mutable",
             "inputs": [
                 {
-                    "name": "token",
-                    "type": "EgldOrEsdtTokenIdentifier"
+                    "name": "tokens",
+                    "type": "variadic<EgldOrEsdtTokenIdentifier>",
+                    "multi_arg": true
                 }
             ],
-            "outputs": [
-                {
-                    "type": "BigUint"
-                }
-            ]
+            "outputs": []
         },
         {
             "name": "setState",
@@ -267,6 +314,145 @@
                 }
             ],
             "outputs": []
+        },
+        {
+            "name": "setExtraFee",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "extra_fee",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setFeeCollector",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "fee_collector",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setExtraFeeCollector",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "extra_fee_collector",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "addVotingManagers",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "voting_managers",
+                    "type": "variadic<Address>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "removeVotingManagers",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "voting_managers",
+                    "type": "variadic<Address>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setVotingCost",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Starts a new voting session."
+            ],
+            "name": "startVoting",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "voting_options",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Ends the current voting session and transfers the funds to the caller."
+            ],
+            "name": "endVoting",
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Receives a payment in order to vote for a specific option.",
+                "",
+                "Parameters:",
+                "- option: u64 - The option to vote for. (excluding 0)"
+            ],
+            "name": "vote",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [
+                {
+                    "name": "option",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Returns all votes for each option.",
+                "",
+                "The returned type is a MultiValueEncoded of Votes Structure, which contains the following fields:",
+                "- option: u64",
+                "- total_votes: u64"
+            ],
+            "name": "getAllVotes",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<Votes>",
+                    "multi_result": true
+                }
+            ]
         }
     ],
     "esdtAttributes": [],
@@ -319,6 +505,32 @@
                 {
                     "name": "Active",
                     "discriminant": 1
+                }
+            ]
+        },
+        "Votes": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "option",
+                    "type": "u64"
+                },
+                {
+                    "name": "total_votes",
+                    "type": "u64"
+                }
+            ]
+        },
+        "WhitelistedToken": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "token",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint"
                 }
             ]
         }

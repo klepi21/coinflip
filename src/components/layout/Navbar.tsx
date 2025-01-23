@@ -27,115 +27,70 @@ export const Navbar = () => {
     <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-[#C99733] to-[#FFD163] backdrop-blur-lg border-b border-black/20"
+      className="fixed top-0 left-0 right-0 z-[100] backdrop-blur-sm"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-[60px]">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-3 text-black font-bold">
-              <img src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg" alt="MINCU Logo" className="w-8 h-8" />
-              $MINCUFIGHT
+            <Link href="/" className="flex items-center gap-3 text-white font-bold">
+              <img src="/img/fologo.png" alt="Logo" className="h-auto w-32" />
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
-            <button
-              onClick={() => setIsHowToPlayOpen(true)}
-              className="text-black font-medium hover:underline"
-            >
-              How to Play
-            </button>
-            <a 
-              href="https://xexchange.com/trade?firstToken=EGLD&secondToken=MINCU-38e93d"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-black font-medium hover:underline"
-            >
-              Buy MINCU
-            </a>
             <WalletButton />
           </div>
 
+          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg bg-black/20 hover:bg-black/30 transition-colors"
+            className="md:hidden p-2 rounded-lg text-white hover:bg-white/5"
           >
             {isMobileMenuOpen ? (
-              <X className="h-6 w-6 text-black" />
+              <X className="h-6 w-6" />
             ) : (
-              <Menu className="h-6 w-6 text-black" />
+              <Menu className="h-6 w-6" />
             )}
           </button>
-
-          <WalletModal
-            isOpen={isProfileOpen}
-            onClose={() => setIsProfileOpen(false)}
-          />
-
-          <HowToPlayModal 
-            isOpen={isHowToPlayOpen}
-            onClose={() => setIsHowToPlayOpen(false)}
-          />
         </div>
       </div>
 
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-gradient-to-r from-[#C99733] to-[#FFD163] border-t border-black/20 shadow-lg"
-          >
-            <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
-              {/* How to Play Link for Mobile */}
-              <button
-                onClick={() => {
-                  setIsHowToPlayOpen(true);
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-black/10 hover:bg-black/20 transition-colors text-black font-medium w-full"
-              >
-                <User className="h-5 w-5" />
-                <span>How to Play</span>
-              </button>
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="absolute top-[60px] left-0 right-0 bg-black/95 backdrop-blur-lg border-t border-white/10 p-4 space-y-4 shadow-xl md:hidden"
+        >
+          {navItems.map((item) => (
+            <Link
+              key={item.name}
+              href={item.url}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                pathname === item.url
+                  ? 'bg-white/10 text-white font-medium'
+                  : 'text-white/80 hover:text-white hover:bg-white/5'
+              }`}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <item.icon className="h-5 w-5" />
+              <span className="font-medium">{item.name}</span>
+            </Link>
+          ))}
+          
+          <div className="px-4 pt-2">
+            <WalletButton className="w-full" />
+          </div>
+        </motion.div>
+      )}
 
-              {/* Buy Link for Mobile */}
-              <a
-                href="https://xexchange.com/trade?firstToken=EGLD&secondToken=MINCU-38e93d"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-black/10 hover:bg-black/20 transition-colors text-black font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Coins className="h-5 w-5" />
-                <span>Buy $MINCU</span>
-              </a>
-
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.url}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    pathname === item.url
-                      ? 'bg-black/10 text-black font-medium'
-                      : 'text-black/80 hover:text-black hover:bg-black/5'
-                  }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              ))}
-              
-              <div className="px-4 pt-2">
-                <WalletButton className="w-full" />
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* How to Play Modal */}
+      <HowToPlayModal 
+        isOpen={isHowToPlayOpen} 
+        onClose={() => setIsHowToPlayOpen(false)} 
+      />
     </motion.nav>
   );
 };

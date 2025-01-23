@@ -26,7 +26,7 @@ export const WalletButton = ({ className }: WalletButtonProps) => {
       <button
         onClick={handleClick}
         className={cn(
-          "px-6 py-2 rounded-full bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:bg-gradient-to-r from-[#C99733]/80 to-[#FFD163]/80 transition-colors text-black text-xl font-bold border-2 border-black",
+          "px-6 py-2 rounded-full text-white text-xl font-bold border-2 border-white",
           className
         )}
       >
