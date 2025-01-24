@@ -52,7 +52,7 @@ export function NavBar({ items, className, activeTextColor = 'text-black' }: Nav
               className={cn(
                 "relative cursor-pointer text-sm font-semibold px-6 py-2 rounded-full transition-colors",
                 "text-white/80 hover:text-white",
-                isActive && "bg-[#FD8700]",
+                isActive && "bg-gradient-to-r from-[#C99733] to-[#FFD163]",
                 isActive && activeTextColor,
               )}
             >

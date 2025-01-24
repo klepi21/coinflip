@@ -51,13 +51,13 @@ const TOKENS = {
   RARE: {
     id: 'RARE',
     name: 'RARE',
-    image: '/img/rare.png',
+    image: 'https://tools.multiversx.com/assets-cdn/tokens/RARE-123456/icon.svg',
     decimals: 18
   },
   BOD: {
     id: 'BOD',
     name: 'BOD',
-    image: '/img/bod.png',
+    image: 'https://tools.multiversx.com/assets-cdn/tokens/BOD-654321/icon.svg',
     decimals: 18
   }
 };

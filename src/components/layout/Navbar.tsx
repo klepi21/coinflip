@@ -43,7 +43,7 @@ export const Navbar = () => {
           <div className="hidden md:flex items-center justify-between w-full px-32">
             <div className="flex-1" />
             <TubelightNavbar items={navItems} activeTextColor="text-black" />
-            <div className="flex-1 flex justify-end">
+            <div className="flex-1 flex justify-end items-center">
               <WalletButton />
             </div>
           </div>

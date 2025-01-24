@@ -106,8 +106,11 @@ export default function Create() {
       setIsWaitingForTx(true);
 
       const decimalAmount = 18;
-      const totalAmount = parseFloat(amount) * multiplier;
-      const rawAmount = totalAmount * Math.pow(10, decimalAmount);
+      // Convert amount to a whole number first to avoid floating point issues
+      const baseAmount = BigInt(amount);
+      const totalAmount = baseAmount * BigInt(multiplier);
+      // Convert to raw amount with decimals
+      const rawAmount = totalAmount * BigInt(10 ** decimalAmount);
       const sideValue = selectedSide === 'GRM' ? 0 : 1;
 
       const tokenIdentifier = selectedToken === 'RARE' ? RARE_IDENTIFIER : BOD_IDENTIFIER;
@@ -115,7 +118,7 @@ export default function Create() {
       const { sessionId: newSessionId } = await sendTransactions({
         transactions: [{
           value: '0',
-          data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${toHexEven(Math.floor(rawAmount))}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
+          data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${rawAmount.toString(16)}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
           receiver: SC_ADDRESS,
           gasLimit: 10000000,
         }],
@@ -337,9 +340,9 @@ export default function Create() {
                             }
                           }}
                           step="1"
-                          min="1001"
+                          min="1"
                           className="flex-1 bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
-                          placeholder={`Enter amount (min. 1001 ${selectedToken})`}
+                          placeholder={`Enter amount`}
                         />
                         <div className="relative">
                           <select
@@ -539,7 +542,7 @@ export default function Create() {
                         }
                       }}
                       step="1"
-                      min="1001"
+                      min="1"
                       className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white text-lg font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
                       placeholder={`Enter amount`}
                     />
