@@ -14,7 +14,7 @@ import {
 import { useGetNetworkConfig, useGetAccountInfo } from "@multiversx/sdk-dapp/hooks";
 import { sendTransactions } from "@multiversx/sdk-dapp/services";
 import { refreshAccount } from "@multiversx/sdk-dapp/utils/account";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 import flipcoinAbi from '@/config/flipcoin.abi.json';
 import { useWallet } from '@/context/WalletContext';
 import { RetroGrid } from '@/components/ui/retro-grid';
@@ -97,6 +97,14 @@ export default function Vote() {
 
       console.log('Sending transaction:', transaction);
 
+      // Show pending toast
+      const pendingToastId = toast.loading(
+        <div className="flex flex-col space-y-2">
+          <p className="font-medium">Transaction Pending</p>
+          <p className="text-sm text-zinc-400">Please wait while your vote is being processed...</p>
+        </div>
+      );
+
       const { sessionId } = await sendTransactions({
         transactions: [transaction],
         transactionsDisplayInfo: {
@@ -108,15 +116,44 @@ export default function Vote() {
       });
 
       if (sessionId) {
-        toast.success('Transaction signed! Processing vote...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Update the pending toast to success
+        toast.dismiss(pendingToastId);
+        
+        const toastId = toast.success(
+          <div className="flex flex-col space-y-2">
+            <div className="p-4">
+              <p className="text-sm font-medium text-white">Vote Successful!</p>
+              <p className="mt-1 text-sm text-zinc-400">Your vote has been recorded.</p>
+            </div>
+            <div className="border-t border-zinc-800 p-2">
+              <button
+                onClick={() => {
+                  toast.dismiss(toastId);
+                  fetchVotes();
+                }}
+                className="w-full p-2 text-sm font-medium text-[#C99733] hover:text-[#FFD163] transition-colors rounded-md hover:bg-zinc-800/50"
+              >
+                Refresh Results
+              </button>
+            </div>
+          </div>,
+          {
+            duration: 5000,
+          }
+        );
+
         await refreshAccount();
         await fetchVotes();
         setSelectedOption(null);
       }
     } catch (error) {
       console.error('Error submitting vote:', error);
-      toast.error('Failed to submit vote. Please try again.');
+      toast.error(
+        <div className="flex flex-col space-y-2">
+          <p className="font-medium">Transaction Failed</p>
+          <p className="text-sm text-zinc-400">Please try voting again.</p>
+        </div>
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -125,12 +162,24 @@ export default function Vote() {
   return (
     <main className="relative h-screen overflow-hidden bg-black">
       <RetroGrid />
+      <Toaster 
+        theme="dark" 
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: '#1A1A1A',
+            border: '1px solid rgba(201, 151, 51, 0.1)',
+            color: 'white',
+          },
+          className: 'my-toast-class',
+        }}
+      />
       <div className="h-full overflow-auto">
-        <div className="container max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
+        <div className="container max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-8"
+            className="w-full"
           >
             <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl p-4 sm:p-6 space-y-4 sm:space-y-6">
               <div className="space-y-2">
