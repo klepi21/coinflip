@@ -224,7 +224,7 @@ export default function Vote() {
                 {[
                   { option: 1, name: "Beniamin Mincu" },
                   { option: 2, name: "Mihai XOXNO" },
-                  { option: 3, name: "Stephan" },
+                  { option: 3, name: "Stephen" },
                   { option: 4, name: "Longin ONEDEX" }
                 ].map((fighter, index) => {
                   const vote = votes.find(v => v.option === fighter.option) || { total_votes: 0 };
