@@ -562,6 +562,18 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                 </div>
               </div>
             ))
+          ) : filteredGames.length === 0 ? (
+            <div className="flex flex-col items-center justify-center text-center py-16 px-4">
+              <h3 className="text-2xl font-bold text-white mb-3">No Active Games Found</h3>
+              <p className="text-zinc-400 text-lg mb-6">Be the first to create an exciting match and start the action!</p>
+              <div className="inline-block bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full p-[2px]">
+                <div className="bg-black rounded-full px-6 py-2">
+                  <span className="bg-gradient-to-r from-[#C99733] to-[#FFD163] text-transparent bg-clip-text font-semibold">
+                    Create a New Battle →
+                  </span>
+                </div>
+              </div>
+            </div>
           ) : (
             <>
               {/* Disappearing Games with Animation */}
