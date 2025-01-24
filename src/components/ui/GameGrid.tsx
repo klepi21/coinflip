@@ -22,6 +22,7 @@ import { refreshAccount } from "@multiversx/sdk-dapp/utils/account";
 import flipcoinAbi from '@/config/flipcoin.abi.json';
 import { useGames, Game } from '@/hooks/useGames';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
+import { GlovesAnimation } from './GlovesAnimation';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -619,31 +620,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       </div>
                     </div>
 
-                    {/* Coin Flip Animation Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                      <div className="animate-coinFlip">
-                        <div className="w-32 h-32 relative">
-                          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#C99733] to-[#FFD163] backface-hidden flex items-center justify-center shadow-lg border-4 border-black">
-                            <Image
-                              src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
-                              alt="MINCU"
-                              width={64}
-                              height={64}
-                              className="w-16 h-16"
-                            />
-                          </div>
-                          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#C99733] to-[#FFD163] backface-hidden rotate-y-180 flex items-center justify-center shadow-lg border-4 border-black">
-                            <Image
-                              src="https://tools.multiversx.com/assets-cdn/tokens/BOD-204877/icon.png"
-                              alt="Lower Expectations"
-                              width={64}
-                              height={64}
-                              className="w-16 h-16"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    {/* Gloves Animation Overlay */}
+                    <GlovesAnimation />
                   </div>
                 </div>
               ))}
@@ -855,32 +833,14 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 if (typeof document !== 'undefined') {
   const styleSheet = document.createElement('style');
   styleSheet.textContent = `
-    @keyframes coinFlip {
-      0% { transform: rotateY(0) scale(1); }
-      50% { transform: rotateY(360deg) scale(1.2); }
-      100% { transform: rotateY(720deg) scale(1); }
-    }
-
     @keyframes fadeOut {
       0% { opacity: 1; }
       85% { opacity: 1; }
       100% { opacity: 0; }
     }
 
-    .animate-coinFlip {
-      animation: coinFlip 3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
     .animate-fadeOut {
       animation: fadeOut 3s ease-in-out forwards;
-    }
-
-    .backface-hidden {
-      backface-visibility: hidden;
-    }
-
-    .rotate-y-180 {
-      transform: rotateY(180deg);
     }
   `;
   document.head.appendChild(styleSheet);

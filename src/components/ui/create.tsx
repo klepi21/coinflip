@@ -177,9 +177,9 @@ export default function Create() {
       action: handleCreateGame,
       text: 'Create Battle'
     };
-    if (amountValue < 1000) return {
+    if (amountValue < 100) return {
       disabled: true,
-      message: `Minimum amount is 1000 ${selectedToken}`,
+      message: `Minimum amount is 100 ${selectedToken}`,
       action: handleCreateGame,
       text: 'Create Battle'
     };
