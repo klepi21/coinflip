@@ -206,7 +206,7 @@ export default function Vote() {
           className: 'my-toast-class',
         }}
       />
-      <div className="h-full overflow-auto">
+      <div className="h-full overflow-auto pt-24">
         <div className="container max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -235,14 +235,16 @@ export default function Vote() {
                     <div
                       key={fighter.option}
                       onClick={() => !isSubmitting && setSelectedOption(fighter.option)}
-                      className={`w-full p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                      className={`w-full p-1 rounded-xl border-2 transition-all cursor-pointer ${
                         isSelected 
                           ? 'border-[#C99733] bg-gradient-to-r from-[#C99733]/10 to-[#FFD163]/10' 
                           : 'border-zinc-800 hover:border-[#C99733]/50'
                       }`}
                     >
+                      <img src={`/img/option${fighter.option}.png`} alt={`Option ${fighter.option}`} className="hidden md:w-12 md:h-12 md:mr-2" />
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
+                        
                           <span className="text-white font-medium">{fighter.name}</span>
                           <span className="text-zinc-400">{percentage.toFixed(1)}%</span>
                         </div>
