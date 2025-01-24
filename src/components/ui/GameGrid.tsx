@@ -247,7 +247,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       const transaction = contract.methods
         .join([new U64Value(gameId)])
         .withSender(new Address(connectedAddress))
-        .withGasLimit(8000000)
+        .withGasLimit(10000000)
         .withChainID(network.chainId);
 
       if (token === 'EGLD') {
@@ -366,7 +366,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       const transaction = contract.methods
         .cancel([new U64Value(gameId)])
         .withSender(new Address(connectedAddress))
-        .withGasLimit(8000000)
+        .withGasLimit(10000000)
         .withChainID(network.chainId);
 
         
