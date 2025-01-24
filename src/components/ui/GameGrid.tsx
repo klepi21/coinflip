@@ -127,6 +127,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const { network } = useGetNetworkConfig();
   const { address: connectedAddress } = useGetAccountInfo();
   const { balance: mincuBalance, isLoading: isLoadingBalance } = useTokenBalance(connectedAddress || '', MINCU_IDENTIFIER);
+  const { balance: rareBalance, isLoading: isLoadingRare } = useTokenBalance(connectedAddress || '', RARE_IDENTIFIER);
+  const { balance: bodBalance, isLoading: isLoadingBod } = useTokenBalance(connectedAddress || '', BOD_IDENTIFIER);
 
   const [previousGames, setPreviousGames] = useState<Game[]>([]);
   const [disappearingGames, setDisappearingGames] = useState<Game[]>([]);
@@ -401,15 +403,15 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     }
   };
 
-  const canJoinGame = (gameAmount: string): boolean => {
+  const canJoinGame = (gameAmount: string, tokenIdentifier: string): boolean => {
     if (!connectedAddress || isLoadingBalance) return false;
     
     try {
-      // Convert game amount to regular number first (from raw form)
-      const requiredAmount = parseFloat(gameAmount) / Math.pow(10, TOKEN_DECIMALS);
+      const currentBalance = tokenIdentifier === RARE_IDENTIFIER ? rareBalance : bodBalance;
+      // Convert game amount to regular number (from raw form)
+      const requiredAmount = BigInt(gameAmount) / BigInt(10 ** TOKEN_DECIMALS);
       
-      // Compare with mincuBalance directly (it's already in the correct format)
-      return mincuBalance >= requiredAmount;
+      return currentBalance >= Number(requiredAmount);
     } catch (error) {
       console.error('Error checking balance:', error);
       return false;
@@ -721,15 +723,15 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       ) : (
                         <button 
                           onClick={() => handleJoinGame(game.id, game.amount, game.token)}
-                          disabled={!canJoinGame(game.amount)}
+                          disabled={!canJoinGame(game.amount, game.token)}
                           className={`w-full font-semibold py-1 px-2 rounded-full text-sm transition-colors shadow-lg border-8 border-black ${
-                            canJoinGame(game.amount)
+                            canJoinGame(game.amount, game.token)
                               ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:opacity-90 text-black'
                               : 'bg-zinc-600 cursor-not-allowed text-zinc-400'
                           }`}
-                          title={!canJoinGame(game.amount) ? `Insufficient balance (${formatTokenAmount(game.amount)})` : ''}
+                          title={!canJoinGame(game.amount, game.token) ? `Insufficient balance (${formatTokenAmount(game.amount)})` : ''}
                         >
-                          {canJoinGame(game.amount) ? 'Join game' : 'Insufficient balance'}
+                          {canJoinGame(game.amount, game.token) ? 'Join game' : 'Insufficient balance'}
                         </button>
                       )}
                     </div>
