@@ -569,7 +569,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
               <div className="inline-block bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full p-[2px]">
                 <div className="bg-black rounded-full px-6 py-2">
                   <span className="bg-gradient-to-r from-[#C99733] to-[#FFD163] text-transparent bg-clip-text font-semibold">
-                    Create a New Battle →
+                    ← Create a New Battle
                   </span>
                 </div>
               </div>
