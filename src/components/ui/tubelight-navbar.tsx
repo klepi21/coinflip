@@ -20,19 +20,27 @@ interface NavBarProps {
 }
 
 export function NavBar({ items, className, activeTextColor = 'text-black' }: NavBarProps) {
-  const [activeTab, setActiveTab] = useState(items[0].name)
-  const [isMobile, setIsMobile] = useState(false)
   const pathname = usePathname();
+  const [activeTab, setActiveTab] = useState(items[0].name);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Set active tab based on current pathname
+  useEffect(() => {
+    const currentItem = items.find(item => item.url === pathname);
+    if (currentItem) {
+      setActiveTab(currentItem.name);
+    }
+  }, [pathname, items]);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
+      setIsMobile(window.innerWidth < 768);
+    };
 
-    handleResize()
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <div
@@ -96,15 +104,15 @@ export function TubelightNav() {
       <div className="absolute inset-x-1 h-8 top-1/2 -translate-y-1/2">
         <div
           className={`absolute h-full bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full transition-all duration-300 ${
-            pathname === '/fight' ? 'left-0 right-[50%]' : 'left-[50%] right-0'
+            pathname === '/' ? 'left-0 right-[50%]' : 'left-[50%] right-0'
           }`}
         />
       </div>
 
       <Link
-        href="/fight"
+        href="/"
         className={`relative z-10 px-6 py-2 text-sm font-medium transition-colors ${
-          pathname === '/fight' ? 'text-black' : 'text-white hover:text-zinc-300'
+          pathname === '/' ? 'text-black' : 'text-white hover:text-zinc-300'
         }`}
       >
         Fight

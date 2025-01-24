@@ -77,22 +77,15 @@ const SIDES = {
 
 const formatTokenAmount = (amount: string): string => {
   try {
-    // Convert scientific notation to a regular string
-    const rawAmount = amount.includes('e') 
-      ? amount.replace(/e\+?/, 'e')  // normalize scientific notation
-      : amount;
-    
-    // Parse the amount and divide by 10^18 for MINCU decimals
-    const decimalAmount = Number(rawAmount) / Math.pow(10, TOKEN_DECIMALS);
-    
-    // Format with commas and preserve all significant digits
+    const value = Number(amount) / (10 ** TOKEN_DECIMALS);
+    // Use Intl.NumberFormat to format the number without rounding
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 20, // Allow more decimal places to show exact amounts
-      useGrouping: true // Keep the comma separators
-    }).format(decimalAmount);
+      maximumFractionDigits: 0,
+      useGrouping: true
+    }).format(value);
   } catch (error) {
-    console.error('Error formatting amount:', error);
+    console.error('Error formatting token amount:', error);
     return '0';
   }
 };
@@ -428,10 +421,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     
     try {
       const currentBalance = tokenIdentifier === RARE_IDENTIFIER ? rareBalance : bodBalance;
-      // Convert game amount to regular number (from raw form)
-      const requiredAmount = BigInt(gameAmount) / BigInt(10 ** TOKEN_DECIMALS);
+      // Convert amounts to numbers for comparison
+      const requiredAmount = Number(gameAmount) / (10 ** TOKEN_DECIMALS);
       
-      return currentBalance >= Number(requiredAmount);
+      return currentBalance >= requiredAmount;
     } catch (error) {
       console.error('Error checking balance:', error);
       return false;

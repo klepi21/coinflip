@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useGetLoginInfo } from '@multiversx/sdk-dapp/hooks';
 import { useRouter, usePathname } from 'next/navigation';
 
-const PUBLIC_ROUTES = ['/', '/scratch'];
+const PUBLIC_ROUTES = ['/', '/vote'];
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isLoggedIn } = useGetLoginInfo();

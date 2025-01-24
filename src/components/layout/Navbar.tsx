@@ -23,7 +23,7 @@ export function Navbar() {
   const { isLoggedIn } = useWallet();
 
   const navItems = [
-    { name: 'Fight', url: '/fight', icon: Coins },
+    { name: 'Fight', url: '/', icon: Coins },
     { name: 'Vote', url: '/vote', icon: Vote }
   ];
 
