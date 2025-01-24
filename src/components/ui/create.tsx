@@ -342,33 +342,32 @@ export default function Create() {
                           }}
                           step="1"
                           min="1"
-                          className="flex-1 bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
-                          placeholder={`Enter amount`}
+                          className="w-32 bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
+                          placeholder="Enter amount"
                         />
-                        <div className="relative">
-                          <select
-                            value={selectedToken}
-                            onChange={(e) => setSelectedToken(e.target.value as 'RARE' | 'BOD')}
-                            className="flex items-center gap-2 bg-black text-white pl-10 pr-10 py-3 rounded-xl border border-zinc-800 appearance-none cursor-pointer hover:border-[#C99733] transition-colors"
-                          >
-                            {Object.entries(TOKENS).map(([key, token]) => (
-                              <option key={key} value={key} className="flex items-center gap-2 py-2">
-                                {token.name}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full overflow-hidden pointer-events-none">
-                            <Image
-                              src={TOKENS[selectedToken].image}
-                              alt={selectedToken}
-                              width={20}
-                              height={20}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
-                            <ChevronDown className="w-4 h-4" />
-                          </div>
+                        <div className="flex gap-2">
+                          {Object.entries(TOKENS).map(([key, token]) => (
+                            <button
+                              key={key}
+                              onClick={() => setSelectedToken(key as 'RARE' | 'BOD')}
+                              className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
+                                selectedToken === key 
+                                  ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black text-black' 
+                                  : 'border-zinc-800 hover:border-[#C99733] text-white'
+                              }`}
+                            >
+                              <div className="w-5 h-5 rounded-full overflow-hidden">
+                                <Image
+                                  src={token.image}
+                                  alt={token.name}
+                                  width={20}
+                                  height={20}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <span className="font-medium">{token.name}</span>
+                            </button>
+                          ))}
                         </div>
                       </div>
                       {/* Helper message */}
@@ -532,7 +531,7 @@ export default function Create() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-zinc-400 text-sm mb-2">Amount</label>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
                     <input
                       type="number"
                       value={amount}
@@ -547,62 +546,32 @@ export default function Create() {
                       }}
                       step="1"
                       min="1"
-                      className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white text-lg font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
-                      placeholder={`Enter amount`}
+                      className="w-40 bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
+                      placeholder="Enter amount"
                     />
-                    <div className="relative">
-                      <button
-                        onClick={() => setIsTokenDropdownOpen(!isTokenDropdownOpen)}
-                        className="flex items-center gap-2 bg-black text-white pl-3 pr-10 py-3 rounded-xl border border-zinc-800 hover:border-[#C99733] transition-colors w-full"
-                      >
-                        <div className="w-5 h-5 rounded-full overflow-hidden">
-                          <Image
-                            src={TOKENS[selectedToken].image}
-                            alt={selectedToken}
-                            width={20}
-                            height={20}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <span>{selectedToken}</span>
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400">
-                          <ChevronDown className="w-4 h-4" />
-                        </div>
-                      </button>
-                      
-                      {isTokenDropdownOpen && (
-                        <>
-                          <div 
-                            className="fixed inset-0 z-10"
-                            onClick={() => setIsTokenDropdownOpen(false)}
-                          />
-                          <div className="absolute top-full left-0 right-0 mt-2 bg-black border border-zinc-800 rounded-xl overflow-hidden z-20">
-                            {Object.entries(TOKENS).map(([key, token]) => (
-                              <button
-                                key={key}
-                                onClick={() => {
-                                  setSelectedToken(key as 'RARE' | 'BOD');
-                                  setIsTokenDropdownOpen(false);
-                                }}
-                                className={`flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:text-black transition-colors ${
-                                  selectedToken === key ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' : 'text-white'
-                                }`}
-                              >
-                                <div className="w-5 h-5 rounded-full overflow-hidden bg-black/20">
-                                  <Image
-                                    src={token.image}
-                                    alt={token.name}
-                                    width={20}
-                                    height={20}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                <span>{token.name}</span>
-                              </button>
-                            ))}
+                    <div className="flex gap-2">
+                      {Object.entries(TOKENS).map(([key, token]) => (
+                        <button
+                          key={key}
+                          onClick={() => setSelectedToken(key as 'RARE' | 'BOD')}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
+                            selectedToken === key 
+                              ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black text-black' 
+                              : 'border-zinc-800 hover:border-[#C99733] text-white'
+                          }`}
+                        >
+                          <div className="w-5 h-5 rounded-full overflow-hidden">
+                            <Image
+                              src={token.image}
+                              alt={token.name}
+                              width={20}
+                              height={20}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
-                        </>
-                      )}
+                          <span className="font-medium">{token.name}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
                   {/* Helper message */}
