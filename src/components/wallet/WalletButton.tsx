@@ -26,7 +26,7 @@ export const WalletButton = ({ className }: WalletButtonProps) => {
       <button
         onClick={handleClick}
         className={cn(
-          "px-6 py-2 rounded-full text-white text-xl font-bold border-2 border-white",
+          "px-4 py-1 rounded-full text-white text-md font-bold border-2 border-white flex",
           className
         )}
       >

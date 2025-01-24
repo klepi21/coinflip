@@ -28,8 +28,8 @@ const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28n
 const GAMES_PER_PAGE = 9;
 const MINCU_IDENTIFIER = 'MINCU-38e93d';
 const LUCIAN_IDENTIFIER = 'LUCIAN-e61415';
-const RARE_IDENTIFIER = 'RARE-123456';
-const BOD_IDENTIFIER = 'BOD-654321';
+const RARE_IDENTIFIER = 'RARE-99e8b0';
+const BOD_IDENTIFIER = 'BOD-204877';
 
 // Token configuration
 const TOKEN_DECIMALS = 18;
@@ -51,13 +51,13 @@ const TOKENS = {
   RARE: {
     id: 'RARE',
     name: 'RARE',
-    image: 'https://tools.multiversx.com/assets-cdn/tokens/RARE-123456/icon.svg',
+    image: 'https://tools.multiversx.com/assets-cdn/tokens/RARE-99e8b0/icon.svg',
     decimals: 18
   },
   BOD: {
     id: 'BOD',
     name: 'BOD',
-    image: 'https://tools.multiversx.com/assets-cdn/tokens/BOD-654321/icon.svg',
+    image: 'https://tools.multiversx.com/assets-cdn/tokens/BOD-204877/icon.png',
     decimals: 18
   }
 };
@@ -555,7 +555,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       <div className="flex-1 p-4 flex flex-col items-center justify-center">
                         <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
                           <Image
-                            src="https://i.ibb.co/zFg3c9G/Screenshot-2025-01-21-at-1-17-39-AM.png"
+                            src="https://tools.multiversx.com/assets-cdn/tokens/RARE-99e8b0/icon.svg"
                             alt="Creator"
                             width={48}
                             height={48}
@@ -570,7 +570,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             {formatTokenAmount(game.amount).split('.')[0]}
                           </span>
                           <Image
-                            src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
+                            src="https://tools.multiversx.com/assets-cdn/tokens/RARE-99e8b0/icon.svg"
                             alt="MINCU"
                             width={24}
                             height={24}
@@ -592,7 +592,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       <div className="flex-1 p-4 flex flex-col items-center justify-center">
                         <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
                           <Image
-                            src="https://i.ibb.co/zFg3c9G/Screenshot-2025-01-21-at-1-17-39-AM.png"
+                            src="https://tools.multiversx.com/assets-cdn/tokens/BOD-204877/icon.png"
                             alt="Rival"
                             width={48}
                             height={48}
@@ -609,7 +609,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           {formatTokenAmount(game.amount).split('.')[0]}
                           </span>
                           <Image
-                            src="https://tools.multiversx.com/assets-cdn/tokens/MINCU-38e93d/icon.svg"
+                            src="https://tools.multiversx.com/assets-cdn/tokens/BOD-204877/icon.png"
                             alt="MINCU"
                             width={16}
                             height={16}
@@ -634,7 +634,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           </div>
                           <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#C99733] to-[#FFD163] backface-hidden rotate-y-180 flex items-center justify-center shadow-lg border-4 border-black">
                             <Image
-                              src="https://i.ibb.co/yqzHwmn/Screenshot-2025-01-21-at-1-49-31-AM.png"
+                              src="https://tools.multiversx.com/assets-cdn/tokens/BOD-204877/icon.png"
                               alt="Lower Expectations"
                               width={64}
                               height={64}
@@ -671,7 +671,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             alt={game.side === 0 ? "GRM" : "SASU"}
                             width={128}
                             height={128}
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-contain filter opacity-50"
                           />
                         </div>
                         <span className="text-black text-xs font-medium mb-1 truncate w-full text-center">
@@ -686,13 +686,13 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             alt={game.token === RARE_IDENTIFIER ? "RARE" : "BOD"}
                             width={16}
                             height={16}
-                            className="w-4 h-4"
+                            className="w-6 h-6"
                           />
                         </div>
                       </div>
 
                       {/* Right Player (Rival) */}
-                      <div className="flex-1 p-4 flex flex-col items-center justify-center  ">
+                      <div className="flex-1 p-4 flex flex-col items-center justify-center ml-8  ">
                         <div className="w-24 h-24">
                           <Image
                             src={game.side === 0 ? SIDES.SASU.image : SIDES.GRM.image}
@@ -705,7 +705,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         <span className="text-black text-xs font-medium mb-1 truncate w-full text-center">
                           {game.rival 
                             ? (game.rivalHerotag || `${game.rival.slice(0, 5)}...${game.rival.slice(-4)}`)
-                            : 'Waiting...'}
+                            : 'Play to win'}
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-black text-sm font-medium">
@@ -716,7 +716,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             alt={game.token === RARE_IDENTIFIER ? "RARE" : "BOD"}
                             width={16}
                             height={16}
-                            className="w-4 h-4"
+                            className="w-6 h-6"
                           />
                         </div>
                       </div>
@@ -744,12 +744,12 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         <button 
                           onClick={() => handleJoinGame(game.id, game.amount, game.token)}
                           disabled={!canJoinGame(game.amount)}
-                          className={`w-full font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black ${
+                          className={`w-full font-semibold py-1 px-2 rounded-full text-sm transition-colors shadow-lg border-8 border-black ${
                             canJoinGame(game.amount)
                               ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:opacity-90 text-black'
                               : 'bg-zinc-600 cursor-not-allowed text-zinc-400'
                           }`}
-                          title={!canJoinGame(game.amount) ? `Insufficient balance (${formatTokenAmount(game.amount)} MINCU required)` : ''}
+                          title={!canJoinGame(game.amount) ? `Insufficient balance (${formatTokenAmount(game.amount)})` : ''}
                         >
                           {canJoinGame(game.amount) ? 'Join game' : 'Insufficient balance'}
                         </button>

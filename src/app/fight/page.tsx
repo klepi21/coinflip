@@ -16,6 +16,7 @@ import GameGrid from '@/components/ui/GameGrid';
 import { AnimatedText } from "@/components/ui/animated-underline-text-one";
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import { RetroGrid } from '@/components/ui/retro-grid';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -23,7 +24,7 @@ const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28n
 const CreateDynamic = dynamic(() => import('@/components/ui/create'), { ssr: false });
 const GameGridDynamic = dynamic(() => import('@/components/ui/GameGrid'), { ssr: false });
 
-export default function Hot() {
+export default function Fight() {
   const [totalGamesPlayed, setTotalGamesPlayed] = useState<number>(0);
   const [activeGames, setActiveGames] = useState<number>(0);
   const { network } = useGetNetworkConfig();
@@ -62,8 +63,9 @@ export default function Hot() {
   }, [network.apiAddress]);
 
   return (
-    <main className="flex flex-col bg-black min-h-[100vh] px-6 pt-24">
-      <div className="w-full max-w-7xl mx-auto flex-1 mb-auto">
+    <main className="relative flex flex-col bg-black min-h-[100vh] px-6 pt-24">
+      <RetroGrid />
+      <div className="w-full max-w-7xl mx-auto flex-1 mb-auto relative z-10">
         {/* Title Section */}
         <div className="flex flex-col items-center mb-12">
           <div className="flex flex-col items-center w-full">
@@ -87,7 +89,7 @@ export default function Hot() {
         </div>
       </div>
       {/* Footer Section */}
-      <div className="relative z-20 bg-black text-center text-white/80 mt-auto ">
+      <div className="relative z-20 bg-transparent text-center text-white/80 mt-auto">
         <p className="max-w-2xl mx-auto mb-2">Engage in a provably fair, peer-to-peer gaming experience. Please ensure you are at least 18 years old and comply with your local regulations.</p>
       </div>
     </main>

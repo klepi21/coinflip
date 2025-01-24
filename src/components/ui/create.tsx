@@ -77,6 +77,7 @@ export default function Create() {
     isLoading: false,
     gameResult: null
   });
+  const [isTokenDropdownOpen, setIsTokenDropdownOpen] = useState(false);
 
   const { isLoggedIn, address } = useWallet();
   const { account } = useGetAccountInfo();
@@ -350,8 +351,11 @@ export default function Create() {
                             onChange={(e) => setSelectedToken(e.target.value as 'RARE' | 'BOD')}
                             className="flex items-center gap-2 bg-black text-white pl-10 pr-10 py-3 rounded-xl border border-zinc-800 appearance-none cursor-pointer hover:border-[#C99733] transition-colors"
                           >
-                            <option value="RARE">RARE</option>
-                            <option value="BOD">BOD</option>
+                            {Object.entries(TOKENS).map(([key, token]) => (
+                              <option key={key} value={key} className="flex items-center gap-2 py-2">
+                                {token.name}
+                              </option>
+                            ))}
                           </select>
                           <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full overflow-hidden pointer-events-none">
                             <Image
@@ -495,7 +499,7 @@ export default function Create() {
                   backgroundRepeat: 'no-repeat'
                 }}>
                   {/* GRM Side */}
-                  <div className={`w-32 h-40 ml-8 transition-all duration-300 flex flex-col items-center ${selectedSide === 'GRM' ? 'opacity-100' : 'opacity-40 blur-sm'}`}>
+                  <div className={`w-32 h-40 ml-8 transition-all duration-300 flex flex-col items-center ${selectedSide === 'GRM' ? 'opacity-100' : 'opacity-99 blur-sm'}`}>
                     <div className="w-32 h-32 flex items-center justify-center">
                       <Image
                         src={SIDES.GRM.image}
@@ -505,11 +509,11 @@ export default function Create() {
                         className="w-28 h-28 object-contain"
                       />
                     </div>
-                    <span className="text-black font-bold text-lg mb-8">GRM</span>
+                    <span className="text-white font-bold text-lg mb-8">GRM</span>
                   </div>
 
                   {/* SASU Side */}
-                  <div className={`w-32 h-40 transition-all mr-8 duration-300 flex flex-col items-center ${selectedSide === 'SASU' ? 'opacity-100' : 'opacity-40 blur-sm'}`}>
+                  <div className={`w-32 h-40 transition-all mr-8 duration-300 flex flex-col items-center ${selectedSide === 'SASU' ? 'opacity-100' : 'opacity-99 blur-sm'}`}>
                     <div className="w-32 h-32 flex items-center justify-center">
                       <Image
                         src={SIDES.SASU.image}
@@ -519,7 +523,7 @@ export default function Create() {
                         className="w-28 h-28 object-contain"
                       />
                     </div>
-                    <span className="text-black font-bold text-lg mb-8">SASU</span>
+                    <span className="text-white font-bold text-lg mb-8">SASU</span>
                   </div>
                 </div>
               </div>
@@ -547,26 +551,58 @@ export default function Create() {
                       placeholder={`Enter amount`}
                     />
                     <div className="relative">
-                      <select
-                        value={selectedToken}
-                        onChange={(e) => setSelectedToken(e.target.value as 'RARE' | 'BOD')}
-                        className="flex items-center gap-2 bg-black text-white pl-10 pr-10 py-3 rounded-xl border border-zinc-800 appearance-none cursor-pointer hover:border-[#C99733] transition-colors"
+                      <button
+                        onClick={() => setIsTokenDropdownOpen(!isTokenDropdownOpen)}
+                        className="flex items-center gap-2 bg-black text-white pl-3 pr-10 py-3 rounded-xl border border-zinc-800 hover:border-[#C99733] transition-colors w-full"
                       >
-                        <option value="RARE">RARE</option>
-                        <option value="BOD">BOD</option>
-                      </select>
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full overflow-hidden pointer-events-none">
-                        <Image
-                          src={TOKENS[selectedToken].image}
-                          alt={selectedToken}
-                          width={20}
-                          height={20}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
-                        <ChevronDown className="w-4 h-4" />
-                      </div>
+                        <div className="w-5 h-5 rounded-full overflow-hidden">
+                          <Image
+                            src={TOKENS[selectedToken].image}
+                            alt={selectedToken}
+                            width={20}
+                            height={20}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <span>{selectedToken}</span>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                          <ChevronDown className="w-4 h-4" />
+                        </div>
+                      </button>
+                      
+                      {isTokenDropdownOpen && (
+                        <>
+                          <div 
+                            className="fixed inset-0 z-10"
+                            onClick={() => setIsTokenDropdownOpen(false)}
+                          />
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-black border border-zinc-800 rounded-xl overflow-hidden z-20">
+                            {Object.entries(TOKENS).map(([key, token]) => (
+                              <button
+                                key={key}
+                                onClick={() => {
+                                  setSelectedToken(key as 'RARE' | 'BOD');
+                                  setIsTokenDropdownOpen(false);
+                                }}
+                                className={`flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:text-black transition-colors ${
+                                  selectedToken === key ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' : 'text-white'
+                                }`}
+                              >
+                                <div className="w-5 h-5 rounded-full overflow-hidden bg-black/20">
+                                  <Image
+                                    src={token.image}
+                                    alt={token.name}
+                                    width={20}
+                                    height={20}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <span>{token.name}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                   {/* Helper message */}
