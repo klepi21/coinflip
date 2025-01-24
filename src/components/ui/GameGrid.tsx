@@ -329,6 +329,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
           refetchGames(),
           fetchTotalGames()
         ]);
+        // Refresh the entire page
+        window.location.reload();
       }, 5000);
 
     } catch (error) {
