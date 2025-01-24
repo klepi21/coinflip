@@ -80,13 +80,13 @@ export default function Vote() {
     try {
       setIsSubmitting(true);
       
-      // RARE token identifier and amount (10 RARE = 10 * 10^18)
-      const rareTokenId = 'RARE-99e8b6';
-      const amount = '10000000000000000000'; // 10 RARE with 18 decimals
+      // RARE token identifier and amount (10 RARE)
+      const rareTokenId = 'RARE-99e8b0';
+      const amount = '10'; // Just 10 RARE
       
       // Create ESDTTransfer transaction data
       const encodedTokenId = Buffer.from(rareTokenId).toString('hex');
-      const data = `ESDTTransfer@${encodedTokenId}@${amount}@vote@${selectedOption}`;
+      const data = `ESDTTransfer@${encodedTokenId}@8ac7230489e80000@766f7465@0${selectedOption.toString(16)}`;
 
       const transaction = {
         value: '0',

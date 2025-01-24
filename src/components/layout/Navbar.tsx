@@ -46,7 +46,7 @@ export const Navbar = () => {
             
           </div>
 
-          <div className="flex-1 flex justify-end items-center">
+          <div className="hidden md:flex-1 md:flex md:justify-end md:items-center">
               <WalletButton />
             </div>
 
