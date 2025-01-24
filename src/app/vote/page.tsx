@@ -95,13 +95,11 @@ export default function Vote() {
         gasLimit: 10000000,
       };
 
-      console.log('Sending transaction:', transaction);
-
-      // Show pending toast
+      // Show pending toast before signing
       const pendingToastId = toast.loading(
         <div className="flex flex-col space-y-2">
-          <p className="font-medium">Transaction Pending</p>
-          <p className="text-sm text-zinc-400">Please wait while your vote is being processed...</p>
+          <p className="font-medium">Please sign the transaction</p>
+          <p className="text-sm text-zinc-400">Waiting for your confirmation...</p>
         </div>
       );
 
@@ -112,35 +110,69 @@ export default function Vote() {
           errorMessage: 'An error occurred during voting',
           successMessage: 'Vote submitted successfully!'
         },
-        redirectAfterSign: false
+        redirectAfterSign: false,
+        transactionDisplayInfo: {
+          processingMessage: 'Processing your vote...',
+          errorMessage: 'An error occurred during voting',
+          successMessage: 'Vote submitted successfully!'
+        }
       });
 
       if (sessionId) {
-        // Update the pending toast to success
-        toast.dismiss(pendingToastId);
-        
-        const toastId = toast.success(
+        // Update toast to processing state
+        toast.loading(
           <div className="flex flex-col space-y-2">
-            <div className="p-4">
-              <p className="text-sm font-medium text-white">Vote Successful!</p>
-              <p className="mt-1 text-sm text-zinc-400">Your vote has been recorded.</p>
-            </div>
-            <div className="border-t border-zinc-800 p-2">
-              <button
-                onClick={() => {
-                  toast.dismiss(toastId);
-                  fetchVotes();
-                }}
-                className="w-full p-2 text-sm font-medium text-[#C99733] hover:text-[#FFD163] transition-colors rounded-md hover:bg-zinc-800/50"
-              >
-                Refresh Results
-              </button>
-            </div>
+            <p className="font-medium">Transaction Processing</p>
+            <p className="text-sm text-zinc-400">Your vote is being processed on the blockchain...</p>
           </div>,
           {
-            duration: 5000,
+            id: pendingToastId
           }
         );
+
+        // Wait for transaction to be processed
+        await new Promise(resolve => setTimeout(resolve, 6000));
+
+        // Check transaction status
+        try {
+          const provider = new ProxyNetworkProvider(network.apiAddress);
+          await provider.getTransactionStatus(sessionId);
+          
+          // Transaction successful
+          toast.dismiss(pendingToastId);
+          toast.success(
+            <div className="flex flex-col space-y-2">
+              <div className="p-4">
+                <p className="text-sm font-medium text-white">Vote Successful!</p>
+                <p className="mt-1 text-sm text-zinc-400">Your vote has been recorded on the blockchain.</p>
+              </div>
+              <div className="border-t border-zinc-800 p-2">
+                <button
+                  onClick={() => {
+                    fetchVotes();
+                  }}
+                  className="w-full p-2 text-sm font-medium text-[#C99733] hover:text-[#FFD163] transition-colors rounded-md hover:bg-zinc-800/50"
+                >
+                  Refresh Results
+                </button>
+              </div>
+            </div>,
+            {
+              duration: 5000,
+            }
+          );
+        } catch (error) {
+          console.error('Transaction failed:', error);
+          toast.error(
+            <div className="flex flex-col space-y-2">
+              <p className="font-medium">Transaction Failed</p>
+              <p className="text-sm text-zinc-400">Your vote could not be processed. Please try again.</p>
+            </div>,
+            {
+              id: pendingToastId
+            }
+          );
+        }
 
         await refreshAccount();
         await fetchVotes();
