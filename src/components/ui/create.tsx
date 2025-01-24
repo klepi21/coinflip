@@ -266,23 +266,25 @@ export default function Create() {
       {/* Mobile/Tablet Create Form Modal */}
       {showCreateModal && (
         <div 
-          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100] lg:hidden flex items-center justify-center"
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[200] lg:hidden"
           onClick={() => setShowCreateModal(false)}
         >
           <div 
-            className="w-full max-w-sm mx-4 my-8 overflow-auto max-h-[calc(100vh-4rem)]"
+            className="w-full h-full flex items-start justify-center overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-[#1A1A1A] rounded-2xl border border-zinc-800 shadow-xl overflow-hidden">
-              <div className="flex justify-end p-4">
+            <div 
+              className="w-full max-w-sm mx-4 my-16 bg-[#1A1A1A] rounded-2xl border border-zinc-800 shadow-xl"
+            >
+              <div className="sticky top-0 z-[201] flex justify-end p-4 bg-[#1A1A1A] border-b border-zinc-800">
                 <button 
                   onClick={() => setShowCreateModal(false)}
-                  className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-white"
+                  className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-white hover:bg-zinc-700"
                 >
                   ×
                 </button>
               </div>
-              <div className="px-4 pb-8">
+              <div className="px-4 pb-8 overflow-y-auto">
                 {/* Mobile Form Content */}
                 <div className="space-y-6">
                   {/* Updated Side-by-Side Animation */}
