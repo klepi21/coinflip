@@ -31,13 +31,7 @@
                 "Receives a payment and creates a number of games.",
                 "",
                 "Parameters:",
-                "- `number_of_games`: The number of games to create.",
-                "",
-                "Requirements:",
-                "- The smart contract is not paused.",
-                "- The token is valid.",
-                "- The amount is valid.",
-                "- The creator is not a smart contract."
+                "- `number_of_games`: The number of games to create."
             ],
             "name": "create",
             "mutability": "mutable",
@@ -61,14 +55,7 @@
                 "Cancels a game.",
                 "",
                 "Parameters:",
-                "- `game_id`: The game's unique identifier.",
-                "",
-                "Requirements:",
-                "- The smart contract is not paused.",
-                "- The game exists.",
-                "- The game is still open (no rival).",
-                "- The caller is the creator.",
-                "- The caller is not a smart contract."
+                "- `game_id`: The game's unique identifier."
             ],
             "name": "cancel",
             "mutability": "mutable",
@@ -103,16 +90,7 @@
                 "Accepts a payment and joins a game.",
                 "",
                 "Parameters:",
-                "- `game_id`: The game's unique identifier.",
-                "",
-                "Requirements:",
-                "- The smart contract is not paused.",
-                "- The game exists.",
-                "- The game is still open (no rival).",
-                "- The token is valid.",
-                "- The amount is valid.",
-                "- The caller is not the creator.",
-                "- The caller is not a smart contract."
+                "- `game_id`: The game's unique identifier."
             ],
             "name": "join",
             "mutability": "mutable",
@@ -189,6 +167,30 @@
                 }
             ],
             "allow_multiple_var_args": true
+        },
+        {
+            "docs": [
+                "Returns the scoreboard.",
+                "",
+                "The returned type is a MultiValueEncoded of PlayerScore Structure, which contains the following fields:",
+                "- `address`: The player's address",
+                "- `wins`: The number of wins",
+                "- `losses`: The number of losses"
+            ],
+            "name": "getScoreboard",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "k",
+                    "type": "bytes"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "variadic<PlayerScore>",
+                    "multi_result": true
+                }
+            ]
         },
         {
             "name": "getId",
@@ -304,52 +306,43 @@
             ]
         },
         {
-            "name": "setFee",
+            "name": "setEarner",
             "onlyOwner": true,
             "mutability": "mutable",
             "inputs": [
                 {
-                    "name": "fee",
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "percentage",
                     "type": "u64"
                 }
             ],
             "outputs": []
         },
         {
-            "name": "setExtraFee",
+            "name": "removeEarner",
             "onlyOwner": true,
             "mutability": "mutable",
             "inputs": [
                 {
-                    "name": "extra_fee",
-                    "type": "u64"
-                }
-            ],
-            "outputs": []
-        },
-        {
-            "name": "setFeeCollector",
-            "onlyOwner": true,
-            "mutability": "mutable",
-            "inputs": [
-                {
-                    "name": "fee_collector",
+                    "name": "address",
                     "type": "Address"
                 }
             ],
             "outputs": []
         },
         {
-            "name": "setExtraFeeCollector",
-            "onlyOwner": true,
-            "mutability": "mutable",
-            "inputs": [
+            "name": "getEarners",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
                 {
-                    "name": "extra_fee_collector",
-                    "type": "Address"
+                    "type": "variadic<multi<Address,u64>>",
+                    "multi_result": true
                 }
-            ],
-            "outputs": []
+            ]
         },
         {
             "name": "addVotingManagers",
@@ -491,6 +484,23 @@
                 },
                 {
                     "name": "timestamp",
+                    "type": "u64"
+                }
+            ]
+        },
+        "PlayerScore": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "wins",
+                    "type": "u64"
+                },
+                {
+                    "name": "losses",
                     "type": "u64"
                 }
             ]
