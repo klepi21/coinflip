@@ -215,8 +215,8 @@ export default function Vote() {
           >
             <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl p-4 sm:p-6 space-y-4 sm:space-y-6">
               <div className="space-y-2">
-                <h2 className="text-xl sm:text-2xl font-bold text-white">Who do you want the next fighter to be?</h2>
-                <p className="text-sm sm:text-base text-zinc-400">Select your preferred fighter. You can vote as many times as you like!</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">Who do you want the next fighters to be?</h2>
+                <p className="text-sm sm:text-base text-zinc-400">Select your preferred fighters. You can vote as many times as you like!</p>
                 <p className="text-xs sm:text-sm text-[#C99733] mt-2">Each vote costs 10 RARE tokens</p>
               </div>
 
@@ -225,7 +225,7 @@ export default function Vote() {
                   { option: 1, name: "Beniamin Mincu" },
                   { option: 2, name: "Mihai XOXNO" },
                   { option: 3, name: "Stephan" },
-                  { option: 4, name: "Lucian Mincu" }
+                  { option: 4, name: "Longin ONEDEX" }
                 ].map((fighter, index) => {
                   const vote = votes.find(v => v.option === fighter.option) || { total_votes: 0 };
                   const percentage = totalVotes > 0 ? (vote.total_votes / totalVotes) * 100 : 0;
