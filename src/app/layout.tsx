@@ -33,7 +33,7 @@ export default function RootLayout({
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="description" content="F.0. - Fud Out, a blockchain-based PvP coin flip fighting game" />
-        <title>F.0. - Fud Out, a blockchain-based PvP coin flip fighting game</title>
+        <title>F.O. - Fud Out, a blockchain-based PvP coin flip fighting game</title>
         <meta name="description" content="Experience the thrill of PvP combat with F.0. - Fud Out, a blockchain-based coin flip fighting game. Compete against other players and claim your rewards." />
         <meta property="og:title" content="F.0. - Fud Out, a blockchain-based PvP coin flip fighting game" />
         <meta property="og:description" content="Compete in PvP coin flip battles with F.0. - Fud Out, a blockchain-based fighting game" />
