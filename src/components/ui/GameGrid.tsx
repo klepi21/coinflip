@@ -270,7 +270,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       setPopup(prev => ({ ...prev, message: 'Waiting for transaction to complete...' }));
 
       // Wait for initial blockchain confirmation
-      await new Promise(resolve => setTimeout(resolve, 8000));
+      await new Promise(resolve => setTimeout(resolve, 10000));
       await refreshAccount();
 
       setPopup(prev => ({ ...prev, message: 'Checking game result...' }));
