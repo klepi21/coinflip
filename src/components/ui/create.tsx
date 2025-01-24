@@ -253,8 +253,8 @@ export default function Create() {
 
   return (
     <>
-      {/* Mobile Create Button */}
-      <div className="md:hidden fixed bottom-24 right-4 z-[90]">
+      {/* Mobile/Tablet Create Button - Show on all devices except large screens */}
+      <div className="lg:hidden fixed bottom-24 right-4 z-[90]">
         <button
           onClick={() => isLoggedIn ? setShowCreateModal(true) : setShowWalletModal(true)}
           className="w-14 h-14 rounded-full bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black flex items-center justify-center shadow-lg border-4 border-black hover:scale-105 transition-transform"
@@ -263,14 +263,14 @@ export default function Create() {
         </button>
       </div>
 
-      {/* Mobile Create Form Modal */}
+      {/* Mobile/Tablet Create Form Modal */}
       {showCreateModal && (
         <div 
-          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] md:hidden flex items-center justify-center"
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100] lg:hidden flex items-center justify-center"
           onClick={() => setShowCreateModal(false)}
         >
           <div 
-            className="w-full max-w-sm mx-4"
+            className="w-full max-w-sm mx-4 my-8 overflow-auto max-h-[calc(100vh-4rem)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-[#1A1A1A] rounded-2xl border border-zinc-800 shadow-xl overflow-hidden">
@@ -475,8 +475,8 @@ export default function Create() {
         onClose={() => setShowWalletModal(false)}
       />
 
-      {/* Desktop Version */}
-      <div className="hidden md:block bg-[#1A1A1A] rounded-3xl border border-zinc-800 shadow-xl mb-8 overflow-hidden">
+      {/* Desktop Version - Only show on large screens */}
+      <div className="hidden lg:block bg-[#1A1A1A] rounded-3xl border border-zinc-800 shadow-xl mb-8 overflow-hidden">
         <div className="p-6">
           {isWaitingForTx ? (
             <div className="flex flex-col items-center justify-center gap-4 py-8">

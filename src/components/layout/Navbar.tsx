@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WalletButton } from '../wallet/WalletButton';
+import { WalletButton } from '@/components/wallet/WalletButton';
 import { Coins, Menu, X, Vote } from 'lucide-react';
 import { HyperText } from '../ui/hyper-text';
 import Link from 'next/link';
@@ -12,8 +12,10 @@ import { WalletModal } from '../wallet/WalletModal';
 import { HowToPlayModal } from '@/components/ui/how-to-play-modal';
 import { cn } from '@/lib/utils';
 import { NavBar as TubelightNavbar } from '@/components/ui/tubelight-navbar';
+import Image from 'next/image';
+import { TubelightNav } from '@/components/ui/tubelight-navbar';
 
-export const Navbar = () => {
+export function Navbar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -37,18 +39,14 @@ export const Navbar = () => {
             <Link href="/" className="flex items-center gap-3 text-white font-bold">
               <img src="/img/fologo.png" alt="Logo" className="h-auto w-32" />
             </Link>
-          </div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center justify-between w-full px-32">
-            <div className="flex-1" />
-            <TubelightNavbar items={navItems} activeTextColor="text-black" />
-            
+            <div className="hidden md:block">
+              <TubelightNav />
+            </div>
           </div>
 
           <div className="hidden md:flex-1 md:flex md:justify-end md:items-center">
-              <WalletButton />
-            </div>
+            <WalletButton />
+          </div>
 
           {/* Mobile Menu Button */}
           <button
@@ -107,4 +105,4 @@ export const Navbar = () => {
       />
     </motion.nav>
   );
-};
+}

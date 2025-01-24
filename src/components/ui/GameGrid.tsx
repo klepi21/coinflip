@@ -482,12 +482,12 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   return (
     <div className="space-y-6">
       {/* Stats and Filter Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex gap-2 sm:gap-4 text-sm sm:text-base">
-          <div className="bg-[#1A1A1A] rounded-full px-3 sm:px-6 py-1.5 sm:py-2 text-white">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex gap-2 lg:gap-4 text-sm lg:text-base">
+          <div className="bg-[#1A1A1A] rounded-full px-3 lg:px-6 py-1.5 lg:py-2 text-white">
             <span className="font-bold">{games.length}</span> ACTIVE
           </div>
-          <div className="bg-[#1A1A1A] rounded-full px-3 sm:px-6 py-1.5 sm:py-2 text-white">
+          <div className="bg-[#1A1A1A] rounded-full px-3 lg:px-6 py-1.5 lg:py-2 text-white">
             <span className="font-bold">{totalGamesPlayed}</span> PLAYED
           </div>
         </div>
@@ -496,7 +496,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         <div className="relative">
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className="w-full sm:w-48 h-10 px-4 rounded-xl bg-[#1A1A1A] border border-zinc-800 text-white flex items-center justify-between hover:border-[#C99733] transition-colors"
+            className="w-full lg:w-48 h-10 px-4 rounded-xl bg-[#1A1A1A] border border-zinc-800 text-white flex items-center justify-between hover:border-[#C99733] transition-colors"
           >
             <span>{getFilterDisplayText(filter)}</span>
             <ChevronDown className={`w-4 h-4 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
@@ -504,14 +504,12 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
           
           {isFilterOpen && (
             <>
-              {/* Backdrop to close dropdown when clicking outside */}
               <div 
                 className="fixed inset-0 z-40"
                 onClick={() => setIsFilterOpen(false)} 
               />
               
-              {/* Dropdown Menu */}
-              <div className="absolute top-full mt-2 w-full sm:w-48 bg-[#1A1A1A] border border-zinc-800 rounded-xl overflow-hidden z-50 shadow-lg">
+              <div className="absolute top-full mt-2 w-full lg:w-48 bg-[#1A1A1A] border border-zinc-800 rounded-xl overflow-hidden z-50 shadow-lg">
                 {(['all', 'highest', 'lowest', 'yours'] as FilterType[]).map((option) => (
                   <button
                     key={option}
@@ -536,7 +534,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
       {/* Games Grid with Fixed Height Container */}
       <div className="min-h-[600px]">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {isInitialLoading ? (
             // Show placeholder cards during initial load
             Array.from({ length: 6 }).map((_, index) => (
