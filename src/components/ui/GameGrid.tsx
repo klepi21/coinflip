@@ -232,8 +232,6 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         throw new Error('No connected address');
       }
 
-     
-
       setPopup({
         isOpen: true,
         message: 'Preparing transaction...',
@@ -260,7 +258,6 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       }
 
       const tx = transaction.buildTransaction();
-      //console.log('Transaction built:', tx);
       
       setPopup(prev => ({ ...prev, message: 'Confirming transaction...' }));
       
@@ -311,14 +308,28 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       
       setPopup({
         isOpen: true,
-        message: isWinner ? 'Congratulations! You won the game!' : 'Better luck next time!',
+        message: isWinner ? 'Congratulations! You won the game!' : 'You got FUDDED OUT!!',
         isLoading: false,
         gameResult: isWinner ? 'win' : 'lose'
       });
 
-      // Refresh games and total games count
-      refetchGames();
-      fetchTotalGames(); // Refresh total games after game completion
+      // Refresh all necessary states
+      await Promise.all([
+        refreshAccount(),
+        refetchGames(),
+        fetchTotalGames()
+      ]);
+
+      // Close popup after result is shown
+      setTimeout(async () => {
+        setPopup(prev => ({ ...prev, isOpen: false }));
+        // Do one final refresh after popup closes
+        await Promise.all([
+          refreshAccount(),
+          refetchGames(),
+          fetchTotalGames()
+        ]);
+      }, 5000);
 
     } catch (error) {
       console.error('Join game error:', error);
@@ -328,6 +339,13 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         isLoading: false,
         gameResult: null
       });
+      
+      // Even on error, try to refresh states
+      await Promise.all([
+        refreshAccount(),
+        refetchGames(),
+        fetchTotalGames()
+      ]);
     }
   };
 
