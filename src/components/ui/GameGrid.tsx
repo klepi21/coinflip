@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
-import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
+import { ProxyNetworkProvider, TransactionStatus } from "@multiversx/sdk-network-providers";
 import { 
   AbiRegistry, 
   SmartContract, 
@@ -269,17 +269,41 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
       setPopup(prev => ({ ...prev, message: 'Waiting for transaction to complete...' }));
 
-      // Wait for initial blockchain confirmation
-      await new Promise(resolve => setTimeout(resolve, 10000));
+      // Wait for transaction signature and initial confirmation
+      const provider = new ProxyNetworkProvider(network.apiAddress);
+      let txStatus: TransactionStatus | null = null;
+      let retries = 30; // More retries for initial transaction check
+
+      while (retries > 0) {
+        try {
+          txStatus = await provider.getTransactionStatus(sessionId);
+          // Check for successful transaction status
+          if (txStatus.isExecuted() || txStatus.isSuccessful()) {
+            break;
+          }
+          // If still pending, wait and retry
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          retries--;
+        } catch (error) {
+          console.error('Error checking transaction status:', error);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          retries--;
+        }
+      }
+
+      if (!txStatus || (!txStatus.isExecuted() && !txStatus.isSuccessful())) {
+        throw new Error('Transaction failed or timed out');
+      }
+
+      // Now that we know transaction is successful, wait for contract state update
+      await new Promise(resolve => setTimeout(resolve, 4000));
       await refreshAccount();
 
       setPopup(prev => ({ ...prev, message: 'Checking game result...' }));
 
-      // Additional wait to ensure smart contract state is updated
-      await new Promise(resolve => setTimeout(resolve, 4000));
-
-      let retries = 3;
+      // Check game result with retries
       let winner = null;
+      retries = 3;
 
       while (retries > 0 && !winner) {
         try {
