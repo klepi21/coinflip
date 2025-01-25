@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
-import { ProxyNetworkProvider, TransactionStatus } from "@multiversx/sdk-network-providers";
+import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
 import { 
   AbiRegistry, 
   SmartContract, 
@@ -23,6 +23,7 @@ import flipcoinAbi from '@/config/flipcoin.abi.json';
 import { useGames, Game } from '@/hooks/useGames';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { GlovesAnimation } from './GlovesAnimation';
+import { TransactionWatcher } from "@multiversx/sdk-core";
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -269,41 +270,25 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
       setPopup(prev => ({ ...prev, message: 'Waiting for transaction to complete...' }));
 
-      // Wait for transaction signature and initial confirmation
+      // Create a transaction watcher
       const provider = new ProxyNetworkProvider(network.apiAddress);
-      let txStatus: TransactionStatus | null = null;
-      let retries = 5; // More retries for initial transaction check
+      const watcher = new TransactionWatcher(provider, {
+        pollingIntervalMilliseconds: 2000,
+        timeoutMilliseconds: 60000, // 1 minute timeout
+        patienceMilliseconds: 5000 // Extra time to wait for contract results
+      });
 
-      while (retries > 0) {
-        try {
-          txStatus = await provider.getTransactionStatus(sessionId);
-          // Check for successful transaction status
-          if (txStatus.isExecuted() || txStatus.isSuccessful()) {
-            break;
-          }
-          // If still pending, wait and retry
-          await new Promise(resolve => setTimeout(resolve, 5000));
-          retries--;
-        } catch (error) {
-          console.error('Error checking transaction status:', error);
-          await new Promise(resolve => setTimeout(resolve, 5000));
-          retries--;
-        }
-      }
+      // Wait for transaction to be completed
+      await watcher.awaitCompleted(sessionId);
 
-      if (!txStatus || (!txStatus.isExecuted() && !txStatus.isSuccessful())) {
-        throw new Error('Transaction failed or timed out');
-      }
-
-      // Now that we know transaction is successful, wait for contract state update
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      // Now that we know transaction is successful, refresh account
       await refreshAccount();
 
       setPopup(prev => ({ ...prev, message: 'Checking game result...' }));
 
       // Check game result with retries
       let winner = null;
-      retries = 3;
+      let retries = 3;
 
       while (retries > 0 && !winner) {
         try {
@@ -613,7 +598,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           />
                         </div>
                         <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
-                          {game.creatorHerotag || `${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
+                          {game.creatorHerotag ? game.creatorHerotag.replace('.elrond', '') : `${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-zinc-400 text-sm font-medium">
@@ -651,7 +636,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </div>
                         <span className="text-black text-xs font-medium mb-1 truncate w-full text-center">
                           {game.rival 
-                            ? (game.rivalHerotag || `${game.rival.slice(0, 5)}...${game.rival.slice(-4)}`)
+                            ? (game.rivalHerotag ? game.rivalHerotag.replace('.elrond', '') : `${game.rival.slice(0, 5)}...${game.rival.slice(-4)}`)
                             : 'Waiting...'}
                         </span>
                         <div className="flex items-center gap-2">
@@ -702,7 +687,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           />
                         </div>
                         <span className="text-black text-xs font-medium mb-1 truncate w-full text-center">
-                          {game.creatorHerotag || `${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
+                          {game.creatorHerotag ? game.creatorHerotag.replace('.elrond', '') : `${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-black text-sm font-medium">
@@ -731,7 +716,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </div>
                         <span className="text-black text-xs font-medium mb-1 truncate w-full text-center">
                           {game.rival 
-                            ? (game.rivalHerotag || `${game.rival.slice(0, 5)}...${game.rival.slice(-4)}`)
+                            ? (game.rivalHerotag ? game.rivalHerotag.replace('.elrond', '') : `${game.rival.slice(0, 5)}...${game.rival.slice(-4)}`)
                             : 'Play to win'}
                         </span>
                         <div className="flex items-center gap-2">
