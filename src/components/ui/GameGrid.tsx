@@ -589,7 +589,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           />
                         </div>
                         <span className="text-white text-xs font-medium mb-1 truncate w-full text-center">
-                          {game.creatorHerotag || `${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
+                          {`${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-zinc-400 text-sm font-medium">
@@ -627,7 +627,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </div>
                         <span className="text-black text-xs font-medium mb-1 truncate w-full text-center">
                           {game.rival 
-                            ? (game.rivalHerotag || `${game.rival.slice(0, 5)}...${game.rival.slice(-4)}`)
+                            ? (`${game.rival.slice(0, 5)}...${game.rival.slice(-4)}`)
                             : 'Waiting...'}
                         </span>
                         <div className="flex items-center gap-2">
@@ -678,7 +678,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           />
                         </div>
                         <span className="text-black text-xs font-medium mb-1 truncate w-full text-center">
-                          {game.creatorHerotag || `${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
+                          {`${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-black text-sm font-medium">
@@ -707,7 +707,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </div>
                         <span className="text-black text-xs font-medium mb-1 truncate w-full text-center">
                           {game.rival 
-                            ? (game.rivalHerotag || `${game.rival.slice(0, 5)}...${game.rival.slice(-4)}`)
+                            ? (`${game.rival.slice(0, 5)}...${game.rival.slice(-4)}`)
                             : 'Play to win'}
                         </span>
                         <div className="flex items-center gap-2">
