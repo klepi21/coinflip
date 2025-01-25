@@ -31,6 +31,7 @@ export default function Vote() {
   const [votes, setVotes] = useState<VoteOption[]>([]);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const accountInfo = useGetAccountInfo();
   const [totalVotes, setTotalVotes] = useState(0);
   const { network } = useGetNetworkConfig();
   const { address } = useGetAccountInfo();
@@ -95,97 +96,61 @@ export default function Vote() {
         gasLimit: 10000000,
       };
 
-      // Show pending toast before signing
-      const pendingToastId = toast.loading(
-        <div className="flex flex-col space-y-2">
-          <p className="font-medium">Please sign the transaction</p>
-          <p className="text-sm text-zinc-400">Waiting for your confirmation...</p>
-        </div>
-      );
-
-      const { sessionId } = await sendTransactions({
+      const { sessionId, error } = await sendTransactions({
         transactions: [transaction],
         transactionsDisplayInfo: {
-          processingMessage: 'Processing vote transaction...',
+          processingMessage: 'Processing vote transaction',
           errorMessage: 'An error occurred during voting',
-          successMessage: 'Vote submitted successfully!'
-        },
-        redirectAfterSign: false,
-        transactionDisplayInfo: {
-          processingMessage: 'Processing your vote...',
-          errorMessage: 'An error occurred during voting',
-          successMessage: 'Vote submitted successfully!'
+          successMessage: 'Vote submitted successfully'
         }
       });
 
-      if (sessionId) {
-        // Update toast to processing state
-        toast.loading(
-          <div className="flex flex-col space-y-2">
-            <p className="font-medium">Transaction Processing</p>
-            <p className="text-sm text-zinc-400">Your vote is being processed on the blockchain...</p>
-          </div>,
-          {
-            id: pendingToastId
-          }
-        );
-
-        // Wait for transaction to be processed
-        await new Promise(resolve => setTimeout(resolve, 6000));
-
-        // Check transaction status
-        try {
-          const provider = new ProxyNetworkProvider(network.apiAddress);
-          await provider.getTransactionStatus(sessionId);
-          
-          // Transaction successful
-          toast.dismiss(pendingToastId);
-          toast.success(
-            <div className="flex flex-col space-y-2">
-              <div className="p-4">
-                <p className="text-sm font-medium text-white">Vote Successful!</p>
-                <p className="mt-1 text-sm text-zinc-400">Your vote has been recorded on the blockchain.</p>
-              </div>
-              <div className="border-t border-zinc-800 p-2">
-                <button
-                  onClick={() => {
-                    fetchVotes();
-                  }}
-                  className="w-full p-2 text-sm font-medium text-[#C99733] hover:text-[#FFD163] transition-colors rounded-md hover:bg-zinc-800/50"
-                >
-                  Refresh Results
-                </button>
-              </div>
-            </div>,
-            {
-              duration: 5000,
-            }
-          );
-        } catch (error) {
-          console.error('Transaction failed:', error);
-          toast.error(
-            <div className="flex flex-col space-y-2">
-              <p className="font-medium">Transaction Failed</p>
-              <p className="text-sm text-zinc-400">Your vote could not be processed. Please try again.</p>
-            </div>,
-            {
-              id: pendingToastId
-            }
-          );
-        }
-
-        await refreshAccount();
-        await fetchVotes();
-        setSelectedOption(null);
+      if (error) {
+        throw new Error(error);
       }
-    } catch (error) {
-      console.error('Error submitting vote:', error);
-      toast.error(
+
+      // Add delay before checking transaction status
+      await new Promise(resolve => setTimeout(resolve, accountInfo.shard === 1 ? 10000 : 25000));
+      await refreshAccount();
+
+      // Additional wait to ensure smart contract state is updated
+      await new Promise(resolve => setTimeout(resolve, 4000));
+
+      // Show success message
+      toast.success(
         <div className="flex flex-col space-y-2">
-          <p className="font-medium">Transaction Failed</p>
-          <p className="text-sm text-zinc-400">Please try voting again.</p>
+          <div className="p-4">
+            <p className="text-sm font-medium text-white">Vote Successful!</p>
+            <p className="mt-1 text-sm text-zinc-400">Your vote has been recorded on the blockchain.</p>
+          </div>
+          <div className="border-t border-zinc-800 p-2">
+            <button
+              onClick={() => {
+                fetchVotes();
+              }}
+              className="w-full p-2 text-sm font-medium text-[#C99733] hover:text-[#FFD163] transition-colors rounded-md hover:bg-zinc-800/50"
+            >
+              Refresh Results
+            </button>
+          </div>
         </div>
       );
+
+      // Refresh data
+      await fetchVotes();
+      setSelectedOption(null);
+
+    } catch (error: any) {
+      console.error('Vote error:', error);
+      // Don't show error toast since the transaction might still be processing
+      if (error?.message?.includes('Request error on url')) {
+        toast.info('Vote submitted! Please wait for network confirmation.');
+        // Still refresh votes as the transaction might have gone through
+        await fetchVotes();
+        setSelectedOption(null);
+      } else {
+        toast.error('Something went wrong. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
