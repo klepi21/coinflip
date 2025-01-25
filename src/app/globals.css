@@ -471,3 +471,7 @@ h1, h2, h3, .game-text {
   transition: all 0.3s ease !important;
   margin-top: 1rem !important;
 }
+
+.dapp-core-component__scamPhishingStyles__scam-phishing-alert-text {
+  color: black !important;
+}
