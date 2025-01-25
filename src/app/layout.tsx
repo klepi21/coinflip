@@ -11,6 +11,7 @@ import { ThemeProvider } from 'next-themes'
 import Head from 'next/head'
 import { Comic_Neue } from 'next/font/google';
 import { Footer } from '@/components/layout/Footer';
+import { TokenProvider } from '@/context/TokenContext';
 
 const comic = Comic_Neue({
   weight: ['400', '700'],
@@ -72,22 +73,24 @@ export default function RootLayout({
             }}
           >
             <WalletProvider>
-              <div className="min-h-screen relative">
-                {/* Optional pattern overlay */}
-                <div className="fixed inset-0 bg-black pointer-events-none" />
-                {/* Content */}
-                <div className="relative z-10">
-                  <Navbar />
-                  <main>
-                    {children}
-                  </main>
-                  <WalletModal 
-                    isOpen={false}
-                    onClose={() => {}}
-                  />
-                  <SignTransactionsModals />
+              <TokenProvider>
+                <div className="min-h-screen relative">
+                  {/* Optional pattern overlay */}
+                  <div className="fixed inset-0 bg-black pointer-events-none" />
+                  {/* Content */}
+                  <div className="relative z-10">
+                    <Navbar />
+                    <main>
+                      {children}
+                    </main>
+                    <WalletModal 
+                      isOpen={false}
+                      onClose={() => {}}
+                    />
+                    <SignTransactionsModals />
+                  </div>
                 </div>
-              </div>
+              </TokenProvider>
             </WalletProvider>
           </DappProvider>
         </ThemeProvider>

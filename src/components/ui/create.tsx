@@ -257,10 +257,9 @@ export default function Create() {
       <div className="lg:hidden fixed bottom-24 right-4 z-[90]">
         <button
           onClick={() => isLoggedIn ? setShowCreateModal(true) : setShowWalletModal(true)}
-          className="w-20 h-20 rounded-full bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black flex items-center justify-center shadow-lg border-4 border-black hover:scale-105 transition-transform"
+          className="w-14 h-14 rounded-full bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black flex items-center justify-center shadow-lg border-4 border-black hover:scale-105 transition-transform"
         >
-          
-          <span className="text-xs font-bold">Create Game</span>
+          <span className="text-3xl font-bold">+</span>
         </button>
       </div>
 

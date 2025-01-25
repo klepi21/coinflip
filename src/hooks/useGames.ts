@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ProxyNetworkProvider, ApiNetworkProvider } from "@multiversx/sdk-network-providers";
+import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
 import { 
   AbiRegistry, 
   SmartContract, 
@@ -8,11 +8,11 @@ import {
   ContractFunction,
   BooleanValue
 } from "@multiversx/sdk-core";
-import { useGetNetworkConfig } from "@multiversx/sdk-dapp/hooks";
 import flipcoinAbi from '@/config/flipcoin.abi.json';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
+const GATEWAY_URL = 'https://multiversx-api.beaconx.app/public-mainnet-gateway';
 
 export type Game = {
   id: number;
@@ -22,8 +22,6 @@ export type Game = {
   amount: string;
   winner: string | null;
   timestamp: number;
-  creatorHerotag?: string;
-  rivalHerotag?: string;
   side: number;
 };
 
@@ -31,26 +29,14 @@ export function useGames() {
   const [games, setGames] = useState<Game[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { network } = useGetNetworkConfig();
-
-  const fetchHerotag = async (address: string): Promise<string | undefined> => {
-    try {
-      const apiNetworkProvider = new ApiNetworkProvider(network.apiAddress);
-      const accountInfo = await apiNetworkProvider.getAccount(new Address(address));
-      return accountInfo.userName || undefined;
-    } catch (error) {
-      return undefined;
-    }
-  };
 
   const fetchGames = useCallback(async () => {
     try {
-      // Only set refreshing state if we already have games
       if (!isInitialLoading) {
         setIsRefreshing(true);
       }
 
-      const provider = new ProxyNetworkProvider(network.apiAddress);
+      const provider = new ProxyNetworkProvider(GATEWAY_URL);
       const contract = new SmartContract({
         address: new Address(SC_ADDRESS),
         abi: AbiRegistry.create(flipcoinAbi)
@@ -71,7 +57,7 @@ export function useGames() {
         const gamesArray = results.values[0]?.valueOf();
         
         if (gamesArray && Array.isArray(gamesArray)) {
-          const processedGames = await Promise.all(gamesArray.map(async (game: any) => {
+          const processedGames = gamesArray.map((game: any) => {
             const rival = game?.rival;
             const winner = game?.winner;
             const creatorAddress = game?.creator?.toString() || '';
@@ -79,17 +65,10 @@ export function useGames() {
               ? rival.value.toString() 
               : null;
             
-            const [creatorHerotag, rivalHerotag] = await Promise.all([
-              fetchHerotag(creatorAddress),
-              rivalAddress ? fetchHerotag(rivalAddress) : undefined
-            ]);
-            
             return {
               id: Number(game?.id?.toString() || 0),
               creator: creatorAddress,
-              creatorHerotag,
               rival: rivalAddress,
-              rivalHerotag,
               token: game?.token?.toString() || '',
               amount: game?.amount?.toString() || '0',
               side: Number(game?.side?.toString() || 0),
@@ -98,13 +77,6 @@ export function useGames() {
                 : null,
               timestamp: Number(game?.timestamp?.toString() || 0)
             } as Game;
-          }));
-
-          // Add console log for active games
-          processedGames.forEach(game => {
-            if (!game.rival) {  // Only log active (open) games
-              //console.log(`Game ${game.id} side: ${game.side}`);
-            }
           });
 
           // Update games smoothly
@@ -143,7 +115,7 @@ export function useGames() {
       setIsInitialLoading(false);
       setIsRefreshing(false);
     }
-  }, [network.apiAddress, isInitialLoading]);
+  }, [isInitialLoading]);
 
   useEffect(() => {
     fetchGames();

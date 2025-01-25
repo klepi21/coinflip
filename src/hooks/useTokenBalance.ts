@@ -13,7 +13,7 @@ export const useTokenBalance = (address: string | undefined, tokenId: string) =>
       }
 
       try {
-        const response = await fetch(`https://multiversx-api.beaconx.app/public-mainnet-api/accounts/${address}/tokens?size=500`);
+        const response = await fetch(`https://api.multiversx.com/accounts/${address}/tokens?size=500`);
         const tokens = await response.json();
         const token = tokens.find((t: any) => t.identifier === tokenId);
         
