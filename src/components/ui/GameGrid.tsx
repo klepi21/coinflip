@@ -272,7 +272,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       // Wait for transaction signature and initial confirmation
       const provider = new ProxyNetworkProvider(network.apiAddress);
       let txStatus: TransactionStatus | null = null;
-      let retries = 30; // More retries for initial transaction check
+      let retries = 5; // More retries for initial transaction check
 
       while (retries > 0) {
         try {
@@ -282,11 +282,11 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
             break;
           }
           // If still pending, wait and retry
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 5000));
           retries--;
         } catch (error) {
           console.error('Error checking transaction status:', error);
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 5000));
           retries--;
         }
       }
@@ -296,7 +296,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       }
 
       // Now that we know transaction is successful, wait for contract state update
-      await new Promise(resolve => setTimeout(resolve, 4000));
+      await new Promise(resolve => setTimeout(resolve, 5000));
       await refreshAccount();
 
       setPopup(prev => ({ ...prev, message: 'Checking game result...' }));
@@ -312,7 +312,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         } catch (error) {
           retries--;
           if (retries > 0) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise(resolve => setTimeout(resolve, 5000));
           }
         }
       }
