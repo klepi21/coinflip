@@ -257,8 +257,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       });
 
       console.log('Transaction Result:', {
-        sessionId: txResult.sessionId,
-        complete: txResult,
+        
+        complete: tx,
       });
 
       if (!txResult.sessionId) {
