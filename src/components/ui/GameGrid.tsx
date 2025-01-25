@@ -186,16 +186,6 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     fetchTotalGames();
   }, []);
 
-  const fetchHerotag = async (address: string): Promise<string | undefined> => {
-    try {
-      const apiNetworkProvider = new ApiNetworkProvider(network.apiAddress);
-      const accountInfo = await apiNetworkProvider.getAccount(new Address(address));
-      return accountInfo.userName || undefined;
-    } catch (error) {
-      console.error('Error fetching herotag:', error);
-      return undefined;
-    }
-  };
 
   const checkGameWinner = async (gameId: number): Promise<string> => {
     const provider = new ProxyNetworkProvider(network.apiAddress);
@@ -270,13 +260,13 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       setPopup(prev => ({ ...prev, message: 'Waiting for transaction to complete...' }));
 
       // Wait for initial blockchain confirmation
-      await new Promise(resolve => setTimeout(resolve, 8000));
+      await new Promise(resolve => setTimeout(resolve, 20000));
       await refreshAccount();
 
       setPopup(prev => ({ ...prev, message: 'Checking game result...' }));
 
       // Additional wait to ensure smart contract state is updated
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
       let retries = 3;
       let winner = null;
