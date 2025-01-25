@@ -121,6 +121,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const { games, isInitialLoading, isRefreshing, refetchGames } = useGames();
   const { network } = useGetNetworkConfig();
   const { address: connectedAddress } = useGetAccountInfo();
+  const accountInfo = useGetAccountInfo();
   const { balance: mincuBalance, isLoading: isLoadingBalance } = useTokenBalance(connectedAddress || '', MINCU_IDENTIFIER);
   const { balance: rareBalance, isLoading: isLoadingRare } = useTokenBalance(connectedAddress || '', RARE_IDENTIFIER);
   const { balance: bodBalance, isLoading: isLoadingBod } = useTokenBalance(connectedAddress || '', BOD_IDENTIFIER);
@@ -247,83 +248,61 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       
       setPopup(prev => ({ ...prev, message: 'Confirming transaction...' }));
       
-      try {
-        const txResult = await sendTransactions({
-          transactions: [tx],
-          transactionsDisplayInfo: {
-            processingMessage: 'Processing game transaction',
-            errorMessage: 'An error occurred during game transaction',
-            successMessage: 'Transaction successful'
-          }
-        });
-
-        if (!txResult.sessionId) {
-          throw new Error('Failed to get transaction session ID');
+      const { sessionId } = await sendTransactions({
+        transactions: [tx],
+        transactionsDisplayInfo: {
+          processingMessage: 'Processing game transaction',
+          errorMessage: 'An error occurred during game transaction',
+          successMessage: 'Transaction successful'
         }
+      });
 
-        // Get the shard from the address
-        const addressBytes = new Address(connectedAddress).pubkey();
-        const addressShard = addressBytes[addressBytes.length - 1] % 4; // Last byte mod 4 gives shard
-        console.log('Signer shard:', addressShard);
-
-        // Adjust wait time based on shard
-        const waitTime = addressShard === 1 ? 10000 : 25000;
-        console.log(`Waiting ${waitTime}ms for shard ${addressShard} confirmation`);
-
-        // Wait for initial blockchain confirmation
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-        await refreshAccount();
-
-        // Log transaction details after confirmation
-        console.log('Transaction completed:', {
-          result: tx,
-          status: 'confirmed',
-          shard: addressShard,
-          timestamp: new Date().toISOString()
-        });
-
-        setTransactionStep('checking');
-
-        // Additional wait to ensure smart contract state is updated
-        await new Promise(resolve => setTimeout(resolve, 4000));
-
-        let retries = 3;
-        let winner = null;
-
-        setTransactionStep('revealing');
-
-        while (retries > 0 && !winner) {
-          try {
-            winner = await checkGameWinner(gameId);
-            if (winner) break;
-          } catch (error) {
-            retries--;
-            if (retries > 0) {
-              await new Promise(resolve => setTimeout(resolve, 2000));
-            }
-          }
-        }
-
-        if (!winner) {
-          throw new Error('Could not determine game result');
-        }
-
-        const isWinner = winner.toLowerCase() === connectedAddress?.toLowerCase();
-        setGameResult(isWinner ? 'win' : 'lose');
-
-        // Refresh all necessary states
-        await Promise.all([
-          refreshAccount(),
-          refetchGames()
-        ]);
-
-      } catch (error) {
-        console.error('Join game error - Full error object:', error);
-        toast.error('Something went wrong. Please try again.');
-        setShowStatusModal(false);
+      if (!sessionId) {
+        throw new Error('Failed to get transaction session ID');
       }
+      console.log('Account info:', accountInfo.shard);
+
+      // Wait for initial blockchain confirmation
+      await new Promise(resolve => setTimeout(resolve, accountInfo.shard === 1 ? 10000 : 25000));
+      await refreshAccount();
+
+      setTransactionStep('checking');
+
+      // Additional wait to ensure smart contract state is updated
+      await new Promise(resolve => setTimeout(resolve, 4000));
+
+      let retries = 3;
+      let winner = null;
+
+      setTransactionStep('revealing');
+
+      while (retries > 0 && !winner) {
+        try {
+          winner = await checkGameWinner(gameId);
+          if (winner) break;
+        } catch (error) {
+          retries--;
+          if (retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+      }
+
+      if (!winner) {
+        throw new Error('Could not determine game result');
+      }
+
+      const isWinner = winner.toLowerCase() === connectedAddress?.toLowerCase();
+      setGameResult(isWinner ? 'win' : 'lose');
+
+      // Refresh all necessary states
+      await Promise.all([
+        refreshAccount(),
+        refetchGames()
+      ]);
+
     } catch (error) {
-      console.error('Join game error - Full error object:', error);
+      console.error('Join game error:', error);
       toast.error('Something went wrong. Please try again.');
       setShowStatusModal(false);
     }
@@ -332,8 +311,6 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const handleCloseStatusModal = () => {
     setShowStatusModal(false);
     setGameResult(null);
-    // Refresh the page after modal is closed
-    window.location.reload();
   };
 
   const handleCancelGame = async (gameId: number) => {

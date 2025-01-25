@@ -111,7 +111,7 @@ export default function Create() {
       const baseAmount = BigInt(amount);
       const totalAmount = baseAmount * BigInt(multiplier);
       // Convert to raw amount with decimals
-      const rawAmount = totalAmount * BigInt(10 ** decimalAmount);
+      const rawAmount = (totalAmount * BigInt(10 ** decimalAmount)).toString(16).padStart(decimalAmount * 2, '0');
       const sideValue = selectedSide === 'GRM' ? 0 : 1;
 
       const tokenIdentifier = selectedToken === 'RARE' ? RARE_IDENTIFIER : BOD_IDENTIFIER;
@@ -119,9 +119,9 @@ export default function Create() {
       const { sessionId: newSessionId } = await sendTransactions({
         transactions: [{
           value: '0',
-          data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${rawAmount.toString(16)}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
+          data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${rawAmount.toString()}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
           receiver: SC_ADDRESS,
-          gasLimit: 10000 * multiplier,
+          gasLimit: 10000000 * multiplier,
         }],
         transactionsDisplayInfo: {
           processingMessage: `Creating ${multiplier} game${multiplier > 1 ? 's' : ''} with ${totalAmount} ${selectedToken}...`,
