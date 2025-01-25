@@ -89,7 +89,11 @@ export default function Home() {
         </div>
       </div>
       {/* Footer Section */}
-      <div className="relative z-20 bg-transparent text-center text-white/80 mt-auto">
+      <div className="relative z-20 bg-transparent text-center text-white/80 mt-auto flex flex-col justify-center items-center">
+        <div className="flex justify-center items-center mb-4">
+          <img src="img/SRBLABS.png" alt="SRB Labs Logo" className="mr-1 w-20 h-auto" />
+          <img src="img/bodlogo.svg" alt="BOD Logo" className="w-20 h-auto" />
+        </div>
         <p className="max-w-2xl mx-auto mb-2 text-sm z-10">Engage in a provably fair, peer-to-peer gaming experience. Please ensure you are at least 18 years old and comply with your local regulations.</p>
       </div>
     </main>
