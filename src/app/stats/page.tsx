@@ -17,7 +17,7 @@ import flipcoinAbi from '@/config/flipcoin.abi.json';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
-const ADMIN_ADDRESS = 'erd1u5p4njlv9rxvzvmhsxjypa69t2dran33x9ttpx0ghft7tt35wpfsxgynw4';
+const ADMIN_ADDRESSES = ['erd1u5p4njlv9rxvzvmhsxjypa69t2dran33x9ttpx0ghft7tt35wpfsxgynw4', 'erd1vvms6vgu0r6he4p20jp7z99wcrwwuk06rwey670kmszg4c7yfhws43xpxp'];
 
 interface PlayerScore {
   address: string;
@@ -75,13 +75,13 @@ export default function Stats() {
   };
 
   useEffect(() => {
-    if (address === ADMIN_ADDRESS) {
+    if (ADMIN_ADDRESSES.includes(address)) {
       fetchScoreboard();
     }
   }, [network.apiAddress, address]);
 
   // If not connected or not admin, show forbidden message
-  if (!address || address !== ADMIN_ADDRESS) {
+  if (!address || !ADMIN_ADDRESSES.includes(address)) {
     return (
       <main className="relative h-screen overflow-hidden bg-black">
         <RetroGrid />
