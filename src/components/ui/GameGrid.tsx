@@ -133,6 +133,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
 
+  const [selectedGames, setSelectedGames] = useState<Game[]>([]);
+  const [currentGameIndex, setCurrentGameIndex] = useState<number>(0);
+
   // Track disappearing games with full game data
   useEffect(() => {
     if (!games || games.length === 0) return;
@@ -308,9 +311,48 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     }
   };
 
+  const handleGameSelect = (game: Game) => {
+    // Don't allow selection if user is the creator or has insufficient balance
+    if (game.creator.toLowerCase() === connectedAddress?.toLowerCase() || !canJoinGame(game.amount, game.token)) {
+      return;
+    }
+
+    if (selectedGames.find(g => g.id === game.id)) {
+      setSelectedGames(prev => prev.filter(g => g.id !== game.id));
+    } else if (selectedGames.length < 2) {
+      setSelectedGames(prev => [...prev, game]);
+    }
+  };
+
+  const handlePlaySelected = async () => {
+    if (selectedGames.length === 0) return;
+    
+    setCurrentGameIndex(0);
+    await handleJoinGame(
+      selectedGames[0].id,
+      selectedGames[0].amount,
+      selectedGames[0].token
+    );
+  };
+
   const handleCloseStatusModal = () => {
     setShowStatusModal(false);
     setGameResult(null);
+
+    // If there are more games to play, move to the next one
+    if (currentGameIndex < selectedGames.length - 1) {
+      setCurrentGameIndex(prev => prev + 1);
+      // Play the next game
+      handleJoinGame(
+        selectedGames[currentGameIndex + 1].id,
+        selectedGames[currentGameIndex + 1].amount,
+        selectedGames[currentGameIndex + 1].token
+      );
+    } else {
+      // Reset selection when all games are played
+      setSelectedGames([]);
+      setCurrentGameIndex(0);
+    }
   };
 
   const handleCancelGame = async (gameId: number) => {
@@ -513,41 +555,57 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         </div>
         
         {/* Filter Dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className="w-full lg:w-48 h-10 px-4 rounded-xl bg-[#1A1A1A] border border-zinc-800 text-white flex items-center justify-between hover:border-[#C99733] transition-colors"
-          >
-            <span>{getFilterDisplayText(filter)}</span>
-            <ChevronDown className={`w-4 h-4 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
-          </button>
-          
-          {isFilterOpen && (
-            <>
-              <div 
-                className="fixed inset-0 z-40"
-                onClick={() => setIsFilterOpen(false)} 
-              />
-              
-              <div className="absolute top-full mt-2 w-full lg:w-48 bg-[#1A1A1A] border border-zinc-800 rounded-xl overflow-hidden z-50 shadow-lg">
-                {(['all', 'highest', 'lowest', 'yours'] as FilterType[]).map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => {
-                      setFilter(option);
-                      setIsFilterOpen(false);
-                    }}
-                    className={`w-full px-4 py-2.5 text-left hover:bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:text-black transition-colors ${
-                      filter === option 
-                        ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' 
-                        : 'text-white'
-                    }`}
-                  >
-                    {getFilterDisplayText(option)}
-                  </button>
-                ))}
-              </div>
-            </>
+        <div className="flex items-center justify-between gap-4">
+          <div className="relative">
+            <button
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className="w-full lg:w-48 h-10 px-4 rounded-xl bg-[#1A1A1A] border border-zinc-800 text-white flex items-center justify-between hover:border-[#C99733] transition-colors"
+            >
+              <span>{getFilterDisplayText(filter)}</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {isFilterOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsFilterOpen(false)} 
+                />
+                
+                <div className="absolute top-full mt-2 w-full lg:w-48 bg-[#1A1A1A] border border-zinc-800 rounded-xl overflow-hidden z-50 shadow-lg">
+                  {(['all', 'highest', 'lowest', 'yours'] as FilterType[]).map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => {
+                        setFilter(option);
+                        setIsFilterOpen(false);
+                      }}
+                      className={`w-full px-4 py-2.5 text-left hover:bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:text-black transition-colors ${
+                        filter === option 
+                          ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' 
+                          : 'text-white'
+                      }`}
+                    >
+                      {getFilterDisplayText(option)}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {selectedGames.length > 0 && (
+            <div className="flex items-center gap-4">
+              <span className="text-white">
+                {selectedGames.length} game{selectedGames.length > 1 ? 's' : ''} selected
+              </span>
+              <button
+                onClick={handlePlaySelected}
+                className="bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black px-6 py-2 rounded-full font-semibold hover:opacity-90 transition-opacity"
+              >
+                Play Selected Games
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -680,10 +738,34 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
               {currentGames.map((game) => (
                 <div 
                   key={game.id} 
-                  className={`relative pb-6 transition-opacity duration-300 ${
+                  className={`relative pb-6 transition-all duration-300 ${
                     isRefreshing ? 'opacity-80' : 'opacity-100'
+                  } ${selectedGames.find(g => g.id === game.id) ? 'ring-2 ring-[#C99733] rounded-2xl' : ''} ${
+                    !game.rival && 
+                    game.creator.toLowerCase() !== connectedAddress?.toLowerCase() && 
+                    canJoinGame(game.amount, game.token) ? 'cursor-pointer' : ''
                   }`}
+                  onClick={() => !game.rival && handleGameSelect(game)}
                 >
+                  {/* Selection Indicator - Only show for selectable games */}
+                  {!game.rival && 
+                   game.creator.toLowerCase() !== connectedAddress?.toLowerCase() && 
+                   canJoinGame(game.amount, game.token) && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <div className={`w-6 h-6 rounded-full border-2 ${
+                        selectedGames.find(g => g.id === game.id)
+                          ? 'bg-[#C99733] border-[#C99733]'
+                          : 'border-white/50'
+                      } transition-colors`}>
+                        {selectedGames.find(g => g.id === game.id) && (
+                          <div className="text-black text-xs font-bold flex items-center justify-center h-full">
+                            {selectedGames.findIndex(g => g.id === game.id) + 1}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Main box with players */}
                   <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg">
                     <div className="flex relative min-h-[160px]" style={{
@@ -770,7 +852,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </button>
                       ) : (
                         <button 
-                          onClick={() => handleJoinGame(game.id, game.amount, game.token)}
+                          onClick={() => handleGameSelect(game)}
                           disabled={!canJoinGame(game.amount, game.token)}
                           className={`w-full font-semibold py-1 px-2 rounded-full text-sm transition-colors shadow-lg border-8 border-black ${
                             canJoinGame(game.amount, game.token)
