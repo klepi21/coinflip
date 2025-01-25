@@ -6,7 +6,8 @@ import {
   Address, 
   ResultsParser, 
   ContractFunction,
-  BooleanValue
+  BooleanValue,
+  U64Value
 } from "@multiversx/sdk-core";
 import flipcoinAbi from '@/config/flipcoin.abi.json';
 
@@ -27,10 +28,11 @@ export type Game = {
 
 export function useGames() {
   const [games, setGames] = useState<Game[]>([]);
+  const [totalGamesPlayed, setTotalGamesPlayed] = useState<number>(0);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchGames = useCallback(async () => {
+  const fetchGamesAndTotal = useCallback(async () => {
     try {
       if (!isInitialLoading) {
         setIsRefreshing(true);
@@ -42,17 +44,27 @@ export function useGames() {
         abi: AbiRegistry.create(flipcoinAbi)
       });
 
-      const query = contract.createQuery({
-        func: new ContractFunction('getGames'),
-        args: [new BooleanValue(true)]
-      });
+      // Fetch both games and total count in parallel
+      const [gamesQuery, totalQuery] = await Promise.all([
+        contract.createQuery({
+          func: new ContractFunction('getGames'),
+          args: [new BooleanValue(true)]
+        }),
+        contract.createQuery({
+          func: new ContractFunction('getId'),
+        })
+      ]);
 
-      const queryResponse = await provider.queryContract(query);
+      const [gamesResponse, totalResponse] = await Promise.all([
+        provider.queryContract(gamesQuery),
+        provider.queryContract(totalQuery)
+      ]);
 
-      if (queryResponse?.returnData) {
+      // Process games
+      if (gamesResponse?.returnData) {
         const endpointDefinition = contract.getEndpoint('getGames');
         const resultParser = new ResultsParser();
-        const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
+        const results = resultParser.parseQueryResponse(gamesResponse, endpointDefinition);
         
         const gamesArray = results.values[0]?.valueOf();
         
@@ -109,6 +121,16 @@ export function useGames() {
           });
         }
       }
+
+      // Process total games
+      if (totalResponse?.returnData?.[0]) {
+        const endpointDefinition = contract.getEndpoint('getId');
+        const resultParser = new ResultsParser();
+        const results = resultParser.parseQueryResponse(totalResponse, endpointDefinition);
+        const totalGames = Number(results.values[0].valueOf().toString());
+        setTotalGamesPlayed(totalGames);
+      }
+
     } catch (error) {
       // Silent error handling to prevent UI disruption
     } finally {
@@ -118,19 +140,16 @@ export function useGames() {
   }, [isInitialLoading]);
 
   useEffect(() => {
-    fetchGames();
-    const interval = setInterval(fetchGames, 30000);
+    fetchGamesAndTotal();
+    const interval = setInterval(fetchGamesAndTotal, 30000);
     return () => clearInterval(interval);
-  }, [fetchGames]);
-
-  const refetchGames = () => {
-    fetchGames();
-  };
+  }, [fetchGamesAndTotal]);
 
   return {
     games,
+    totalGamesPlayed,
     isInitialLoading,
     isRefreshing,
-    refetchGames
+    refetchGames: fetchGamesAndTotal
   };
 } 
