@@ -23,6 +23,8 @@ import flipcoinAbi from '@/config/flipcoin.abi.json';
 import { useGames, Game } from '@/hooks/useGames';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { GlovesAnimation } from './GlovesAnimation';
+import { GameStatusModal } from './GameStatusModal';
+import { toast } from 'sonner';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -126,6 +128,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const [previousGames, setPreviousGames] = useState<Game[]>([]);
   const [disappearingGames, setDisappearingGames] = useState<Game[]>([]);
   const [totalGamesPlayed, setTotalGamesPlayed] = useState<number>(0);
+  const [transactionStep, setTransactionStep] = useState<'signing' | 'processing' | 'checking' | 'revealing'>('signing');
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
 
   // Track disappearing games with full game data
   useEffect(() => {
@@ -210,17 +215,15 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   };
 
   const handleJoinGame = async (gameId: number, amount: string, token: string) => {
-    try {
-      if (!connectedAddress) {
-        throw new Error('No connected address');
-      }
+    if (!connectedAddress) {
+      toast.error('Please connect your wallet first');
+      return;
+    }
 
-      setPopup({
-        isOpen: true,
-        message: 'Preparing transaction...',
-        isLoading: true,
-        gameResult: null
-      });
+    try {
+      setShowStatusModal(true);
+      setTransactionStep('signing');
+      setGameResult(null);
 
       const contract = new SmartContract({
         address: new Address(SC_ADDRESS),
@@ -244,32 +247,37 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       
       setPopup(prev => ({ ...prev, message: 'Confirming transaction...' }));
       
-      const { sessionId } = await sendTransactions({
+      const txResult = await sendTransactions({
         transactions: [tx],
         transactionsDisplayInfo: {
-          processingMessage: 'Processing join game transaction',
-          errorMessage: 'An error occurred during join game',
-          successMessage: 'Join game transaction successful'
+          processingMessage: 'Processing game transaction',
+          errorMessage: 'An error occurred during game transaction',
+          successMessage: 'Transaction successful'
         }
       });
 
-      if (!sessionId) {
+      console.log('Transaction Result:', {
+        sessionId: txResult.sessionId,
+        complete: txResult,
+      });
+
+      if (!txResult.sessionId) {
         throw new Error('Failed to get transaction session ID');
       }
 
-      setPopup(prev => ({ ...prev, message: 'Waiting for transaction to complete...' }));
-
       // Wait for initial blockchain confirmation
-      await new Promise(resolve => setTimeout(resolve, 20000));
+      await new Promise(resolve => setTimeout(resolve, 10000));
       await refreshAccount();
 
-      setPopup(prev => ({ ...prev, message: 'Checking game result...' }));
+      setTransactionStep('checking');
 
       // Additional wait to ensure smart contract state is updated
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 4000));
 
       let retries = 3;
       let winner = null;
+
+      setTransactionStep('revealing');
 
       while (retries > 0 && !winner) {
         try {
@@ -288,50 +296,26 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       }
 
       const isWinner = winner.toLowerCase() === connectedAddress?.toLowerCase();
-      
-      setPopup({
-        isOpen: true,
-        message: isWinner ? 'Congratulations! You won the game!' : 'You got FUDDED OUT!!',
-        isLoading: false,
-        gameResult: isWinner ? 'win' : 'lose'
-      });
+      setGameResult(isWinner ? 'win' : 'lose');
 
       // Refresh all necessary states
       await Promise.all([
         refreshAccount(),
-        refetchGames(),
-        fetchTotalGames()
+        refetchGames()
       ]);
-
-      // Close popup after result is shown
-      setTimeout(async () => {
-        setPopup(prev => ({ ...prev, isOpen: false }));
-        // Do one final refresh after popup closes
-        await Promise.all([
-          refreshAccount(),
-          refetchGames(),
-          fetchTotalGames()
-        ]);
-        // Refresh the entire page
-        window.location.reload();
-      }, 5000);
 
     } catch (error) {
-      console.error('Join game error:', error);
-      setPopup({
-        isOpen: true,
-        message: 'Something went wrong. Please check your transaction in Explorer.',
-        isLoading: false,
-        gameResult: null
-      });
-      
-      // Even on error, try to refresh states
-      await Promise.all([
-        refreshAccount(),
-        refetchGames(),
-        fetchTotalGames()
-      ]);
+      console.error('Join game error - Full error object:', error);
+      toast.error('Something went wrong. Please try again.');
+      setShowStatusModal(false);
     }
+  };
+
+  const handleCloseStatusModal = () => {
+    setShowStatusModal(false);
+    setGameResult(null);
+    // Refresh the page after modal is closed
+    window.location.reload();
   };
 
   const handleCancelGame = async (gameId: number) => {
@@ -785,61 +769,12 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         </div>
       )}
 
-      {/* Result Popup */}
-      {popup.isOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-300">
-          <div className="bg-[#1A1A1A] rounded-3xl p-8 max-w-md w-full mx-4 relative border border-zinc-800 shadow-[0_0_50px_-12px] shadow-[#C99733]/20">
-            {popup.isLoading ? (
-              <div className="flex flex-col items-center gap-6 py-4">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-full border-4 border-zinc-800"></div>
-                  <div className="absolute top-0 left-0 w-16 h-16 rounded-full border-4 border-[#C99733] border-t-transparent animate-spin"></div>
-                </div>
-                <div className="space-y-2 text-center">
-                  <h3 className="text-xl font-bold text-white">{popup.message}</h3>
-                  <p className="text-zinc-400 text-sm">Please wait while we process your transaction</p>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-6 py-4">
-                {popup.gameResult && (
-                  <div className="relative">
-                    <div className={`w-24 h-24 rounded-full flex items-center justify-center ${
-                      popup.gameResult === 'win' ? 'bg-[#C99733]/10' : 'bg-zinc-800/50'
-                    }`}>
-                      <span className="text-5xl animate-bounce">
-                        {popup.gameResult === 'win' ? '🎉' : '🎲'}
-                      </span>
-                    </div>
-                    {popup.gameResult === 'win' && (
-                      <div className="absolute -inset-2 rounded-full border-2 border-[#C99733]/30 animate-pulse"></div>
-                    )}
-                  </div>
-                )}
-                <div className="space-y-2 text-center">
-                  <h3 className={`text-2xl font-bold ${
-                    popup.gameResult === 'win' ? 'text-[#FFD163]' : 'text-white'
-                  }`}>
-                    {popup.gameResult === 'win' 
-                      ? 'Congratulations! You Won!' 
-                      : popup.gameResult === 'lose'
-                      ? 'Better Luck Next Time!'
-                      : 'Transaction Status'}
-                  </h3>
-                  <p className="text-zinc-400">{popup.message}</p>
-                </div>
-                <button
-                  onClick={() => setPopup(prev => ({ ...prev, isOpen: false }))}
-                  className="mt-4 group relative px-8 py-3 bg-[#1A1A1A] text-white font-semibold rounded-full overflow-hidden transition-all hover:scale-105"
-                >
-                  <div className="absolute inset-0 w-0 bg-gradient-to-r from-[#C99733] to-[#FFD163] transition-all duration-300 ease-out group-hover:w-full"></div>
-                  <span className="relative group-hover:text-black">Close</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <GameStatusModal
+        isOpen={showStatusModal}
+        onClose={handleCloseStatusModal}
+        currentStep={transactionStep}
+        gameResult={gameResult}
+      />
     </div>
   );
 }
