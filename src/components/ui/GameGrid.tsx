@@ -528,7 +528,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{ marginTop: '-80px' }}>
       <Toaster 
         theme="dark" 
         position="bottom-right"
