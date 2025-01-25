@@ -158,7 +158,7 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletModalProps) => {
                       {...commonProps}
                       buttonClassName="login-button"
                       wrapContentInsideModal={true}
-                      showScamPhishingAlert={false}
+                      showScamPhishingAlert={true}
                       hideButtonWhenModalOpens={false}
                       showProgressBar={false}
                       modalClassName="ledger-login-modal"
