@@ -24,7 +24,14 @@ export function Navbar() {
 
   const navItems = [
     { name: 'Fight', url: '/', icon: Coins },
-    { name: 'Vote', url: '/vote', icon: Vote }
+    { name: 'Vote', url: '/vote', icon: Vote },
+    { 
+      name: 'Stats', 
+      url: '/stats', 
+      icon: Vote, 
+      disabled: true,
+      badge: 'SOON'
+    }
   ];
 
   return (
@@ -71,19 +78,35 @@ export function Navbar() {
           className="absolute top-[60px] left-0 right-0 bg-black/95 backdrop-blur-lg border-t border-white/10 p-4 space-y-4 shadow-xl md:hidden"
         >
           {navItems.map((item) => (
-            <Link
-              key={item.name}
-              href={item.url}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                pathname === item.url
-                  ? 'bg-white/10 text-white font-medium'
-                  : 'text-white/80 hover:text-white hover:bg-white/5'
-              }`}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <item.icon className="h-5 w-5" />
-              <span className="font-medium">{item.name}</span>
-            </Link>
+            <div key={item.name} className="relative">
+              <Link
+                href={item.url}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-colors",
+                  pathname === item.url
+                    ? 'bg-white/10 text-white font-medium'
+                    : 'text-white/80 hover:text-white hover:bg-white/5',
+                  item.disabled && "cursor-not-allowed text-zinc-500 pointer-events-none"
+                )}
+                onClick={(e) => {
+                  if (item.disabled) {
+                    e.preventDefault();
+                    return;
+                  }
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                <item.icon className="h-5 w-5" />
+                <span className="font-medium">{item.name}</span>
+                {item.badge && (
+                  <div className="absolute -top-1 -right-2">
+                    <div className="bg-[#C99733] text-black text-[10px] px-1 rounded-full">
+                      {item.badge}
+                    </div>
+                  </div>
+                )}
+              </Link>
+            </div>
           ))}
           
           <div className="px-4 pt-2">

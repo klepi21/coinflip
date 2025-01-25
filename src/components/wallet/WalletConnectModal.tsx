@@ -85,6 +85,7 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletModalProps) => {
                   title=""
                   lead=""
                   legacyMessage=""
+                  
                   innerWalletConnectComponentsClasses={{
                     containerButtonClassName: 'xportal-login-button',
                     containerTitleClassName: 'hidden',
@@ -105,7 +106,7 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletModalProps) => {
                     }
                   }}
                   {...commonProps}
-                  showScamPhishingAlert={false}
+                  showScamPhishingAlert={true}
                   wrapContentInsideModal={false}
                 />
 

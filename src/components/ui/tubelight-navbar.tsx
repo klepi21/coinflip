@@ -104,7 +104,7 @@ export function TubelightNav() {
       <div className="absolute inset-x-1 h-8 top-1/2 -translate-y-1/2">
         <div
           className={`absolute h-full bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full transition-all duration-300 ${
-            pathname === '/' ? 'left-0 right-[50%]' : 'left-[50%] right-0'
+            pathname === '/' ? 'left-0 right-[66%]' : pathname === '/vote' ? 'left-[33%] right-[33%]' : 'left-[66%] right-0'
           }`}
         />
       </div>
@@ -125,6 +125,20 @@ export function TubelightNav() {
       >
         Vote
       </Link>
+      <div className="relative">
+        <Link
+          href="/stats"
+          className="relative z-10 px-6 py-2 text-sm font-medium text-zinc-500 cursor-not-allowed"
+          onClick={(e) => e.preventDefault()}
+        >
+          Stats
+          <div className="absolute -top-1 -right-1">
+            <div className="bg-[#C99733] text-black text-[10px] px-1 rounded-full">
+              SOON
+            </div>
+          </div>
+        </Link>
+      </div>
     </nav>
   );
 } 
