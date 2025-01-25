@@ -119,7 +119,7 @@ export default function Create() {
       const { sessionId: newSessionId } = await sendTransactions({
         transactions: [{
           value: '0',
-          data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${rawAmount.toString(16)}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
+          data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${rawAmount.toString(16).padStart(64, '0')}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
           receiver: SC_ADDRESS,
           gasLimit: 10000000 * multiplier,
         }],
