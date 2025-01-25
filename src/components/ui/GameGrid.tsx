@@ -24,7 +24,7 @@ import { useGames, Game } from '@/hooks/useGames';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { GlovesAnimation } from './GlovesAnimation';
 import { GameStatusModal } from './GameStatusModal';
-import { toast } from 'sonner';
+import { toast, Toaster } from 'sonner';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -315,12 +315,19 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
   const handleCancelGame = async (gameId: number) => {
     try {
-      setPopup({
-        isOpen: true,
-        message: 'Preparing to cancel game...',
-        isLoading: true,
-        gameResult: null
-      });
+      // Show loading toast
+      const loadingToastId = toast.loading(
+        <div className="flex flex-col space-y-2">
+          <p className="font-medium text-white">Cancelling game...</p>
+          <p className="text-sm text-zinc-400">Please wait while we process your request</p>
+        </div>,
+        {
+          style: {
+            background: '#1A1A1A',
+            border: '1px solid rgba(201, 151, 51, 0.1)',
+          }
+        }
+      );
 
       const contract = new SmartContract({
         address: new Address(SC_ADDRESS),
@@ -332,14 +339,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         .withSender(new Address(connectedAddress))
         .withGasLimit(10000000)
         .withChainID(network.chainId);
-
         
       const tx = transaction.buildTransaction();
       
-      
-      setPopup(prev => ({ ...prev, message: 'Confirming cancellation...' }));
-      
-      const { sessionId } = await sendTransactions({
+      const { sessionId, error } = await sendTransactions({
         transactions: [tx],
         transactionsDisplayInfo: {
           processingMessage: 'Processing game cancellation',
@@ -348,40 +351,79 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         }
       });
 
-      if (!sessionId) {
-        throw new Error('Failed to get transaction session ID');
+      if (error) {
+        toast.dismiss(loadingToastId);
+        throw new Error(error);
       }
 
-      setPopup(prev => ({ ...prev, message: 'Waiting for cancellation to complete...' }));
-
-      // Wait for blockchain confirmation
-      await new Promise(resolve => setTimeout(resolve, 8000));
+      // Wait for initial blockchain confirmation
+      await new Promise(resolve => setTimeout(resolve, accountInfo.shard === 1 ? 10000 : 25000));
       await refreshAccount();
 
-      setPopup({
-        isOpen: true,
-        message: 'Game cancelled successfully!',
-        isLoading: false,
-        gameResult: null
-      });
+      // Additional wait to ensure smart contract state is updated
+      await new Promise(resolve => setTimeout(resolve, 4000));
 
-      // Close popup after 3 seconds
-      setTimeout(() => {
-        setPopup(prev => ({ ...prev, isOpen: false }));
-      }, 3000);
+      // Dismiss loading toast and show success toast
+      toast.dismiss(loadingToastId);
+      toast.success(
+        <div className="flex flex-col space-y-2">
+          <div className="p-4">
+            <p className="text-sm font-medium text-white">Game Cancelled!</p>
+            <p className="mt-1 text-sm text-zinc-400">Your game has been cancelled successfully.</p>
+          </div>
+          <div className="border-t border-zinc-800 p-2">
+            <button
+              onClick={() => refetchGames()}
+              className="w-full p-2 text-sm font-medium text-[#C99733] hover:text-[#FFD163] transition-colors rounded-md hover:bg-zinc-800/50"
+            >
+              Refresh Games
+            </button>
+          </div>
+        </div>,
+        {
+          style: {
+            background: '#1A1A1A',
+            border: '1px solid rgba(201, 151, 51, 0.1)',
+          },
+          duration: 5000,
+        }
+      );
 
-      // Refresh games and total games count
-      refetchGames();
-      fetchTotalGames(); // Refresh total games after cancellation
+      // Refresh games
+      await refetchGames();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Cancel game error:', error);
-      setPopup({
-        isOpen: true,
-        message: 'Something went wrong. Please check your transaction in Explorer.',
-        isLoading: false,
-        gameResult: null
-      });
+      // Don't show error toast since the transaction might still be processing
+      if (error?.message?.includes('Request error on url')) {
+        toast.info(
+          <div className="flex flex-col space-y-2">
+            <p className="font-medium text-white">Transaction Processing</p>
+            <p className="text-sm text-zinc-400">Please wait for network confirmation</p>
+          </div>,
+          {
+            style: {
+              background: '#1A1A1A',
+              border: '1px solid rgba(201, 151, 51, 0.1)',
+            }
+          }
+        );
+        // Still refresh games as the transaction might have gone through
+        await refetchGames();
+      } else {
+        toast.error(
+          <div className="flex flex-col space-y-2">
+            <p className="font-medium text-white">Error</p>
+            <p className="text-sm text-zinc-400">Something went wrong. Please try again.</p>
+          </div>,
+          {
+            style: {
+              background: '#1A1A1A',
+              border: '1px solid rgba(201, 151, 51, 0.1)',
+            }
+          }
+        );
+      }
     }
   };
 
@@ -445,6 +487,20 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
   return (
     <div className="space-y-6">
+      <Toaster 
+        theme="dark" 
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: '#1A1A1A',
+            border: '1px solid rgba(201, 151, 51, 0.1)',
+            color: 'white',
+            zIndex: 200,
+          },
+          className: 'my-toast-class',
+        }}
+        richColors
+      />
       {/* Stats and Filter Row */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex gap-2 lg:gap-4 text-sm lg:text-base">
