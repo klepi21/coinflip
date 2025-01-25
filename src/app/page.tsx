@@ -69,8 +69,8 @@ export default function Home() {
         {/* Title Section */}
         <div className="flex flex-col items-center mb-12">
           <div className="flex flex-col items-center w-full">
-            <p className="text-lg md:text-2xl font-semibold text-white mt-4 text-center">
-              Settle the Fight, One Battle at a Time!
+            <p className="text-lg md:text-4xl font-semibold text-white mt-4 text-center">
+               Squash Beefs, One Smush at a Time!
             </p>
           </div>
         </div>
@@ -90,7 +90,7 @@ export default function Home() {
       </div>
       {/* Footer Section */}
       <div className="relative z-20 bg-transparent text-center text-white/80 mt-auto">
-        <p className="max-w-2xl mx-auto mb-2">Engage in a provably fair, peer-to-peer gaming experience. Please ensure you are at least 18 years old and comply with your local regulations.</p>
+        <p className="max-w-2xl mx-auto mb-2 text-sm z-10">Engage in a provably fair, peer-to-peer gaming experience. Please ensure you are at least 18 years old and comply with your local regulations.</p>
       </div>
     </main>
   );
