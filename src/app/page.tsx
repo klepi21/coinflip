@@ -94,7 +94,7 @@ export default function Home() {
           <img src="/img/SRBLABS.png" alt="SRBLABS Logo" className="w-20 h-auto mr-4" />
           <img src="/img/bodlogo.svg" alt="BOD Logo" className="w-20 h-auto ml-4" />
         </div>
-        <p className="max-w-2xl mx-auto mb-2 text-white/80">Engage in a provably fair, peer-to-peer gaming experience. Please ensure you are at least 18 years old and comply with your local regulations.</p>
+        <p className="max-w-full mx-auto mb-2 text-xs text-white/80">Peer-to-peer gaming for true degens—provably fair, unapologetically risky, and absolutely addictive. Just don’t forget: 18+ and don't get rugged by your local laws.</p>
       </div>
     </main>
   );
