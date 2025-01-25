@@ -119,9 +119,9 @@ export default function Create() {
       const { sessionId: newSessionId } = await sendTransactions({
         transactions: [{
           value: '0',
-          data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${rawAmount.toString(16).padStart(64, '0')}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
+          data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${rawAmount.toString(16)}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
           receiver: SC_ADDRESS,
-          gasLimit: 10000000 * multiplier,
+          gasLimit: 10000000,
         }],
         transactionsDisplayInfo: {
           processingMessage: `Creating ${multiplier} game${multiplier > 1 ? 's' : ''} with ${totalAmount} ${selectedToken}...`,
@@ -177,9 +177,9 @@ export default function Create() {
       action: handleCreateGame,
       text: 'Create Battle'
     };
-    if (amountValue < 1) return {
+    if (amountValue < 100) return {
       disabled: true,
-      message: `Minimum amount is 1 ${selectedToken}`,
+      message: `Minimum amount is 100 ${selectedToken}`,
       action: handleCreateGame,
       text: 'Create Battle'
     };
