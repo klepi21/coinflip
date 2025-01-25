@@ -161,7 +161,7 @@ export default function Vote() {
       <RetroGrid />
       <Toaster 
         theme="dark" 
-        position="top-center"
+        position="bottom-right"
         toastOptions={{
           style: {
             background: '#1A1A1A',
