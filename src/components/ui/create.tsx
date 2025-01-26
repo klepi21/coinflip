@@ -177,9 +177,9 @@ export default function Create() {
       action: handleCreateGame,
       text: 'Create Battle'
     };
-    if (amountValue < 0.5) return {
+    if (amountValue < 500) return {
       disabled: true,
-      message: `Minimum amount is 100 ${selectedToken}`,
+      message: `Minimum amount is 500 ${selectedToken}`,
       action: handleCreateGame,
       text: 'Create Battle'
     };
@@ -343,7 +343,7 @@ export default function Create() {
                             }
                           }}
                           step="1"
-                          min="1"
+                          min="500"
                           className="w-32 bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
                           placeholder="Enter amount"
                         />
