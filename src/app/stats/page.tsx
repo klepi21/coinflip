@@ -27,6 +27,8 @@ interface PlayerScore {
 
 export default function Stats() {
   const [scores, setScores] = useState<PlayerScore[]>([]);
+  const [totalWins, setTotalWins] = useState(0);
+  const [totalLosses, setTotalLosses] = useState(0);
   const { network } = useGetNetworkConfig();
   const { address } = useGetAccountInfo();
 
@@ -54,6 +56,19 @@ export default function Stats() {
       }));
 
       setScores(scoreboardData);
+
+      // Calculate totals
+      const totals = scoreboardData.reduce(
+        (acc: { wins: number; losses: number }, curr: PlayerScore) => ({
+          wins: acc.wins + curr.wins,
+          losses: acc.losses + curr.losses
+        }),
+        { wins: 0, losses: 0 }
+      );
+
+      setTotalWins(totals.wins);
+      setTotalLosses(totals.losses);
+
     } catch (error) {
       console.error('Error fetching scoreboard:', error);
     }
@@ -102,6 +117,18 @@ export default function Stats() {
                 <p className="text-zinc-400">Player performance overview</p>
               </div>
 
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-zinc-800/50 rounded-xl p-4">
+                  <h3 className="text-sm font-medium text-zinc-400">Total Wins</h3>
+                  <p className="text-2xl font-bold text-[#C99733]">{totalWins}</p>
+                </div>
+                <div className="bg-zinc-800/50 rounded-xl p-4">
+                  <h3 className="text-sm font-medium text-zinc-400">Total Losses</h3>
+                  <p className="text-2xl font-bold text-[#C99733]">{totalLosses}</p>
+                </div>
+              </div>
+
               {/* Scoreboard Table */}
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -118,19 +145,11 @@ export default function Stats() {
                       const winRate = score.wins + score.losses > 0
                         ? ((score.wins / (score.wins + score.losses)) * 100).toFixed(1)
                         : '0.0';
-                      const isLuckyOne = Number(winRate) >= 60;
 
                       return (
                         <tr key={score.address} className="border-b border-zinc-800/50">
                           <td className="py-3 px-4 text-white font-medium">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm">{score.address.slice(0, 8)}...{score.address.slice(-4)}</span>
-                              {isLuckyOne && (
-                                <span className="px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-500 rounded-full border border-red-500/20">
-                                  Lucky One
-                                </span>
-                              )}
-                            </div>
+                            <span className="text-sm">{score.address.slice(0, 8)}...{score.address.slice(-4)}</span>
                           </td>
                           <td className="py-3 px-4 text-center text-[#C99733]">{score.wins}</td>
                           <td className="py-3 px-4 text-center text-zinc-400">{score.losses}</td>

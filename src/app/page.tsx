@@ -83,7 +83,7 @@ export default function Home() {
           </div>
 
           {/* Right Half - Game Grid */}
-          <div className="w-full md:w-2/3">
+          <div className="w-full md:w-2/3" style={{ marginTop: '-80px' }}>
             <GameGridDynamic onActiveGamesChange={setActiveGames} />
           </div>
         </div>
