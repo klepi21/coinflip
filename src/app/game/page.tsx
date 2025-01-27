@@ -108,7 +108,6 @@ export default function GamePage() {
 
     } catch (error) {
       console.error('Join game error:', error);
-      toast.error('Something went wrong. Please try again.');
       setShowStatusModal(false);
     }
   };

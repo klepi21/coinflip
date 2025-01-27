@@ -68,14 +68,12 @@ export const WalletButton = ({ className }: WalletButtonProps) => {
       {/* Desktop Dropdown - Only show on desktop */}
       {isDropdownOpen && (
         <div className="absolute hidden md:block top-full right-0 mt-2 w-48 bg-[#1A1A1A] border border-zinc-800 rounded-xl overflow-hidden shadow-xl z-50">
-          <a 
-            href={`https://explorer.multiversx.com/accounts/${address}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button 
+            onClick={() => window.open(`https://explorer.multiversx.com/accounts/${address}`, '_blank')}
             className="w-full px-3 py-2.5 text-left text-sm text-white hover:bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:text-black transition-colors"
           >
             Open in Explorer
-          </a>
+          </button>
           <button 
             onClick={handleLogoutClick}
             className="w-full px-3 py-2.5 text-left text-sm text-white hover:bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:text-black transition-colors"

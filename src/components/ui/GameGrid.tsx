@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, LayoutGrid, Grid2X2, Grid3X3 } from "lucide-react";
 import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
 import { 
   AbiRegistry, 
@@ -103,6 +103,8 @@ type PopupState = {
 
 type FilterType = 'all' | 'highest' | 'lowest' | 'yours';
 
+type GridView = '2x2' | '3x3';
+
 type Props = {
   onActiveGamesChange?: (count: number) => void;
 };
@@ -111,6 +113,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState<FilterType>('all');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedGames, setSelectedGames] = useState<Game[]>([]);
+  const [gridView, setGridView] = useState<GridView>('3x3');
   const [popup, setPopup] = useState<PopupState>({
     isOpen: false,
     message: '',
@@ -131,7 +135,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const [totalGamesPlayed, setTotalGamesPlayed] = useState<number>(0);
   const [transactionStep, setTransactionStep] = useState<'signing' | 'processing' | 'checking' | 'revealing'>('signing');
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [gameResult, setGameResult] = useState<'win' | 'lose' | null>(null);
+  const [gameResult, setGameResult] = useState<GameResult>(null);
 
   // Track disappearing games with full game data
   useEffect(() => {
@@ -303,7 +307,6 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
     } catch (error) {
       console.error('Join game error:', error);
-      toast.error('Something went wrong. Please try again.');
       setShowStatusModal(false);
     }
   };
@@ -442,6 +445,11 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     }
   };
 
+  // Adjust games per page based on grid view
+  const getGamesPerPage = () => {
+    return gridView === '2x2' ? 6 : 9;
+  };
+
   // Filter and sort games based on selection
   const filteredGames = (() => {
     let filtered = games;
@@ -462,6 +470,19 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     }
   })();
 
+  // Pagination
+  const gamesPerPage = getGamesPerPage();
+  const totalPages = Math.ceil(filteredGames.length / gamesPerPage);
+  const currentGames = filteredGames.slice(
+    (currentPage - 1) * gamesPerPage,
+    currentPage * gamesPerPage
+  );
+
+  // Reset to first page when changing grid view
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [gridView]);
+
   // Get display text for current filter
   const getFilterDisplayText = (filterType: FilterType) => {
     switch (filterType) {
@@ -471,11 +492,6 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       case 'yours': return 'Your Games';
     }
   };
-
-  const totalPages = Math.ceil(filteredGames.length / GAMES_PER_PAGE);
-  const startIndex = (currentPage - 1) * GAMES_PER_PAGE;
-  const endIndex = startIndex + GAMES_PER_PAGE;
-  const currentGames = filteredGames.slice(startIndex, endIndex);
 
   const handlePrevPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -512,57 +528,103 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
           </div>
         </div>
         
-        {/* Filter Dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className="w-full lg:w-48 h-10 px-4 rounded-xl bg-[#1A1A1A] border border-zinc-800 text-white flex items-center justify-between hover:border-[#C99733] transition-colors"
-          >
-            <span>{getFilterDisplayText(filter)}</span>
-            <ChevronDown className={`w-4 h-4 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
-          </button>
-          
-          {isFilterOpen && (
-            <>
-              <div 
-                className="fixed inset-0 z-40"
-                onClick={() => setIsFilterOpen(false)} 
-              />
-              
-              <div className="absolute top-full mt-2 w-full lg:w-48 bg-[#1A1A1A] border border-zinc-800 rounded-xl overflow-hidden z-50 shadow-lg">
-                {(['all', 'highest', 'lowest', 'yours'] as FilterType[]).map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => {
-                      setFilter(option);
-                      setIsFilterOpen(false);
-                    }}
-                    className={`w-full px-4 py-2.5 text-left hover:bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:text-black transition-colors ${
-                      filter === option 
-                        ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' 
-                        : 'text-white'
-                    }`}
-                  >
-                    {getFilterDisplayText(option)}
-                  </button>
-                ))}
-              </div>
-            </>
+        {/* Filter and View Controls */}
+        <div className="flex items-center justify-between gap-4">
+          {/* Grid View Toggle */}
+          <div className="flex items-center gap-2 bg-[#1A1A1A] rounded-xl p-1">
+            <button
+              onClick={() => setGridView('2x2')}
+              className={`p-2 rounded-lg transition-colors ${
+                gridView === '2x2' 
+                  ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' 
+                  : 'text-white hover:text-[#C99733]'
+              }`}
+              title="2 Columns (6 games)"
+            >
+              <Grid2X2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setGridView('3x3')}
+              className={`p-2 rounded-lg transition-colors ${
+                gridView === '3x3' 
+                  ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' 
+                  : 'text-white hover:text-[#C99733]'
+              }`}
+              title="3 Columns (9 games)"
+            >
+              <Grid3X3 className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Existing Filter Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className="w-full lg:w-48 h-10 px-4 rounded-xl bg-[#1A1A1A] border border-zinc-800 text-white flex items-center justify-between hover:border-[#C99733] transition-colors"
+            >
+              <span>{getFilterDisplayText(filter)}</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {isFilterOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsFilterOpen(false)} 
+                />
+                
+                <div className="absolute top-full mt-2 w-full lg:w-48 bg-[#1A1A1A] border border-zinc-800 rounded-xl overflow-hidden z-50 shadow-lg">
+                  {(['all', 'highest', 'lowest', 'yours'] as FilterType[]).map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => {
+                        setFilter(option);
+                        setIsFilterOpen(false);
+                      }}
+                      className={`w-full px-4 py-2.5 text-left hover:bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:text-black transition-colors ${
+                        filter === option 
+                          ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' 
+                          : 'text-white'
+                      }`}
+                    >
+                      {getFilterDisplayText(option)}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {selectedGames.length > 0 && (
+            <div className="flex items-center gap-4">
+              <span className="text-white">
+                {selectedGames.length} game{selectedGames.length > 1 ? 's' : ''} selected
+              </span>
+              <button
+                className="bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black px-6 py-2 rounded-full font-semibold hover:opacity-90 transition-opacity"
+              >
+                Play Selected Games
+              </button>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Games Grid with Fixed Height Container */}
-      <div className="min-h-[600px]">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Games Grid with Dynamic Layout */}
+      <div className="min-h-[600px] flex flex-col">
+        <div className={`grid gap-6 flex-1 ${
+          gridView === '2x2' 
+            ? 'grid-cols-1 lg:grid-cols-2' 
+            : 'grid-cols-1 lg:grid-cols-3'
+        }`}>
           {isInitialLoading ? (
             // Show placeholder cards during initial load
             Array.from({ length: 6 }).map((_, index) => (
               <div key={`placeholder-${index}`} className="relative pb-6">
                 <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg animate-pulse">
-                  <div className="flex relative min-h-[160px]" style={{
+                  <div className="flex relative min-h-[130px]" style={{
                     backgroundImage: "url('/img/fightback.jpg')",
-                    backgroundSize: 'cover',
+                    backgroundSize: 'auto',
                     backgroundPosition: 'center'
                   }}>
                     {/* Left Player Placeholder */}
@@ -680,16 +742,18 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
               {currentGames.map((game) => (
                 <div 
                   key={game.id} 
-                  className={`relative pb-6 transition-opacity duration-300 ${
+                  className={`relative pb-6 transition-all duration-300 ${
                     isRefreshing ? 'opacity-80' : 'opacity-100'
-                  }`}
+                  } ${selectedGames.find(g => g.id === game.id) ? 'ring-2 ring-[#C99733] rounded-2xl' : ''}`}
                 >
                   {/* Main box with players */}
                   <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg">
                     <div className="flex relative min-h-[160px]" style={{
                       backgroundImage: "url('/img/fightback.jpg')",
-                      backgroundSize: 'cover',
+                      backgroundSize: 'contain',
+                      backgroundRepeat: 'no-repeat',
                       backgroundPosition: 'center',
+                      backgroundColor: '#D5D5D5',
                     }}>
                       {/* Left Player (Creator) */}
                       <div className="flex-1 p-4 flex flex-col items-center justify-center">
@@ -789,36 +853,36 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
             </>
           )}
         </div>
-      </div>
 
-      {/* Fixed Position Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-4 sticky bottom-6">
-          <div className="bg-[#1A1A1A] rounded-full px-6 py-2 flex items-center gap-4 border border-zinc-800">
-            <button
-              onClick={handlePrevPage}
-              disabled={currentPage === 1}
-              className={`p-2 rounded-full transition-colors ${
-                currentPage === 1 ? 'text-zinc-600' : 'text-white hover:bg-zinc-800'
-              }`}
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-            <span className="text-white font-medium">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-              className={`p-2 rounded-full transition-colors ${
-                currentPage === totalPages ? 'text-zinc-600' : 'text-white hover:bg-zinc-800'
-              }`}
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
+        {/* Bottom Fixed Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-8 flex justify-center items-center gap-4">
+            <div className="bg-[#1A1A1A] rounded-full px-6 py-2 flex items-center gap-4 border border-zinc-800">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-full transition-colors ${
+                  currentPage === 1 ? 'text-zinc-600' : 'text-white hover:bg-zinc-800'
+                }`}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <span className="text-white font-medium">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-full transition-colors ${
+                  currentPage === totalPages ? 'text-zinc-600' : 'text-white hover:bg-zinc-800'
+                }`}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <GameStatusModal
         isOpen={showStatusModal}
