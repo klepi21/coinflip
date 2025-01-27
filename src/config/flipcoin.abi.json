@@ -130,7 +130,6 @@
                 "Optional arguments:",
                 "- `opt_only_active`: If set true, only returns the games that are still open. Otherwise, returns all games.",
                 "- `opt_creator`: If set, only returns the games created by the specified player. Otherwise, returns all games.",
-                "- `opt_max_results`: If set, limits the number of games returned. Otherwise, returns the latest 50 games.",
                 "",
                 "The returned type is a Game Structure, which contains the following fields:",
                 "- `id`: The game's unique identifier",
@@ -152,11 +151,6 @@
                 {
                     "name": "opt_creator",
                     "type": "optional<Address>",
-                    "multi_arg": true
-                },
-                {
-                    "name": "opt_max_results",
-                    "type": "optional<u32>",
                     "multi_arg": true
                 }
             ],
@@ -284,6 +278,26 @@
             "outputs": []
         },
         {
+            "name": "withdraw",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                },
+                {
+                    "name": "nonce",
+                    "type": "u64"
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": []
+        },
+        {
             "name": "setState",
             "onlyOwner": true,
             "mutability": "mutable",
@@ -371,7 +385,7 @@
             "outputs": []
         },
         {
-            "name": "setVotingCost",
+            "name": "addVotingCost",
             "onlyOwner": true,
             "mutability": "mutable",
             "inputs": [
@@ -384,6 +398,27 @@
                     "type": "BigUint"
                 }
             ],
+            "outputs": []
+        },
+        {
+            "name": "removeVotingCost",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Adds a new voting option."
+            ],
+            "name": "addVotingOption",
+            "mutability": "mutable",
+            "inputs": [],
             "outputs": []
         },
         {
@@ -402,7 +437,7 @@
         },
         {
             "docs": [
-                "Ends the current voting session and transfers the funds to the caller."
+                "Ends the current voting session."
             ],
             "name": "endVoting",
             "mutability": "mutable",

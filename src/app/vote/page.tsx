@@ -18,9 +18,31 @@ import { toast, Toaster } from "sonner";
 import flipcoinAbi from '@/config/flipcoin.abi.json';
 import { useWallet } from '@/context/WalletContext';
 import { RetroGrid } from '@/components/ui/retro-grid';
+import Image from "next/image";
+import { useTokenBalance } from '@/hooks/useTokenBalance';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
+const RARE_IDENTIFIER = 'RARE-99e8b0';
+const BOD_IDENTIFIER = 'BOD-204877';
+
+// Token data with images
+const TOKENS = {
+  RARE: {
+    id: 'RARE',
+    name: 'RARE',
+    image: `https://tools.multiversx.com/assets-cdn/tokens/${RARE_IDENTIFIER}/icon.svg`,
+    decimals: 18,
+    voteAmount: '10'
+  },
+  BOD: {
+    id: 'BOD',
+    name: 'BOD',
+    image: `https://tools.multiversx.com/assets-cdn/tokens/${BOD_IDENTIFIER}/icon.svg`,
+    decimals: 18,
+    voteAmount: '10000'
+  }
+};
 
 interface VoteOption {
   option: number;
@@ -30,12 +52,15 @@ interface VoteOption {
 export default function Vote() {
   const [votes, setVotes] = useState<VoteOption[]>([]);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD'>('RARE');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const accountInfo = useGetAccountInfo();
   const [totalVotes, setTotalVotes] = useState(0);
   const { network } = useGetNetworkConfig();
   const { address } = useGetAccountInfo();
   const { isLoggedIn } = useWallet();
+  const { balance: rareBalance, isLoading: isLoadingRare } = useTokenBalance(address || '', RARE_IDENTIFIER);
+  const { balance: bodBalance, isLoading: isLoadingBod } = useTokenBalance(address || '', BOD_IDENTIFIER);
 
   const fetchVotes = async () => {
     try {
@@ -78,16 +103,25 @@ export default function Vote() {
       return;
     }
 
+    // Check balance based on selected token
+    const currentBalance = selectedToken === 'RARE' ? rareBalance : bodBalance;
+    const requiredAmount = Number(TOKENS[selectedToken].voteAmount);
+    
+    if (currentBalance < requiredAmount) {
+      toast.error(`Insufficient ${selectedToken} balance. You need ${requiredAmount} ${selectedToken} to vote.`);
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       
-      // RARE token identifier and amount (10 RARE)
-      const rareTokenId = 'RARE-99e8b0';
-      const amount = '10'; // Just 10 RARE
+      const tokenId = selectedToken === 'RARE' ? RARE_IDENTIFIER : BOD_IDENTIFIER;
+      const amount = TOKENS[selectedToken].voteAmount;
       
       // Create ESDTTransfer transaction data
-      const encodedTokenId = Buffer.from(rareTokenId).toString('hex');
-      const data = `ESDTTransfer@${encodedTokenId}@8ac7230489e80000@766f7465@0${selectedOption.toString(16)}`;
+      const encodedTokenId = Buffer.from(tokenId).toString('hex');
+      const rawAmount = (BigInt(amount) * BigInt(10 ** 18)).toString(16).padStart(64, '0');
+      const data = `ESDTTransfer@${encodedTokenId}@${rawAmount}@766f7465@0${selectedOption.toString(16)}`;
 
       const transaction = {
         value: '0',
@@ -181,8 +215,34 @@ export default function Vote() {
             <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl p-4 sm:p-6 space-y-4 sm:space-y-6">
               <div className="space-y-2">
                 <h2 className="text-xl sm:text-2xl font-bold text-white">Who do you want the next fighters to be?</h2>
-                <p className="text-sm sm:text-base text-zinc-400">Select your preferred fighters. You can vote as many times as you like!</p>
-                <p className="text-xs sm:text-sm text-[#C99733] mt-2">Each vote costs 10 RARE tokens</p>
+                <p className="text-sm sm:text-base text-zinc-400">Select your preferred fighters and token to vote with.</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <p className="text-xs sm:text-sm text-[#C99733]">Vote with:</p>
+                  <div className="flex gap-2">
+                    {Object.entries(TOKENS).map(([key, token]) => (
+                      <button
+                        key={key}
+                        onClick={() => setSelectedToken(key as 'RARE' | 'BOD')}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
+                          selectedToken === key 
+                            ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black text-black' 
+                            : 'border-zinc-800 hover:border-[#C99733] text-white'
+                        }`}
+                      >
+                        <div className="w-5 h-5 rounded-full overflow-hidden">
+                          <Image
+                            src={token.image}
+                            alt={token.name}
+                            width={20}
+                            height={20}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <span className="font-medium">{token.voteAmount} {token.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-3 sm:space-y-4">
@@ -245,13 +305,24 @@ export default function Vote() {
                     : isSubmitting
                     ? 'Submitting...'
                     : selectedOption
-                    ? 'Submit Vote'
+                    ? `Vote with ${TOKENS[selectedToken].voteAmount} ${selectedToken}`
                     : 'Select an Option'}
                 </button>
               </div>
 
               <div className="text-center text-sm text-zinc-500 relative z-40">
                 Total Votes: {totalVotes}
+              </div>
+
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-zinc-500">Balance:</span>
+                {isLoadingRare || isLoadingBod ? (
+                  <span className="text-zinc-400">Loading...</span>
+                ) : (
+                  <span className="text-white font-medium">
+                    {(selectedToken === 'RARE' ? rareBalance : bodBalance).toFixed(2)} {selectedToken}
+                  </span>
+                )}
               </div>
             </div>
           </motion.div>
