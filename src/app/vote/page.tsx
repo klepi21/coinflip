@@ -115,6 +115,20 @@ export default function Vote() {
     try {
       setIsSubmitting(true);
       
+      // Show loading toast
+      const loadingToastId = toast.loading(
+        <div className="flex flex-col space-y-2">
+          <p className="font-medium text-white">Processing Vote...</p>
+          <p className="text-sm text-zinc-400">Please wait while we submit your vote</p>
+        </div>,
+        {
+          style: {
+            background: '#1A1A1A',
+            border: '1px solid rgba(201, 151, 51, 0.1)',
+          }
+        }
+      );
+      
       const tokenId = selectedToken === 'RARE' ? RARE_IDENTIFIER : BOD_IDENTIFIER;
       const amount = TOKENS[selectedToken].voteAmount;
       
@@ -140,6 +154,7 @@ export default function Vote() {
       });
 
       if (error) {
+        toast.dismiss(loadingToastId);
         throw new Error(error);
       }
 
@@ -150,12 +165,13 @@ export default function Vote() {
       // Additional wait to ensure smart contract state is updated
       await new Promise(resolve => setTimeout(resolve, 4000));
 
-      // Show success message
+      // Dismiss loading toast and show success toast
+      toast.dismiss(loadingToastId);
       toast.success(
         <div className="flex flex-col space-y-2">
           <div className="p-4">
             <p className="text-sm font-medium text-white">Vote Successful!</p>
-            <p className="mt-1 text-sm text-zinc-400">Your vote has been recorded on the blockchain.</p>
+            <p className="mt-1 text-sm text-zinc-400">Your vote has been recorded.</p>
           </div>
           <div className="border-t border-zinc-800 p-2">
             <button
@@ -167,7 +183,14 @@ export default function Vote() {
               Refresh Results
             </button>
           </div>
-        </div>
+        </div>,
+        {
+          style: {
+            background: '#1A1A1A',
+            border: '1px solid rgba(201, 151, 51, 0.1)',
+          },
+          duration: 5000,
+        }
       );
 
       // Refresh data
@@ -178,12 +201,34 @@ export default function Vote() {
       console.error('Vote error:', error);
       // Don't show error toast since the transaction might still be processing
       if (error?.message?.includes('Request error on url')) {
-        toast.info('Vote submitted! Please wait for network confirmation.');
+        toast.info(
+          <div className="flex flex-col space-y-2">
+            <p className="font-medium text-white">Transaction Processing</p>
+            <p className="text-sm text-zinc-400">Please wait for network confirmation</p>
+          </div>,
+          {
+            style: {
+              background: '#1A1A1A',
+              border: '1px solid rgba(201, 151, 51, 0.1)',
+            }
+          }
+        );
         // Still refresh votes as the transaction might have gone through
         await fetchVotes();
         setSelectedOption(null);
       } else {
-        toast.error('Something went wrong. Please try again.');
+        toast.error(
+          <div className="flex flex-col space-y-2">
+            <p className="font-medium text-white">Error</p>
+            <p className="text-sm text-zinc-400">Something went wrong. Please try again.</p>
+          </div>,
+          {
+            style: {
+              background: '#1A1A1A',
+              border: '1px solid rgba(201, 151, 51, 0.1)',
+            }
+          }
+        );
       }
     } finally {
       setIsSubmitting(false);
