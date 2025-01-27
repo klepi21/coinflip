@@ -92,7 +92,6 @@ export default function Home() {
       <div className="relative z-20 bg-transparent text-center mt-auto">
         <div className="flex justify-center mb-4">
           <img src="/img/SRBLABS.png" alt="SRBLABS Logo" className="w-20 h-auto mr-4" />
-          <img src="/img/bodlogo.svg" alt="BOD Logo" className="w-20 h-auto ml-4" />
         </div>
         <p className="max-w-full mx-auto mb-2 text-xs text-white/80">Peer-to-peer gaming for true degens—provably fair, unapologetically risky, and absolutely addictive. Just don’t forget: 18+ and don't get rugged by your local laws.</p>
       </div>
