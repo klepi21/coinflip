@@ -208,7 +208,7 @@ export default function GamePage() {
                   <div className="text-center">
                     <div className="w-64 h-64 mx-auto mb-4">
                       <Image
-                        src={game.side === 0 ? '/img/grm.png' : '/img/sasu.png'}
+                        src={game.side === 0 ? '/img/grm.png?v=2' : '/img/sasu.png?v=2'}
                         alt={game.side === 0 ? 'GRM' : 'SASU'}
                         width={128}
                         height={128}
@@ -220,7 +220,7 @@ export default function GamePage() {
                   <div className="text-center">
                     <div className="w-64 h-64 mx-auto mb-4">
                       <Image
-                        src={game.side === 0 ? '/img/sasu.png' : '/img/grm.png'}
+                        src={game.side === 0 ? '/img/sasu.png?v=2' : '/img/grm.png?v=2'}
                         alt={game.side === 0 ? 'SASU' : 'GRM'}
                         width={128}
                         height={128}

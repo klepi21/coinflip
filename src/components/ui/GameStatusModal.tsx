@@ -135,7 +135,7 @@ export function GameStatusModal({ isOpen, onClose, currentStep, gameResult }: Ga
                 className="w-24 h-24 relative z-10"
               >
                 <Image
-                  src="/img/grm.png"
+                  src="/img/grm.png?v=2"
                   alt="GRM"
                   width={96}
                   height={96}
@@ -157,7 +157,7 @@ export function GameStatusModal({ isOpen, onClose, currentStep, gameResult }: Ga
                 className="w-24 h-24 relative z-10"
               >
                 <Image
-                  src="/img/sasu.png"
+                  src="/img/sasu.png?v=2"
                   alt="SASU"
                   width={96}
                   height={96}

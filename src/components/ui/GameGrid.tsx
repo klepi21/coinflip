@@ -695,7 +695,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       <div className="flex-1 p-4 flex flex-col items-center justify-center">
                         <div className="w-24 h-24">
                           <Image
-                            src={game.side === 0 ? SIDES.GRM.image : SIDES.SASU.image}
+                            src={game.side === 0 ? '/img/grm.png?v=2' : '/img/sasu.png?v=2'}
                             alt={game.side === 0 ? "GRM" : "SASU"}
                             width={128}
                             height={128}
@@ -723,7 +723,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       <div className="flex-1 p-4 flex flex-col items-center justify-center ml-8  ">
                         <div className="w-24 h-24">
                           <Image
-                            src={game.side === 0 ? SIDES.SASU.image : SIDES.GRM.image}
+                            src={game.side === 0 ? '/img/sasu.png?v=2' : '/img/grm.png?v=2'}
                             alt={game.side === 0 ? "SASU" : "GRM"}
                             width={128}
                             height={128}
