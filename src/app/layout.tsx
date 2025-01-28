@@ -12,6 +12,7 @@ import Head from 'next/head'
 import { Comic_Neue } from 'next/font/google';
 import { Footer } from '@/components/layout/Footer';
 import { TokenProvider } from '@/context/TokenContext';
+import { VoteBanner } from '@/components/ui/VoteBanner';
 
 const comic = Comic_Neue({
   weight: ['400', '700'],
@@ -80,7 +81,8 @@ export default function RootLayout({
                   {/* Content */}
                   <div className="relative z-10">
                     <Navbar />
-                    <main>
+                    <VoteBanner />
+                    <main className="pt-0">
                       {children}
                     </main>
                     <WalletModal 
