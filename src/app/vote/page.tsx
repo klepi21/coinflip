@@ -271,7 +271,7 @@ export default function Vote() {
                         className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
                           selectedToken === key 
                             ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black text-black' 
-                            : 'border-zinc-800 hover:border-[#C99733] text-white'
+                            : 'border-zinc-800 hover:border-[#C99733] text-white' 
                         }`}
                       >
                         <div className="w-5 h-5 rounded-full overflow-hidden">
