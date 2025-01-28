@@ -611,8 +611,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       </div>
 
       {/* Games Grid with Dynamic Layout */}
-      <div className="min-h-[600px] flex flex-col">
-        <div className={`grid gap-6 flex-1 ${
+      <div className="min-h-[200px] flex flex-col">
+        <div className={`grid gap-6 ${
           gridView === '2x2' 
             ? 'grid-cols-1 lg:grid-cols-2' 
             : 'grid-cols-1 lg:grid-cols-3'
@@ -856,7 +856,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
         {/* Bottom Fixed Pagination */}
         {totalPages > 1 && (
-          <div className="mt-8 flex justify-center items-center gap-4">
+          <div className="mt-8 mb-4 flex justify-center items-center gap-4">
             <div className="bg-[#1A1A1A] rounded-full px-6 py-2 flex items-center gap-4 border border-zinc-800">
               <button
                 onClick={handlePrevPage}
