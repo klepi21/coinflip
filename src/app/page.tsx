@@ -70,7 +70,7 @@ export default function Home() {
         <div className="flex flex-col items-center py-4 md:py-12 mb-16">
           <div className="flex flex-col items-center w-full">
             <p className="text-xl md:text-4xl font-bold text-white text-center">
-            Squash Beefs, One Smush at a Time!
+              Squash Beefs, One Smush at a Time!
             </p>
           </div>
         </div>

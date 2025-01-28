@@ -748,7 +748,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                 >
                   {/* Main box with players */}
                   <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg">
-                    <div className="flex relative min-h-[160px]" style={{
+                    <div className="flex relative min-h-[180px]" style={{
                       backgroundImage: "url('/img/fightback.jpg')",
                       backgroundSize: 'contain',
                       backgroundRepeat: 'no-repeat',
@@ -756,7 +756,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       backgroundColor: '#D5D5D5',
                     }}>
                       {/* Left Player (Creator) */}
-                      <div className="flex-1 p-4 flex flex-col items-center justify-center">
+                      <div className="flex-1 p-1 flex flex-col items-center justify-center">
                         <div className="w-24 h-24">
                           <Image
                             src={game.side === 0 ? '/img/grm.png?v=2' : '/img/sasu.png?v=2'}
@@ -767,7 +767,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           />
                         </div>
                         <span className="text-black text-xs font-medium mb-1 truncate w-full text-center">
-                          {`${game.creator.slice(0, 5)}...${game.creator.slice(-4)}`}
+                          {`${game.creator.slice(0, 3)}...${game.creator.slice(-4)}`}
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-black text-sm font-medium">
@@ -784,7 +784,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       </div>
 
                       {/* Right Player (Rival) */}
-                      <div className="flex-1 p-4 flex flex-col items-center justify-center ml-8  ">
+                      <div className="flex-1 p-1 flex flex-col items-center justify-center ml-8  ">
                         <div className="w-24 h-24">
                           <Image
                             src={game.side === 0 ? '/img/sasu.png?v=2' : '/img/grm.png?v=2'}
