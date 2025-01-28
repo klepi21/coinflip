@@ -60,7 +60,7 @@ export function VoteBanner() {
   if (!isVisible || timeLeft.isExpired) return null
 
   return (
-    <div className="relative z-20 mt-[60px]">
+    <div className="relative z-20 mt-[60px] -mb-10 md:-mb-20">
       <Banner variant="muted" className="bg-[#1A1A1A] border-b border-zinc-800">
         <div className="flex w-full gap-2 md:items-center">
           <div className="flex grow gap-3 md:items-center">
