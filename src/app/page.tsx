@@ -63,13 +63,13 @@ export default function Home() {
   }, [network.apiAddress]);
 
   return (
-    <main className="relative flex flex-col bg-black min-h-[100vh] px-6 pt-24">
+    <main className="relative flex flex-col bg-black min-h-[100vh] px-6 pt-20">
       <RetroGrid />
-      <div className="w-full max-w-7xl mx-auto flex-1 mb-auto relative z-10">
+      <div className="w-full md:container mx-auto flex-1 mb-auto relative z-10">
         {/* Title Section */}
-        <div className="flex flex-col items-center mb-20">
+        <div className="flex flex-col items-center py-4 md:py-12 mb-16">
           <div className="flex flex-col items-center w-full">
-            <p className="text-lg md:text-2xl font-semibold text-white mt-4 text-center">
+            <p className="text-xl md:text-4xl font-bold text-white text-center">
             Squash Beefs, One Smush at a Time!
             </p>
           </div>
@@ -83,7 +83,7 @@ export default function Home() {
           </div>
 
           {/* Right Half - Game Grid */}
-          <div className="w-full md:w-2/3" style={{ marginTop: '-80px' }}>
+          <div className="w-full md:w-2/3" style={{ marginTop: '-86px' }}>
             <GameGridDynamic onActiveGamesChange={setActiveGames} />
           </div>
         </div>

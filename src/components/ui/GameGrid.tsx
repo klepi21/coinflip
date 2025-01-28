@@ -612,7 +612,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
       {/* Games Grid with Dynamic Layout */}
       <div className="min-h-[200px] flex flex-col">
-        <div className={`grid gap-6 ${
+        <div className={`grid gap-6 grid-rows-2 md:grid-rows-3 ${
           gridView === '2x2' 
             ? 'grid-cols-1 lg:grid-cols-2' 
             : 'grid-cols-1 lg:grid-cols-3'
@@ -817,18 +817,18 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
                   {/* Join/Cancel Button - Only show if no rival */}
                   {!game.rival && (
-                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-[calc(50%)] border-[#1A1A1A] mt-8">
+                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-fit border-[#1A1A1A] mt-8">
                       {!connectedAddress ? (
                         <button 
                           disabled
-                          className="w-full bg-zinc-600 cursor-not-allowed text-black font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black"
+                          className="w-full bg-zinc-600 cursor-not-allowed text-black font-semibold py-2 px-4 whitespace-nowrap rounded-full text-sm transition-colors shadow-lg border-8 border-black"
                         >
                           Connect Wallet
                         </button>
                       ) : game.creator.toLowerCase() === connectedAddress?.toLowerCase() ? (
                         <button 
                           onClick={() => handleCancelGame(game.id)}
-                          className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-full text-sm transition-colors shadow-lg border-8 border-black"
+                          className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 whitespace-nowrap rounded-full text-sm transition-colors shadow-lg border-8 border-black"
                         >
                           Cancel
                         </button>
@@ -836,7 +836,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         <button 
                           onClick={() => handleJoinGame(game.id, game.amount, game.token)}
                           disabled={!canJoinGame(game.amount, game.token)}
-                          className={`w-full font-semibold py-1 px-2 rounded-full text-sm transition-colors shadow-lg border-8 border-black ${
+                          className={`w-full font-semibold py-2 px-4 whitespace-nowrap rounded-full text-sm transition-colors shadow-lg border-8 border-black ${
                             canJoinGame(game.amount, game.token)
                               ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:opacity-90 text-black'
                               : 'bg-zinc-600 cursor-not-allowed text-zinc-400'
