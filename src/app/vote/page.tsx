@@ -264,7 +264,7 @@ export default function Vote() {
                 <div className="flex items-center gap-2 mt-2">
                   <p className="text-xs sm:text-sm text-[#C99733]">Vote with:</p>
                   <div className="flex gap-2">
-                    {Object.entries(TOKENS).map(([key, token]) => (
+                    {Object.entries(TOKENS).map(([key, token]) => ( 
                       <button
                         key={key}
                         onClick={() => setSelectedToken(key as 'RARE' | 'BOD')}
