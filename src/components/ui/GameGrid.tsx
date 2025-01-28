@@ -132,7 +132,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
   const [previousGames, setPreviousGames] = useState<Game[]>([]);
   const [disappearingGames, setDisappearingGames] = useState<Game[]>([]);
-  const [totalGamesPlayed, setTotalGamesPlayed] = useState<number>(0);
+  const [totalGames, setTotalGames] = useState<number>(0);
   const [transactionStep, setTransactionStep] = useState<'signing' | 'processing' | 'checking' | 'revealing'>('signing');
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [gameResult, setGameResult] = useState<GameResult>(null);
@@ -184,7 +184,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         const resultParser = new ResultsParser();
         const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
         const totalGames = Number(results.values[0].valueOf().toString());
-        setTotalGamesPlayed(totalGames);
+        setTotalGames(totalGames);
       }
     } catch (error) {
       console.error('Error fetching total games:', error);
@@ -524,7 +524,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
             <span className="font-bold">{games.length}</span> ACTIVE
           </div>
           <div className="bg-[#1A1A1A] rounded-full px-3 lg:px-6 py-1.5 lg:py-2 text-white">
-            <span className="font-bold">{totalGamesPlayed}</span> PLAYED
+            <span className="font-bold">{totalGames - games.length}</span> PLAYED
           </div>
         </div>
         
