@@ -69,7 +69,6 @@ export default function RootLayout({
             environment="mainnet"
             customNetworkConfig={{
               name: 'customConfig',
-              apiTimeout: 6000,
               walletConnectV2ProjectId: mvxConfig.walletConnectV2ProjectId
             }}
           >
