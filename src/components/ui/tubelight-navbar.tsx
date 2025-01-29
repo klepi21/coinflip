@@ -100,7 +100,7 @@ export function TubelightNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="relative flex items-center gap-4 h-10 bg-black/50 rounded-full border border-zinc-800 px-1">
+    <nav className="relative flex items-center justify-center gap-4 h-10 bg-black/50 rounded-full border border-zinc-800 px-1">
       <div className="absolute inset-x-1 h-8 top-1/2 -translate-y-1/2">
         <div
           className={`absolute h-full bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full transition-all duration-300 ${
@@ -114,7 +114,7 @@ export function TubelightNav() {
 
       <Link
         href="/"
-        className={`relative z-10 px-6 py-2 text-sm font-medium transition-colors ${
+        className={`relative z-10 px-6 py-2 text-sm font-medium transition-colors text-center min-w-[100px] ${
           pathname === '/' ? 'text-black' : 'text-white hover:text-zinc-300'
         }`}
       >
@@ -122,7 +122,7 @@ export function TubelightNav() {
       </Link>
       <Link
         href="/vote"
-        className={`relative z-10 px-6 py-2 text-sm font-medium transition-colors ${
+        className={`relative z-10 px-6 py-2 text-sm font-medium transition-colors text-center min-w-[100px] ${
           pathname === '/vote' ? 'text-black' : 'text-white hover:text-zinc-300'
         }`}
       >
@@ -130,7 +130,7 @@ export function TubelightNav() {
       </Link>
       <Link
         href="/votetoken"
-        className={`relative z-10 px-6 py-2 text-sm font-medium transition-colors ${
+        className={`relative z-10 px-6 py-2 text-sm font-medium transition-colors text-center min-w-[100px] ${
           pathname === '/votetoken' ? 'text-black' : 'text-white hover:text-zinc-300'
         }`}
       >
@@ -139,7 +139,7 @@ export function TubelightNav() {
       <div className="relative">
         <Link
           href="/stats"
-          className="relative z-10 px-6 py-2 text-sm font-medium text-zinc-500 cursor-not-allowed"
+          className="relative z-10 px-6 py-2 text-sm font-medium text-zinc-500 cursor-not-allowed text-center min-w-[100px]"
           onClick={(e) => e.preventDefault()}
         >
           Stats
