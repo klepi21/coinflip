@@ -109,62 +109,16 @@ export function GameStatusModal({ isOpen, onClose, currentStep, gameResult }: Ga
             </div>
           </div>
 
-          {/* VS Animation with Result Overlay */}
-          <div className="relative h-48 mb-8">
-            <div className="absolute inset-0">
-              <Image
-                src="/img/pick.jpg"
-                alt="Fight Background"
-                width={500}
-                height={200}
-                className="w-full h-full object-cover rounded-xl opacity-50"
-              />
-            </div>
-            <div className="absolute inset-0 flex items-center justify-between px-8">
-              {/* Left Fighter */}
-              <motion.div
-                animate={{
-                  x: [-10, 10],
-                  y: [-5, 5],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                }}
-                className="w-24 h-24 relative z-10"
-              >
-                <Image
-                  src="/img/grm.png?v=2"
-                  alt="GRM"
-                  width={96}
-                  height={96}
-                  className="w-full h-full object-contain"
-                />
-              </motion.div>
-
-              {/* Right Fighter */}
-              <motion.div
-                animate={{
-                  x: [10, -10],
-                  y: [5, -5],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                }}
-                className="w-24 h-24 relative z-10"
-              >
-                <Image
-                  src="/img/sasu.png?v=2"
-                  alt="SASU"
-                  width={96}
-                  height={96}
-                  className="w-full h-full object-contain"
-                />
-              </motion.div>
-            </div>
+          {/* VS Video Animation with Result Overlay */}
+          <div className="relative h-48 mb-8 rounded-xl overflow-hidden">
+            <video
+              src="/img/vsvideo.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+            />
 
             {/* Result Overlay */}
             <AnimatePresence>
@@ -173,7 +127,7 @@ export function GameStatusModal({ isOpen, onClose, currentStep, gameResult }: Ga
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-0 flex items-center justify-center z-20 bg-black/60 rounded-xl backdrop-blur-sm"
+                  className="absolute inset-0 flex items-center justify-center z-20 bg-black/60 backdrop-blur-sm"
                 >
                   <motion.div
                     initial={{ scale: 0.5 }}
