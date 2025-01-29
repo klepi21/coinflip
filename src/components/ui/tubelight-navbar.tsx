@@ -130,7 +130,7 @@ export function TubelightNav() {
       </Link>
       <Link
         href="/votetoken"
-        className={`relative z-10 px-6 py-2 text-sm font-medium transition-colors text-center min-w-[100px] ${
+        className={`relative z-10 px-6 py-2 pl-6 text-sm font-medium transition-colors text-center min-w-[100px] ${
           pathname === '/votetoken' ? 'text-black' : 'text-white hover:text-zinc-300'
         }`}
       >
