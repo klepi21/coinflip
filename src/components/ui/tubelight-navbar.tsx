@@ -104,7 +104,10 @@ export function TubelightNav() {
       <div className="absolute inset-x-1 h-8 top-1/2 -translate-y-1/2">
         <div
           className={`absolute h-full bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full transition-all duration-300 ${
-            pathname === '/' ? 'left-0 right-[66%]' : pathname === '/vote' ? 'left-[33%] right-[33%]' : 'left-[66%] right-0'
+            pathname === '/' ? 'left-0 right-[75%]' : 
+            pathname === '/vote' ? 'left-[25%] right-[50%]' : 
+            pathname === '/votetoken' ? 'left-[50%] right-[25%]' :
+            'left-[75%] right-0'
           }`}
         />
       </div>
@@ -124,6 +127,14 @@ export function TubelightNav() {
         }`}
       >
         Vote
+      </Link>
+      <Link
+        href="/votetoken"
+        className={`relative z-10 px-6 py-2 text-sm font-medium transition-colors ${
+          pathname === '/votetoken' ? 'text-black' : 'text-white hover:text-zinc-300'
+        }`}
+      >
+        Vote Token
       </Link>
       <div className="relative">
         <Link

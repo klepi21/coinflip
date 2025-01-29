@@ -481,6 +481,76 @@
                     "multi_result": true
                 }
             ]
+        },
+        {
+            "docs": [
+                "Adds a new voting option."
+            ],
+            "name": "addTokenVotingOption",
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Starts a new voting session."
+            ],
+            "name": "startTokenVoting",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "voting_options",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Ends the current voting session."
+            ],
+            "name": "endTokenVoting",
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Receives a payment in order to vote for a specific option.",
+                "",
+                "Parameters:",
+                "- option: u64 - The option to vote for. (excluding 0)"
+            ],
+            "name": "voteToken",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [
+                {
+                    "name": "option",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Returns all votes for each option.",
+                "",
+                "The returned type is a MultiValueEncoded of Votes Structure, which contains the following fields:",
+                "- option: u64",
+                "- total_votes: u64"
+            ],
+            "name": "getAllTokenVotes",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<Votes>",
+                    "multi_result": true
+                }
+            ]
         }
     ],
     "esdtAttributes": [],
