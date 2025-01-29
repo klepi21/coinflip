@@ -67,6 +67,9 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light">
           <DappProvider
             environment="mainnet"
+            dappConfig={{
+              shouldUseWebViewProvider: true,
+            }}
             customNetworkConfig={{
               name: 'customConfig',
               walletConnectV2ProjectId: mvxConfig.walletConnectV2ProjectId
