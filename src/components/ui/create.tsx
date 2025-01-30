@@ -383,16 +383,19 @@ export default function Create() {
                         type="number"
                         value={amount}
                         onChange={(e) => {
-                          const value = e.target.value.replace(/[^0-9]/g, '');
+                          // Allow decimals but prevent multiple dots
+                          const value = e.target.value;
+                          if (value.split('.').length > 2) return; // Prevent multiple dots
+                          if (value.startsWith('.')) return; // Prevent starting with dot
                           setAmount(value);
                         }}
                         onKeyDown={(e) => {
-                          if (e.key === '.' || e.key === ',' || e.key.toLowerCase() === 'e') {
+                          if (e.key.toLowerCase() === 'e') {
                             e.preventDefault();
                           }
                         }}
-                        step="1"
-                        min="500"
+                        step={selectedToken === 'EGLD' ? '0.01' : '1'}
+                        min={TOKENS[selectedToken].minAmount}
                         className="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
                         placeholder="Enter amount"
                       />
@@ -591,16 +594,19 @@ export default function Create() {
                     type="number"
                     value={amount}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      // Allow decimals but prevent multiple dots
+                      const value = e.target.value;
+                      if (value.split('.').length > 2) return; // Prevent multiple dots
+                      if (value.startsWith('.')) return; // Prevent starting with dot
                       setAmount(value);
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === '.' || e.key === ',' || e.key.toLowerCase() === 'e') {
+                      if (e.key.toLowerCase() === 'e') {
                         e.preventDefault();
                       }
                     }}
-                    step="1"
-                    min="1"
+                    step={selectedToken === 'EGLD' ? '0.01' : '1'}
+                    min={TOKENS[selectedToken].minAmount}
                     className="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
                     placeholder="Enter amount"
                   />
