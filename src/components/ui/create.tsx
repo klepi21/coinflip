@@ -199,15 +199,15 @@ export default function Create() {
       action: handleCreateGame,
       text: 'Create Battle'
     };
-    if (amountValue < 500) return {
+    if (amountValue < TOKENS[selectedToken].minAmount) return {
       disabled: true,
-      message: `Minimum amount is 500 ${selectedToken}`,
+      message: `Minimum amount is ${TOKENS[selectedToken].minAmount} ${selectedToken}`,
       action: handleCreateGame,
       text: 'Create Battle'
     };
     if (currentBalance < totalAmount) return { 
       disabled: true, 
-      message: `Insufficient balance (${currentBalance.toFixed(2)} ${selectedToken} available)`,
+      message: `Insufficient balance (${currentBalance.toFixed(selectedToken === 'EGLD' ? 4 : 2)} ${selectedToken} available)`,
       action: handleCreateGame,
       text: 'Create Battle'
     };
