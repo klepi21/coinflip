@@ -11,6 +11,7 @@ import { useTrackTransactionStatus } from "@multiversx/sdk-dapp/hooks/transactio
 import { toast } from "sonner";
 import { WalletConnectModal } from "@/components/wallet/WalletConnectModal";
 import { useGetAccountInfo } from "@multiversx/sdk-dapp/hooks";
+import { TokenPayment } from "@multiversx/sdk-core";
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -113,29 +114,28 @@ export default function Create() {
       setIsSubmitting(true);
       setIsWaitingForTx(true);
 
-      const decimalAmount = TOKENS[selectedToken].decimals;
-      // Convert amount to a whole number first to avoid floating point issues
-      const baseAmount = BigInt(amount);
-      const totalAmount = baseAmount * BigInt(multiplier);
-      // Convert to raw amount with decimals
-      const rawAmount = (totalAmount * BigInt(10 ** decimalAmount)).toString(16).padStart(decimalAmount * 2, '0');
       const sideValue = selectedSide === 'GRM' ? 0 : 1;
 
       let transaction;
       if (selectedToken === 'EGLD') {
-        // EGLD transaction
+        // For EGLD, use TokenPayment to handle the conversion
+        const egldAmount = TokenPayment.egldFromAmount(parseFloat(amount) * multiplier);
         transaction = {
-          value: rawAmount.toString(),
+          value: egldAmount.valueOf().toString(),
           data: `create@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
           receiver: SC_ADDRESS,
           gasLimit: 10000000 * multiplier,
         };
       } else {
         // Token transaction
+        const decimalAmount = TOKENS[selectedToken].decimals;
+        const baseAmount = BigInt(amount);
+        const totalAmount = baseAmount * BigInt(multiplier);
+        const rawAmount = (totalAmount * BigInt(10 ** decimalAmount)).toString(16).padStart(decimalAmount * 2, '0');
         const tokenIdentifier = selectedToken === 'RARE' ? RARE_IDENTIFIER : BOD_IDENTIFIER;
         transaction = {
           value: '0',
-          data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${rawAmount.toString()}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
+          data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${rawAmount}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
           receiver: SC_ADDRESS,
           gasLimit: 10000000 * multiplier,
         };
@@ -144,7 +144,7 @@ export default function Create() {
       const { sessionId: newSessionId } = await sendTransactions({
         transactions: [transaction],
         transactionsDisplayInfo: {
-          processingMessage: `Creating ${multiplier} game${multiplier > 1 ? 's' : ''} with ${totalAmount} ${selectedToken}...`,
+          processingMessage: `Creating ${multiplier} game${multiplier > 1 ? 's' : ''} with ${amount} ${selectedToken}...`,
           errorMessage: 'Failed to create game',
           successMessage: `Successfully created ${multiplier} game${multiplier > 1 ? 's' : ''}!`
         }

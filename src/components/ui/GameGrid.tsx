@@ -77,13 +77,13 @@ const SIDES = {
   }
 };
 
-const formatTokenAmount = (amount: string): string => {
+const formatTokenAmount = (amount: string, token: string): string => {
   try {
     const value = Number(amount) / (10 ** TOKEN_DECIMALS);
-    // Use Intl.NumberFormat to format the number without rounding
+    // Use Intl.NumberFormat to format the number
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      maximumFractionDigits: token === 'EGLD' ? 2 : 0,
       useGrouping: true
     }).format(value);
   } catch (error) {
@@ -136,9 +136,6 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const [transactionStep, setTransactionStep] = useState<'signing' | 'processing' | 'checking' | 'revealing'>('signing');
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [gameResult, setGameResult] = useState<GameResult>(null);
-  const [isWaitingForTx, setIsWaitingForTx] = useState(false);
-  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
 
   // Track disappearing games with full game data
   useEffect(() => {
@@ -222,58 +219,95 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     return winnerAddress;
   };
 
-  // Add type guard for token
-  const isValidToken = (token: string): token is keyof typeof TOKENS => {
-    return token in TOKENS;
-  };
-
-  const handleJoinGame = async (game: Game) => {
-    if (!isValidToken(game.token)) {
-      toast.error('Invalid token type');
+  const handleJoinGame = async (gameId: number, amount: string, token: string) => {
+    if (!connectedAddress) {
+      toast.error('Please connect your wallet first');
       return;
     }
 
     try {
-      setIsWaitingForTx(true);
-      setSelectedGame(game);
+      setShowStatusModal(true);
+      setTransactionStep('signing');
+      setGameResult(null);
 
-      const decimalAmount = TOKENS[game.token].decimals;
-      const rawAmount = (BigInt(game.amount) * BigInt(10 ** decimalAmount)).toString(16);
+      const contract = new SmartContract({
+        address: new Address(SC_ADDRESS),
+        abi: AbiRegistry.create(flipcoinAbi)
+      });
 
-      let transaction;
-      if (game.token === 'EGLD') {
-        // EGLD transaction
-        transaction = {
-          value: rawAmount.toString(),
-          data: `join@${game.id}`,
-          receiver: SC_ADDRESS,
-          gasLimit: 10000000,
-        };
+      const transaction = contract.methods
+        .join([new U64Value(gameId)])
+        .withSender(new Address(connectedAddress))
+        .withGasLimit(10000000)
+        .withChainID(network.chainId);
+
+      if (token === 'EGLD') {
+        transaction.withValue(amount);
       } else {
-        // Token transaction
-        const tokenIdentifier = game.token === 'RARE' ? RARE_IDENTIFIER : BOD_IDENTIFIER;
-        transaction = {
-          value: '0',
-          data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${rawAmount}@${Buffer.from('join').toString('hex')}@${game.id}`,
-          receiver: SC_ADDRESS,
-          gasLimit: 10000000,
-        };
+        const payment = TokenPayment.fungibleFromAmount(token, amount, 0);
+        transaction.withSingleESDTTransfer(payment);
       }
 
-      const { sessionId: newSessionId } = await sendTransactions({
-        transactions: [transaction],
+      const tx = transaction.buildTransaction();
+      
+      setPopup(prev => ({ ...prev, message: 'Confirming transaction...' }));
+      
+      const { sessionId } = await sendTransactions({
+        transactions: [tx],
         transactionsDisplayInfo: {
-          processingMessage: 'Processing game join...',
-          errorMessage: 'Failed to join game',
-          successMessage: 'Successfully joined game!'
+          processingMessage: 'Processing game transaction',
+          errorMessage: 'An error occurred during game transaction',
+          successMessage: 'Transaction successful'
         }
       });
 
-      setSessionId(newSessionId);
+      if (!sessionId) {
+        throw new Error('Failed to get transaction session ID');
+      }
+      console.log('Account info:', accountInfo.shard);
+
+      // Wait for initial blockchain confirmation
+      await new Promise(resolve => setTimeout(resolve, accountInfo.shard === 1 ? 10000 : 25000));
+      await refreshAccount();
+
+      setTransactionStep('checking');
+
+      // Additional wait to ensure smart contract state is updated
+      await new Promise(resolve => setTimeout(resolve, 4000));
+
+      let retries = 3;
+      let winner = null;
+
+      setTransactionStep('revealing');
+
+      while (retries > 0 && !winner) {
+        try {
+          winner = await checkGameWinner(gameId);
+          if (winner) break;
+        } catch (error) {
+          retries--;
+          if (retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+      }
+
+      if (!winner) {
+        throw new Error('Could not determine game result');
+      }
+
+      const isWinner = winner.toLowerCase() === connectedAddress?.toLowerCase();
+      setGameResult(isWinner ? 'win' : 'lose');
+
+      // Refresh all necessary states
+      await Promise.all([
+        refreshAccount(),
+        refetchGames()
+      ]);
+
     } catch (error) {
-      console.error('Error joining game:', error);
-      toast.error('Failed to join game');
-      setIsWaitingForTx(false);
+      console.error('Join game error:', error);
+      setShowStatusModal(false);
     }
   };
 
@@ -646,11 +680,15 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-zinc-400 text-sm font-medium">
-                            {formatTokenAmount(game.amount).split('.')[0]}
+                            {formatTokenAmount(game.amount, game.token)}
                           </span>
                           <Image
-                            src="https://tools.multiversx.com/assets-cdn/tokens/RARE-99e8b0/icon.svg"
-                            alt="MINCU"
+                            src={game.token === 'EGLD' 
+                              ? TOKENS.EGLD.image 
+                              : game.token === RARE_IDENTIFIER 
+                                ? TOKENS.RARE.image 
+                                : TOKENS.BOD.image}
+                            alt={game.token}
                             width={24}
                             height={24}
                             className="w-8 h-8 rounded-full"
@@ -685,11 +723,15 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-black text-sm font-medium">
-                          {formatTokenAmount(game.amount).split('.')[0]}
+                            {formatTokenAmount(game.amount, game.token)}
                           </span>
                           <Image
-                            src="https://tools.multiversx.com/assets-cdn/tokens/BOD-204877/icon.png"
-                            alt="MINCU"
+                            src={game.token === 'EGLD' 
+                              ? TOKENS.EGLD.image 
+                              : game.token === RARE_IDENTIFIER 
+                                ? TOKENS.RARE.image 
+                                : TOKENS.BOD.image}
+                            alt={game.token}
                             width={16}
                             height={16}
                             className="w-4 h-4 rounded-full"
@@ -737,11 +779,15 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-black text-sm font-medium">
-                            {formatTokenAmount(game.amount).split('.')[0]}
+                            {formatTokenAmount(game.amount, game.token)}
                           </span>
                           <Image
-                            src={game.token === RARE_IDENTIFIER ? TOKENS.RARE.image : TOKENS.BOD.image}
-                            alt={game.token === RARE_IDENTIFIER ? "RARE" : "BOD"}
+                            src={game.token === 'EGLD' 
+                              ? TOKENS.EGLD.image 
+                              : game.token === RARE_IDENTIFIER 
+                                ? TOKENS.RARE.image 
+                                : TOKENS.BOD.image}
+                            alt={game.token}
                             width={16}
                             height={16}
                             className="w-6 h-6"
@@ -767,11 +813,15 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-black text-sm font-medium">
-                            {formatTokenAmount(game.amount).split('.')[0]}
+                            {formatTokenAmount(game.amount, game.token)}
                           </span>
                           <Image
-                            src={game.token === RARE_IDENTIFIER ? TOKENS.RARE.image : TOKENS.BOD.image}
-                            alt={game.token === RARE_IDENTIFIER ? "RARE" : "BOD"}
+                            src={game.token === 'EGLD' 
+                              ? TOKENS.EGLD.image 
+                              : game.token === RARE_IDENTIFIER 
+                                ? TOKENS.RARE.image 
+                                : TOKENS.BOD.image}
+                            alt={game.token}
                             width={16}
                             height={16}
                             className="w-6 h-6"
@@ -800,14 +850,14 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </button>
                       ) : (
                         <button 
-                          onClick={() => handleJoinGame(game)}
+                          onClick={() => handleJoinGame(game.id, game.amount, game.token)}
                           disabled={!canJoinGame(game.amount, game.token)}
                           className={`w-full font-semibold py-2 px-4 whitespace-nowrap rounded-full text-sm transition-colors shadow-lg border-8 border-black ${
                             canJoinGame(game.amount, game.token)
                               ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:opacity-90 text-black'
                               : 'bg-zinc-600 cursor-not-allowed text-zinc-400'
                           }`}
-                          title={!canJoinGame(game.amount, game.token) ? `Insufficient balance (${formatTokenAmount(game.amount)})` : ''}
+                          title={!canJoinGame(game.amount, game.token) ? `Insufficient balance (${formatTokenAmount(game.amount, game.token)})` : ''}
                         >
                           {canJoinGame(game.amount, game.token) ? 'Join game' : 'Insufficient balance'}
                         </button>
