@@ -26,6 +26,7 @@ import Image from "next/image";
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
 const RARE_IDENTIFIER = 'RARE-99e8b0';
 const BOD_IDENTIFIER = 'BOD-204877';
+const VOTE_MULTIPLIERS = [1, 3, 5, 10, 15];
 
 // Token data with images
 const TOKENS = {
@@ -62,6 +63,7 @@ export default function VoteTokenPage() {
   const [selectedOption, setSelectedOption] = useState<VoteOption | null>(null);
   const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD'>('RARE');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [multiplier, setMultiplier] = useState(1);
 
   const { network } = useGetNetworkConfig();
   const { address } = useGetAccountInfo();
@@ -147,32 +149,30 @@ export default function VoteTokenPage() {
       const optionHex = selectedOption.option.toString(16).padStart(2, '0');
       const data = `ESDTTransfer@${encodedTokenId}@${rawAmount}@766f7465546f6b656e@${optionHex}`;
 
-      const transaction = {
+      const transactions = Array(multiplier).fill({
         value: '0',
         data: data,
         receiver: SC_ADDRESS,
         gasLimit: 10000000,
-      };
+      });
 
       const { sessionId } = await sendTransactions({
-        transactions: [transaction],
+        transactions,
         transactionsDisplayInfo: {
-          processingMessage: 'Processing vote transaction',
-          errorMessage: 'An error occurred during voting',
-          successMessage: 'Vote submitted successfully'
+          processingMessage: `Voting ${multiplier} time${multiplier > 1 ? 's' : ''} for ${selectedToken}...`,
+          errorMessage: 'An error has occurred during voting',
+          successMessage: `Successfully voted ${multiplier} time${multiplier > 1 ? 's' : ''}!`
         }
       });
 
-      // Wait for transaction to be processed
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await refreshAccount();
-
-      // Refresh votes
-      await fetchVotes();
-
-      toast.dismiss(loadingToastId);
-      toast.success('Vote submitted successfully!');
-      setSelectedOption(null);
+      if (sessionId) {
+        setIsSubmitting(true);
+        await refreshAccount();
+        await fetchVotes();
+        toast.dismiss(loadingToastId);
+        toast.success('Vote submitted successfully!');
+        setSelectedOption(null);
+      }
     } catch (error) {
       console.error('Error voting:', error);
       toast.error('Failed to submit vote');
@@ -278,6 +278,26 @@ export default function VoteTokenPage() {
                 })}
               </div>
 
+              {/* Add Vote Multiplier Selection */}
+              <div className="mt-8">
+                <label className="block text-zinc-400 text-sm mb-2">How many votes to cast?</label>
+                <div className="flex gap-1">
+                  {VOTE_MULTIPLIERS.map((mult) => (
+                    <button
+                      key={mult}
+                      onClick={() => setMultiplier(mult)}
+                      className={`flex-1 h-10 rounded-xl text-sm ${
+                        multiplier === mult 
+                          ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' 
+                          : 'bg-zinc-800 text-white'
+                      } font-medium transition-all`}
+                    >
+                      {mult}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {!isLoggedIn ? (
                 <div className="text-center">
                   <p className="text-zinc-400 mb-4">Connect your wallet to vote</p>
@@ -287,13 +307,17 @@ export default function VoteTokenPage() {
                   <button
                     onClick={handleVote}
                     disabled={!selectedOption || isSubmitting}
-                    className={`px-8 py-2 rounded-full font-semibold transition-all ${
+                    className={`w-full h-12 mt-8 rounded-xl font-medium transition-all ${
                       !selectedOption || isSubmitting
                         ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black hover:opacity-90'
+                        : 'bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:opacity-90 text-black'
                     }`}
                   >
-                    {isSubmitting ? 'Voting...' : `Vote with ${TOKENS[selectedToken].voteAmount} ${selectedToken}`}
+                    {isSubmitting 
+                      ? 'Processing...' 
+                      : selectedOption 
+                        ? `Vote ${multiplier}x for ${selectedOption.name}` 
+                        : 'Select a token to vote'}
                   </button>
                 </div>
               )}
