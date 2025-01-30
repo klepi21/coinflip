@@ -29,8 +29,12 @@ export default function Stats() {
   const [scores, setScores] = useState<PlayerScore[]>([]);
   const [totalWins, setTotalWins] = useState(0);
   const [totalLosses, setTotalLosses] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<'winRate' | 'totalGames'>('winRate');
   const { network } = useGetNetworkConfig();
   const { address } = useGetAccountInfo();
+  const itemsPerPage = 10;
 
   const fetchScoreboard = async () => {
     try {
@@ -80,6 +84,31 @@ export default function Stats() {
     }
   }, [network.apiAddress, address]);
 
+  // Filter and sort scores
+  const filteredAndSortedScores = scores
+    .filter(score => 
+      searchQuery ? score.address.toLowerCase().includes(searchQuery.toLowerCase()) : true
+    )
+    .map(score => ({
+      ...score,
+      totalGames: score.wins + score.losses,
+      winRate: score.wins + score.losses > 0
+        ? (score.wins / (score.wins + score.losses)) * 100
+        : 0
+    }))
+    .sort((a, b) => 
+      sortBy === 'winRate' 
+        ? b.winRate - a.winRate
+        : b.totalGames - a.totalGames
+    );
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredAndSortedScores.length / itemsPerPage);
+  const paginatedScores = filteredAndSortedScores.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <main className="relative h-screen overflow-hidden bg-black">
       <RetroGrid />
@@ -114,12 +143,47 @@ export default function Stats() {
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-zinc-800/50 rounded-xl p-4">
-                    <h3 className="text-sm font-medium text-zinc-400">Total Wins</h3>
-                    <p className="text-2xl font-bold text-[#C99733]">{totalWins}</p>
+                    <h3 className="text-sm font-medium text-zinc-400">Total Games Played</h3>
+                    <p className="text-2xl font-bold text-[#C99733]">{totalWins }</p>
                   </div>
                   <div className="bg-zinc-800/50 rounded-xl p-4">
-                    <h3 className="text-sm font-medium text-zinc-400">Total Losses</h3>
-                    <p className="text-2xl font-bold text-[#C99733]">{totalLosses}</p>
+                    <h3 className="text-sm font-medium text-zinc-400">Total Players</h3>
+                    <p className="text-2xl font-bold text-[#C99733]">{scores.length}</p>
+                  </div>
+                </div>
+
+                {/* Search and Sort Controls */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      placeholder="Search by ERD address..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-[#C99733]"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setSortBy('winRate')}
+                      className={`px-4 py-2 rounded-xl ${
+                        sortBy === 'winRate'
+                          ? 'bg-[#C99733] text-black'
+                          : 'bg-zinc-800/50 text-white'
+                      }`}
+                    >
+                      Sort by Win Rate
+                    </button>
+                    <button
+                      onClick={() => setSortBy('totalGames')}
+                      className={`px-4 py-2 rounded-xl ${
+                        sortBy === 'totalGames'
+                          ? 'bg-[#C99733] text-black'
+                          : 'bg-zinc-800/50 text-white'
+                      }`}
+                    >
+                      Sort by Games
+                    </button>
                   </div>
                 </div>
 
@@ -129,15 +193,15 @@ export default function Stats() {
                     <thead>
                       <tr className="border-b border-zinc-800">
                         <th className="text-left py-3 px-4 text-zinc-400 font-medium">Player</th>
-                        <th className="text-center py-3 px-4 text-zinc-400 font-medium">Wins</th>
-                        <th className="text-center py-3 px-4 text-zinc-400 font-medium">Losses</th>
+                        <th className="text-center py-3 px-4 text-zinc-400 font-medium">Total Games</th>
                         <th className="text-center py-3 px-4 text-zinc-400 font-medium">Win Rate</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {scores.map((score, index) => {
-                        const winRate = score.wins + score.losses > 0
-                          ? ((score.wins / (score.wins + score.losses)) * 100).toFixed(1)
+                      {paginatedScores.map((score) => {
+                        const totalGames = score.wins + score.losses;
+                        const winRate = totalGames > 0
+                          ? ((score.wins / totalGames) * 100).toFixed(1)
                           : '0.0';
 
                         return (
@@ -145,8 +209,7 @@ export default function Stats() {
                             <td className="py-3 px-4 text-white font-medium">
                               <span className="text-sm">{score.address.slice(0, 8)}...{score.address.slice(-4)}</span>
                             </td>
-                            <td className="py-3 px-4 text-center text-[#C99733]">{score.wins}</td>
-                            <td className="py-3 px-4 text-center text-zinc-400">{score.losses}</td>
+                            <td className="py-3 px-4 text-center text-[#C99733]">{totalGames}</td>
                             <td className="py-3 px-4 text-center text-white">{winRate}%</td>
                           </tr>
                         );
@@ -154,6 +217,37 @@ export default function Stats() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center gap-2 mt-4">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className={`px-4 py-2 rounded-xl ${
+                        currentPage === 1
+                          ? 'bg-zinc-800/50 text-zinc-500'
+                          : 'bg-zinc-800/50 text-white hover:bg-[#C99733] hover:text-black'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <span className="px-4 py-2 text-zinc-400">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className={`px-4 py-2 rounded-xl ${
+                        currentPage === totalPages
+                          ? 'bg-zinc-800/50 text-zinc-500'
+                          : 'bg-zinc-800/50 text-white hover:bg-[#C99733] hover:text-black'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
