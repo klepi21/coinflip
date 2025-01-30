@@ -8,7 +8,7 @@ import Link from "next/link"
 
 // Define the vote end dates
 const fighterVoteEndDate = new Date('2025-02-14T23:59:59')
-const tokenVoteEndDate = new Date(Date.now() + (72 * 60 * 60 * 1000)) // 72 hours from now
+const tokenVoteEndDate = new Date('2025-02-01T22:01:00') // Fixed end date and time
 
 interface TimeLeft {
   days: number

@@ -9,7 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@headlessui/react": "^1.7.18",
+    "@ashswap/ash-sdk-js": "^2.2.0",
+    "@formkit/auto-animate": "^0.8.2",
+    "@headlessui/react": "^1.7.19",
     "@multiversx/sdk-core": "^12.19.3",
     "@multiversx/sdk-dapp": "^2.40.11",
     "@multiversx/sdk-network-providers": "^2.2.1",
@@ -29,6 +31,7 @@
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.7.1",
     "@types/canvas-confetti": "^1.9.0",
+    "bignumber.js": "^9.1.2",
     "buffer": "^6.0.3",
     "canvas-confetti": "^1.9.3",
     "class-variance-authority": "^0.7.1",
@@ -36,6 +39,7 @@
     "dotted-map": "^2.2.3",
     "framer-motion": "^11.18.0",
     "lightweight-charts": "^4.2.2",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.344.0",
     "next": "^14.2.0",
     "next-themes": "^0.4.4",
@@ -49,6 +53,7 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.15",
     "@types/node": "^20.11.19",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
