@@ -39,10 +39,10 @@ const TOKEN_DECIMALS = 18;
 
 // Token data with images
 const TOKENS = {
-  MINCU: {
-    id: 'MINCU',
-    name: 'MINCU',
-    image: `https://tools.multiversx.com/assets-cdn/tokens/${MINCU_IDENTIFIER}/icon.svg`,
+  EGLD: {
+    id: 'EGLD',
+    name: 'EGLD',
+    image: `https://s2.coinmarketcap.com/static/img/coins/200x200/6892.png`,
     decimals: 18
   },
   LUCIAN: {
@@ -136,6 +136,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const [transactionStep, setTransactionStep] = useState<'signing' | 'processing' | 'checking' | 'revealing'>('signing');
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [gameResult, setGameResult] = useState<GameResult>(null);
+  const [isWaitingForTx, setIsWaitingForTx] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   // Track disappearing games with full game data
   useEffect(() => {
@@ -219,95 +222,58 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     return winnerAddress;
   };
 
-  const handleJoinGame = async (gameId: number, amount: string, token: string) => {
-    if (!connectedAddress) {
-      toast.error('Please connect your wallet first');
+  // Add type guard for token
+  const isValidToken = (token: string): token is keyof typeof TOKENS => {
+    return token in TOKENS;
+  };
+
+  const handleJoinGame = async (game: Game) => {
+    if (!isValidToken(game.token)) {
+      toast.error('Invalid token type');
       return;
     }
 
     try {
-      setShowStatusModal(true);
-      setTransactionStep('signing');
-      setGameResult(null);
+      setIsWaitingForTx(true);
+      setSelectedGame(game);
 
-      const contract = new SmartContract({
-        address: new Address(SC_ADDRESS),
-        abi: AbiRegistry.create(flipcoinAbi)
-      });
+      const decimalAmount = TOKENS[game.token].decimals;
+      const rawAmount = (BigInt(game.amount) * BigInt(10 ** decimalAmount)).toString(16);
 
-      const transaction = contract.methods
-        .join([new U64Value(gameId)])
-        .withSender(new Address(connectedAddress))
-        .withGasLimit(10000000)
-        .withChainID(network.chainId);
-
-      if (token === 'EGLD') {
-        transaction.withValue(amount);
+      let transaction;
+      if (game.token === 'EGLD') {
+        // EGLD transaction
+        transaction = {
+          value: rawAmount.toString(),
+          data: `join@${game.id}`,
+          receiver: SC_ADDRESS,
+          gasLimit: 10000000,
+        };
       } else {
-        const payment = TokenPayment.fungibleFromAmount(token, amount, 0);
-        transaction.withSingleESDTTransfer(payment);
+        // Token transaction
+        const tokenIdentifier = game.token === 'RARE' ? RARE_IDENTIFIER : BOD_IDENTIFIER;
+        transaction = {
+          value: '0',
+          data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${rawAmount}@${Buffer.from('join').toString('hex')}@${game.id}`,
+          receiver: SC_ADDRESS,
+          gasLimit: 10000000,
+        };
       }
 
-      const tx = transaction.buildTransaction();
-      
-      setPopup(prev => ({ ...prev, message: 'Confirming transaction...' }));
-      
-      const { sessionId } = await sendTransactions({
-        transactions: [tx],
+      const { sessionId: newSessionId } = await sendTransactions({
+        transactions: [transaction],
         transactionsDisplayInfo: {
-          processingMessage: 'Processing game transaction',
-          errorMessage: 'An error occurred during game transaction',
-          successMessage: 'Transaction successful'
+          processingMessage: 'Processing game join...',
+          errorMessage: 'Failed to join game',
+          successMessage: 'Successfully joined game!'
         }
       });
 
-      if (!sessionId) {
-        throw new Error('Failed to get transaction session ID');
-      }
-      console.log('Account info:', accountInfo.shard);
-
-      // Wait for initial blockchain confirmation
-      await new Promise(resolve => setTimeout(resolve, accountInfo.shard === 1 ? 10000 : 25000));
-      await refreshAccount();
-
-      setTransactionStep('checking');
-
-      // Additional wait to ensure smart contract state is updated
-      await new Promise(resolve => setTimeout(resolve, 4000));
-
-      let retries = 3;
-      let winner = null;
-
-      setTransactionStep('revealing');
-
-      while (retries > 0 && !winner) {
-        try {
-          winner = await checkGameWinner(gameId);
-          if (winner) break;
-        } catch (error) {
-          retries--;
-          if (retries > 0) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-          }
-        }
-      }
-
-      if (!winner) {
-        throw new Error('Could not determine game result');
-      }
-
-      const isWinner = winner.toLowerCase() === connectedAddress?.toLowerCase();
-      setGameResult(isWinner ? 'win' : 'lose');
-
-      // Refresh all necessary states
-      await Promise.all([
-        refreshAccount(),
-        refetchGames()
-      ]);
-
+      setSessionId(newSessionId);
     } catch (error) {
-      console.error('Join game error:', error);
-      setShowStatusModal(false);
+      console.error('Error joining game:', error);
+      toast.error('Failed to join game');
+      setIsWaitingForTx(false);
     }
   };
 
@@ -834,7 +800,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </button>
                       ) : (
                         <button 
-                          onClick={() => handleJoinGame(game.id, game.amount, game.token)}
+                          onClick={() => handleJoinGame(game)}
                           disabled={!canJoinGame(game.amount, game.token)}
                           className={`w-full font-semibold py-2 px-4 whitespace-nowrap rounded-full text-sm transition-colors shadow-lg border-8 border-black ${
                             canJoinGame(game.amount, game.token)

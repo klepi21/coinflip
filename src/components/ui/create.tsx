@@ -32,6 +32,13 @@ const TOKENS = {
     image: `https://tools.multiversx.com/assets-cdn/tokens/${BOD_IDENTIFIER}/icon.svg`,
     decimals: 18,
     minAmount: 100000
+  },
+  EGLD: {
+    id: 'EGLD',
+    name: 'EGLD',
+    image: `https://s2.coinmarketcap.com/static/img/coins/200x200/6892.png`,
+    decimals: 18,
+    minAmount: 0.1
   }
 };
 
@@ -57,7 +64,7 @@ const GAME_MULTIPLIERS = [1, 2, 5, 10, 15];
 
 export default function Create() {
   const [amount, setAmount] = useState('');
-  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD'>('RARE');
+  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'EGLD'>('RARE');
   const [multiplier, setMultiplier] = useState(1);
   const [selectedSide, setSelectedSide] = useState<'GRM' | 'SASU' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -106,7 +113,7 @@ export default function Create() {
       setIsSubmitting(true);
       setIsWaitingForTx(true);
 
-      const decimalAmount = 18;
+      const decimalAmount = TOKENS[selectedToken].decimals;
       // Convert amount to a whole number first to avoid floating point issues
       const baseAmount = BigInt(amount);
       const totalAmount = baseAmount * BigInt(multiplier);
@@ -114,15 +121,28 @@ export default function Create() {
       const rawAmount = (totalAmount * BigInt(10 ** decimalAmount)).toString(16).padStart(decimalAmount * 2, '0');
       const sideValue = selectedSide === 'GRM' ? 0 : 1;
 
-      const tokenIdentifier = selectedToken === 'RARE' ? RARE_IDENTIFIER : BOD_IDENTIFIER;
-
-      const { sessionId: newSessionId } = await sendTransactions({
-        transactions: [{
+      let transaction;
+      if (selectedToken === 'EGLD') {
+        // EGLD transaction
+        transaction = {
+          value: rawAmount.toString(),
+          data: `create@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
+          receiver: SC_ADDRESS,
+          gasLimit: 10000000 * multiplier,
+        };
+      } else {
+        // Token transaction
+        const tokenIdentifier = selectedToken === 'RARE' ? RARE_IDENTIFIER : BOD_IDENTIFIER;
+        transaction = {
           value: '0',
           data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${rawAmount.toString()}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
           receiver: SC_ADDRESS,
           gasLimit: 10000000 * multiplier,
-        }],
+        };
+      }
+
+      const { sessionId: newSessionId } = await sendTransactions({
+        transactions: [transaction],
         transactionsDisplayInfo: {
           processingMessage: `Creating ${multiplier} game${multiplier > 1 ? 's' : ''} with ${totalAmount} ${selectedToken}...`,
           errorMessage: 'Failed to create game',
@@ -161,7 +181,9 @@ export default function Create() {
       text: 'Create Battle'
     };
     
-    const currentBalance = selectedToken === 'RARE' ? rareBalance : bodBalance;
+    const currentBalance = selectedToken === 'RARE' ? rareBalance : 
+                          selectedToken === 'BOD' ? bodBalance : 
+                          Number(account.balance) / Math.pow(10, 18); // Convert EGLD balance from atomic units
     const amountValue = parseFloat(amount);
     const totalAmount = amountValue * multiplier;
     
@@ -328,50 +350,52 @@ export default function Create() {
                   {/* Mobile Form Fields */}
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-zinc-400 text-sm mb-2">Amount</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          value={amount}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/[^0-9]/g, '');
-                            setAmount(value);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === '.' || e.key === ',' || e.key.toLowerCase() === 'e') {
-                              e.preventDefault();
-                            }
-                          }}
-                          step="1"
-                          min="500"
-                          className="w-32 bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
-                          placeholder="Enter amount"
-                        />
-                        <div className="flex gap-2">
-                          {Object.entries(TOKENS).map(([key, token]) => (
-                            <button
-                              key={key}
-                              onClick={() => setSelectedToken(key as 'RARE' | 'BOD')}
-                              className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
-                                selectedToken === key 
-                                  ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black text-black' 
-                                  : 'border-zinc-800 hover:border-[#C99733] text-white'
-                              }`}
-                            >
-                              <div className="w-5 h-5 rounded-full overflow-hidden">
-                                <Image
-                                  src={token.image}
-                                  alt={token.name}
-                                  width={20}
-                                  height={20}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                              <span className="font-medium">{token.name}</span>
-                            </button>
-                          ))}
-                        </div>
+                      <label className="block text-zinc-400 text-sm mb-2">Select Token</label>
+                      <div className="flex gap-2">
+                        {Object.entries(TOKENS).map(([key, token]) => (
+                          <button
+                            key={key}
+                            onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'EGLD')}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
+                              selectedToken === key 
+                                ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black text-black' 
+                                : 'border-zinc-800 hover:border-[#C99733] text-white'
+                            }`}
+                          >
+                            <div className="w-5 h-5 rounded-full overflow-hidden">
+                              <Image
+                                src={token.image}
+                                alt={token.name}
+                                width={20}
+                                height={20}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <span className="font-medium">{token.name}</span>
+                          </button>
+                        ))}
                       </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-zinc-400 text-sm mb-2">Amount</label>
+                      <input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9]/g, '');
+                          setAmount(value);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === '.' || e.key === ',' || e.key.toLowerCase() === 'e') {
+                            e.preventDefault();
+                          }
+                        }}
+                        step="1"
+                        min="500"
+                        className="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
+                        placeholder="Enter amount"
+                      />
                       {/* Helper message */}
                       <div className="text-sm text-zinc-500 mt-1">
                         Minimum amount: {TOKENS[selectedToken].minAmount} {selectedToken}
@@ -455,11 +479,13 @@ export default function Create() {
 
                     <div className="flex items-center gap-2 text-xs">
                       <span className="text-zinc-500">Balance:</span>
-                      {isLoadingBalance ? (
+                      {isLoadingBalance && selectedToken !== 'EGLD' ? (
                         <span className="text-zinc-400">Loading...</span>
                       ) : (
                         <span className="text-white font-medium">
-                          {(selectedToken === 'RARE' ? rareBalance : bodBalance).toFixed(2)} {selectedToken}
+                          {selectedToken === 'EGLD' 
+                            ? (Number(account.balance) / Math.pow(10, 18)).toFixed(4)
+                            : (selectedToken === 'RARE' ? rareBalance : bodBalance).toFixed(2)} {selectedToken}
                         </span>
                       )}
                     </div>
@@ -532,50 +558,52 @@ export default function Create() {
               {/* Form */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-zinc-400 text-sm mb-2">Amount</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      value={amount}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9]/g, '');
-                        setAmount(value);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === '.' || e.key === ',' || e.key.toLowerCase() === 'e') {
-                          e.preventDefault();
-                        }
-                      }}
-                      step="1"
-                      min="1"
-                      className="w-40 bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
-                      placeholder="Enter amount"
-                    />
-                    <div className="flex gap-2">
-                      {Object.entries(TOKENS).map(([key, token]) => (
-                        <button
-                          key={key}
-                          onClick={() => setSelectedToken(key as 'RARE' | 'BOD')}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
-                            selectedToken === key 
-                              ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black text-black' 
-                              : 'border-zinc-800 hover:border-[#C99733] text-white'
-                          }`}
-                        >
-                          <div className="w-5 h-5 rounded-full overflow-hidden">
-                            <Image
-                              src={token.image}
-                              alt={token.name}
-                              width={20}
-                              height={20}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <span className="font-medium">{token.name}</span>
-                        </button>
-                      ))}
-                    </div>
+                  <label className="block text-zinc-400 text-sm mb-2">Select Token</label>
+                  <div className="flex gap-2">
+                    {Object.entries(TOKENS).map(([key, token]) => (
+                      <button
+                        key={key}
+                        onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'EGLD')}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
+                          selectedToken === key 
+                            ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black text-black' 
+                            : 'border-zinc-800 hover:border-[#C99733] text-white'
+                        }`}
+                      >
+                        <div className="w-5 h-5 rounded-full overflow-hidden">
+                          <Image
+                            src={token.image}
+                            alt={token.name}
+                            width={20}
+                            height={20}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <span className="font-medium">{token.name}</span>
+                      </button>
+                    ))}
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-zinc-400 text-sm mb-2">Amount</label>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      setAmount(value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === '.' || e.key === ',' || e.key.toLowerCase() === 'e') {
+                        e.preventDefault();
+                      }
+                    }}
+                    step="1"
+                    min="1"
+                    className="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-white text-base font-medium placeholder-zinc-500 outline-none focus:border-[#C99733]"
+                    placeholder="Enter amount"
+                  />
                   {/* Helper message */}
                   <div className="text-sm text-zinc-500 mt-1">
                     Minimum amount: {TOKENS[selectedToken].minAmount} {selectedToken}
@@ -659,11 +687,13 @@ export default function Create() {
 
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-zinc-500">Balance:</span>
-                  {isLoadingBalance ? (
+                  {isLoadingBalance && selectedToken !== 'EGLD' ? (
                     <span className="text-zinc-400">Loading...</span>
                   ) : (
                     <span className="text-white font-medium">
-                      {(selectedToken === 'RARE' ? rareBalance : bodBalance).toFixed(2)} {selectedToken}
+                      {selectedToken === 'EGLD' 
+                        ? (Number(account.balance) / Math.pow(10, 18)).toFixed(4)
+                        : (selectedToken === 'RARE' ? rareBalance : bodBalance).toFixed(2)} {selectedToken}
                     </span>
                   )}
                 </div>

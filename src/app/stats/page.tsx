@@ -80,12 +80,14 @@ export default function Stats() {
     }
   }, [network.apiAddress, address]);
 
-  // If not connected or not admin, show forbidden message
-  if (!address || !ADMIN_ADDRESSES.includes(address)) {
-    return (
-      <main className="relative h-screen overflow-hidden bg-black">
-        <RetroGrid />
-        <div className="h-full overflow-auto pt-24">
+  return (
+    <main className="relative h-screen overflow-hidden bg-black">
+      <RetroGrid />
+      <div className="h-full overflow-auto pt-24">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+        </div>
+
+        {(!address || !ADMIN_ADDRESSES.includes(address)) ? (
           <div className="container max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -96,73 +98,66 @@ export default function Stats() {
               <p className="text-zinc-400">You don't have permission to view this page.</p>
             </motion.div>
           </div>
-        </div>
-      </main>
-    );
-  }
-
-  return (
-    <main className="relative h-screen overflow-hidden bg-black">
-      <RetroGrid />
-      <div className="h-full overflow-auto pt-24">
-        <div className="container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full"
-          >
-            <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl p-6 space-y-6">
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-white">Game Statistics</h2>
-                <p className="text-zinc-400">Player performance overview</p>
-              </div>
-
-              {/* Summary Cards */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-zinc-800/50 rounded-xl p-4">
-                  <h3 className="text-sm font-medium text-zinc-400">Total Wins</h3>
-                  <p className="text-2xl font-bold text-[#C99733]">{totalWins}</p>
+        ) : (
+          <div className="container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full"
+            >
+              <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl p-6 space-y-6">
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold text-white">Game Statistics</h2>
+                  <p className="text-zinc-400">Player performance overview</p>
                 </div>
-                <div className="bg-zinc-800/50 rounded-xl p-4">
-                  <h3 className="text-sm font-medium text-zinc-400">Total Losses</h3>
-                  <p className="text-2xl font-bold text-[#C99733]">{totalLosses}</p>
+
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-zinc-800/50 rounded-xl p-4">
+                    <h3 className="text-sm font-medium text-zinc-400">Total Wins</h3>
+                    <p className="text-2xl font-bold text-[#C99733]">{totalWins}</p>
+                  </div>
+                  <div className="bg-zinc-800/50 rounded-xl p-4">
+                    <h3 className="text-sm font-medium text-zinc-400">Total Losses</h3>
+                    <p className="text-2xl font-bold text-[#C99733]">{totalLosses}</p>
+                  </div>
+                </div>
+
+                {/* Scoreboard Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-zinc-800">
+                        <th className="text-left py-3 px-4 text-zinc-400 font-medium">Player</th>
+                        <th className="text-center py-3 px-4 text-zinc-400 font-medium">Wins</th>
+                        <th className="text-center py-3 px-4 text-zinc-400 font-medium">Losses</th>
+                        <th className="text-center py-3 px-4 text-zinc-400 font-medium">Win Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {scores.map((score, index) => {
+                        const winRate = score.wins + score.losses > 0
+                          ? ((score.wins / (score.wins + score.losses)) * 100).toFixed(1)
+                          : '0.0';
+
+                        return (
+                          <tr key={score.address} className="border-b border-zinc-800/50">
+                            <td className="py-3 px-4 text-white font-medium">
+                              <span className="text-sm">{score.address.slice(0, 8)}...{score.address.slice(-4)}</span>
+                            </td>
+                            <td className="py-3 px-4 text-center text-[#C99733]">{score.wins}</td>
+                            <td className="py-3 px-4 text-center text-zinc-400">{score.losses}</td>
+                            <td className="py-3 px-4 text-center text-white">{winRate}%</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-
-              {/* Scoreboard Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-zinc-800">
-                      <th className="text-left py-3 px-4 text-zinc-400 font-medium">Player</th>
-                      <th className="text-center py-3 px-4 text-zinc-400 font-medium">Wins</th>
-                      <th className="text-center py-3 px-4 text-zinc-400 font-medium">Losses</th>
-                      <th className="text-center py-3 px-4 text-zinc-400 font-medium">Win Rate</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {scores.map((score, index) => {
-                      const winRate = score.wins + score.losses > 0
-                        ? ((score.wins / (score.wins + score.losses)) * 100).toFixed(1)
-                        : '0.0';
-
-                      return (
-                        <tr key={score.address} className="border-b border-zinc-800/50">
-                          <td className="py-3 px-4 text-white font-medium">
-                            <span className="text-sm">{score.address.slice(0, 8)}...{score.address.slice(-4)}</span>
-                          </td>
-                          <td className="py-3 px-4 text-center text-[#C99733]">{score.wins}</td>
-                          <td className="py-3 px-4 text-center text-zinc-400">{score.losses}</td>
-                          <td className="py-3 px-4 text-center text-white">{winRate}%</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </motion.div>
-        </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     </main>
   );
