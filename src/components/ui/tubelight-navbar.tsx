@@ -100,21 +100,21 @@ export function TubelightNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="relative flex items-center justify-center gap-4 h-10 bg-black/50 rounded-full border border-zinc-800 px-1">
-      <div className="absolute inset-x-1 h-8 top-1/2 -translate-y-1/2">
+    <nav className="relative flex items-center justify-center gap-4 h-10 bg-black/50 rounded-full border border-zinc-800 px-1 min-w-[600px]">
+      <div className="absolute inset-x-0 h-8 top-1/2 -translate-y-1/2 mx-1">
         <div
           className={`absolute h-full bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full transition-all duration-300 ${
-            pathname === '/' ? 'left-0 right-[75%]' : 
-            pathname === '/vote' ? 'left-[25%] right-[50%]' : 
-            pathname === '/votetoken' ? 'left-[50%] right-[25%]' :
-            'left-[75%] right-0'
+            pathname === '/' ? 'left-0 w-[calc(25%-3px)]' : 
+            pathname === '/vote' ? 'left-[25%] w-[calc(25%-3px)]' : 
+            pathname === '/votetoken' ? 'left-[50%] w-[calc(25%-3px)]' :
+            'left-[75%] w-[calc(25%-3px)]'
           }`}
         />
       </div>
 
       <Link
         href="/"
-        className={`relative z-10 px-6 py-2 text-sm font-medium transition-colors text-center min-w-[100px] ${
+        className={`relative z-10 px-4 py-2 text-sm font-medium transition-colors text-center w-1/4 whitespace-nowrap ${
           pathname === '/' ? 'text-black' : 'text-white hover:text-zinc-300'
         }`}
       >
@@ -122,7 +122,7 @@ export function TubelightNav() {
       </Link>
       <Link
         href="/vote"
-        className={`relative z-10 px-6 py-2 text-sm font-medium transition-colors text-center min-w-[100px] ${
+        className={`relative z-10 px-4 py-2 text-sm font-medium transition-colors text-center w-1/4 whitespace-nowrap ${
           pathname === '/vote' ? 'text-black' : 'text-white hover:text-zinc-300'
         }`}
       >
@@ -130,16 +130,16 @@ export function TubelightNav() {
       </Link>
       <Link
         href="/votetoken"
-        className={`relative z-10 px-6 py-2 pl-6 text-sm font-medium transition-colors text-center min-w-[100px] ${
+        className={`relative z-10 px-4 py-2 text-sm font-medium transition-colors text-center w-1/4 whitespace-nowrap ${
           pathname === '/votetoken' ? 'text-black' : 'text-white hover:text-zinc-300'
         }`}
       >
         Vote Token
       </Link>
-      <div className="relative">
+      <div className="relative w-1/4">
         <Link
           href="/stats"
-          className="relative z-10 px-6 py-2 text-sm font-medium text-zinc-500 cursor-not-allowed text-center min-w-[100px]"
+          className="relative z-10 px-4 py-2 text-sm font-medium text-zinc-500 cursor-not-allowed text-center block whitespace-nowrap"
           onClick={(e) => e.preventDefault()}
         >
           Stats
