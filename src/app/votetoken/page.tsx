@@ -26,7 +26,7 @@ import Image from "next/image";
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
 const RARE_IDENTIFIER = 'RARE-99e8b0';
 const BOD_IDENTIFIER = 'BOD-204877';
-const VOTE_MULTIPLIERS = [1, 3, 5, 10, 15];
+const VOTE_MULTIPLIERS = [1, 5, 10, 50, 100];
 
 // Token data with images
 const TOKENS = {

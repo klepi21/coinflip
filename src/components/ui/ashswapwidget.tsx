@@ -8,6 +8,7 @@ import { Aggregator } from '@ashswap/ash-sdk-js/out';
 import { ChainId } from '@ashswap/ash-sdk-js/out/helper/token';
 import BigNumber from 'bignumber.js';
 import { useToast } from './toast';
+import { useTrackTransactionStatus } from '@multiversx/sdk-dapp/hooks/transactions/useTrackTransactionStatus';
 
 // Constants
 const QX_ASHSWAP_AGGREGATOR_SC = 'erd1qqqqqqqqqqqqqpgqfpxvzz7s3ws2at75g8lz92r4z5r24gl4u7zsz63spm';
@@ -515,6 +516,12 @@ export const AshSwapWidget: React.FC<AshSwapWidgetProps> = ({ availableTokens, i
   const [interaction, setInteraction] = useState<Interaction | null>(null);
   const [outAmount, setOutAmount] = useState('');
   const [quoteInfo, setQuoteInfo] = useState<QuoteInfo | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  
+  // Add transaction tracking
+  const { isPending, isSuccessful, isFailed } = useTrackTransactionStatus({
+    transactionId: sessionId || ''
+  });
 
   const aggregatorService = useMemo(() => 
     new Aggregator({ 
@@ -566,6 +573,41 @@ export const AshSwapWidget: React.FC<AshSwapWidgetProps> = ({ availableTokens, i
     getQuote();
   }, [tokenIn, tokenOut, amount, address, aggregatorService]);
 
+  // Show transaction status toasts
+  useEffect(() => {
+    if (!sessionId) return;
+
+    if (isPending) {
+      toast({
+        title: "Transaction Pending",
+        description: "Your swap transaction is being processed...",
+        duration: 1000000, // Very long duration instead of null
+      });
+    }
+
+    if (isSuccessful) {
+      toast({
+        title: "Transaction Successful",
+        description: "Your swap has been completed successfully!",
+        duration: 5000,
+      });
+      // Reset states after success
+      setSessionId(null);
+      setAmount('');
+      setOutAmount('');
+    }
+
+    if (isFailed) {
+      toast({
+        title: "Transaction Failed",
+        description: "Your swap transaction has failed. Please try again.",
+        duration: 5000,
+        variant: "destructive",
+      });
+      setSessionId(null);
+    }
+  }, [isPending, isSuccessful, isFailed, sessionId, toast]);
+
   // Update the swap handler with toast notifications
   const handleSwap = useCallback(async () => {
     if (!interaction || !address || !tokenIn || !tokenOut || !amount) return;
@@ -577,13 +619,7 @@ export const AshSwapWidget: React.FC<AshSwapWidgetProps> = ({ availableTokens, i
 
       const finalInteraction = prepareFinalInteraction(interaction, address, actualAmount);
 
-      toast({
-        title: "Transaction Pending",
-        description: "Your swap transaction is being processed...",
-        duration: 5000,
-      });
-
-      const { sessionId } = await sendTransactions({
+      const { sessionId: newSessionId } = await sendTransactions({
         transactions: [finalInteraction.buildTransaction()],
         transactionsDisplayInfo: {
           processingMessage: 'Processing Swap',
@@ -594,21 +630,11 @@ export const AshSwapWidget: React.FC<AshSwapWidgetProps> = ({ availableTokens, i
         callbackRoute: window.location.pathname
       });
 
-      // Show success toast
-      toast({
-        title: "Transaction Successful",
-        description: "Your swap has been completed successfully!",
-        duration: 5000,
-      });
-
-      console.log('Transaction sent with sessionId:', sessionId);
+      setSessionId(newSessionId);
       setError(null);
-      setAmount('');
-      setOutAmount('');
 
     } catch (err) {
       console.error('Swap error:', err);
-      // Show error toast
       toast({
         title: "Transaction Failed",
         description: err instanceof Error ? err.message : 'Failed to prepare swap',
