@@ -14,6 +14,7 @@ import {
 import { useGetNetworkConfig, useGetAccountInfo } from "@multiversx/sdk-dapp/hooks";
 import { RetroGrid } from '@/components/ui/retro-grid';
 import flipcoinAbi from '@/config/flipcoin.abi.json';
+import { AshSwapWidget } from "@/components/ui/ashswapwidget";
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -134,6 +135,7 @@ export default function Stats() {
               animate={{ opacity: 1, y: 0 }}
               className="w-full"
             >
+
               <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl p-6 space-y-6">
                 <div className="space-y-2">
                   <h2 className="text-2xl font-bold text-white">Game Statistics</h2>

@@ -126,7 +126,7 @@ export function TubelightNav() {
           pathname === '/vote' ? 'text-black' : 'text-white hover:text-zinc-300'
         }`}
       >
-        Vote
+        Vote Fighter
       </Link>
       <Link
         href="/votetoken"

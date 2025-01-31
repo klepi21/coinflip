@@ -24,7 +24,7 @@ export function Navbar() {
 
   const navItems = [
     { name: 'Fight', url: '/', icon: Coins },
-    { name: 'Vote', url: '/vote', icon: Vote },
+    { name: 'Vote Fighter', url: '/vote', icon: Vote },
     { name: 'Vote Token', url: '/votetoken', icon: Vote },
     { 
       name: 'Stats', 
