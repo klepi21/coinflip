@@ -1,8 +1,22 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { useGetAccount } from '@multiversx/sdk-dapp/hooks';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { useGetAccount, useGetAccountInfo } from '@multiversx/sdk-dapp/hooks';
 import { sendTransactions } from '@multiversx/sdk-dapp/services';
+import { getNetworkConfig } from '@multiversx/sdk-dapp/utils';
 import axios from 'axios';
-import { Address, Transaction, TokenPayment, SmartContract, ContractFunction, Interaction, TokenTransfer, BigUIntValue, BooleanValue } from '@multiversx/sdk-core';
+import { Address, BooleanValue, ContractFunction, Interaction, SmartContract, TokenTransfer } from '@multiversx/sdk-core/out';
+import { Aggregator } from '@ashswap/ash-sdk-js/out';
+import { ChainId } from '@ashswap/ash-sdk-js/out/helper/token';
+import BigNumber from 'bignumber.js';
+import { useToast } from './toast';
+
+// Constants
+const QX_ASHSWAP_AGGREGATOR_SC = 'erd1qqqqqqqqqqqqqpgqfpxvzz7s3ws2at75g8lz92r4z5r24gl4u7zsz63spm';
+
+const FEE = 0.001; // 0.1%
+const EGLD_MINIMUM_VALUE = 0.005;
+
+// Allowed tokens for "You receive" section
+const ALLOWED_RECEIVE_TOKENS = ['RARE', 'BOD', 'KWAK', 'ONE', 'TOM', 'JEX'];
 
 // Types
 interface Token {
@@ -64,28 +78,21 @@ interface QuoteResponse {
   warning?: string;
 }
 
-// Constants
+// Default tokens
 const DEFAULT_TOKENS: Token[] = [
-  {
-    identifier: 'EGLD',
-    name: 'MultiversX eGold',
-    ticker: 'EGLD',
-    decimals: 18,
-    icon: 'https://media.elrond.com/tokens/asset/WEGLD-bd4d79/logo.svg'
-  },
-  {
-    identifier: 'WEGLD-bd4d79',
-    name: 'Wrapped EGLD',
-    ticker: 'WEGLD',
-    decimals: 18,
-    icon: 'https://media.elrond.com/tokens/asset/WEGLD-bd4d79/logo.svg'
-  },
   {
     identifier: 'USDC-c76f1f',
     name: 'USD Coin',
     ticker: 'USDC',
     decimals: 6,
     icon: 'https://media.elrond.com/tokens/asset/USDC-c76f1f/logo.svg'
+  },
+  {
+    identifier: 'RARE-99e8b0',
+    name: 'RARE Token',
+    ticker: 'RARE',
+    decimals: 18,
+    icon: 'https://media.elrond.com/tokens/asset/RARE-99e8b0/logo.svg'
   }
 ];
 
@@ -102,8 +109,15 @@ const QX_CONSTANTS = {
   }
 };
 
-// Add type for swap arguments
-type SwapArg = BigUIntValue | BooleanValue;
+// Add QuoteInfo type
+interface QuoteInfo {
+  effectivePrice: number;
+  priceImpact: number;
+  warning?: string;
+}
+
+// Constants
+const GOLD_COLOR = '#FFB930'; // App's gold color
 
 // UI Components
 const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
@@ -320,13 +334,52 @@ const SwapInput: React.FC<{
   label?: string;
   isOutput?: boolean;
 }> = ({ value, onChange, token, onSelectToken, label, isOutput }) => {
+  const { address } = useGetAccountInfo();
+  const [balance, setBalance] = useState<string>('0');
+
+  // Fetch token balance when token changes
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (!token || !address) return;
+
+      try {
+        if (token.identifier === 'EGLD') {
+          const response = await axios.get(`https://api.multiversx.com/accounts/${address}/balance`);
+          const balanceInEGLD = new BigNumber(response.data).dividedBy(10 ** 18).toString();
+          setBalance(balanceInEGLD);
+        } else {
+          const response = await axios.get(`https://api.multiversx.com/accounts/${address}/tokens/${token.identifier}`);
+          const balanceInToken = new BigNumber(response.data.balance).dividedBy(10 ** token.decimals).toString();
+          setBalance(balanceInToken);
+        }
+      } catch (error) {
+        console.error('Failed to fetch balance:', error);
+        setBalance('0');
+      }
+    };
+
+    fetchBalance();
+  }, [token, address]);
+
   const displayValue = isOutput && token && value ? 
     (parseFloat(value) / Math.pow(10, token.decimals)).toString() :
     value;
 
+  const formattedBalance = parseFloat(balance).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6
+  });
+
   return (
-    <div className="bg-[#131A2A] p-4 rounded-[20px]">
-      {label && <div className="text-sm text-[#5D6785] mb-2">{label}</div>}
+    <div className="bg-[#1a1a1a] p-4 rounded-[20px] border-2 border-[#FFB930]/30">
+      <div className="flex justify-between items-center mb-2">
+        <div className="text-base font-bold text-[#FFB930]">{label}</div>
+        {token && !isOutput && (
+          <div className="text-sm text-[#FFB930]/70">
+            Balance: {formattedBalance} {token.ticker}
+          </div>
+        )}
+      </div>
       <div className="flex justify-between gap-2">
         <input
           type="number"
@@ -334,20 +387,20 @@ const SwapInput: React.FC<{
           onChange={(e) => onChange(e.target.value)}
           placeholder="0"
           readOnly={isOutput}
-          className="bg-transparent text-2xl text-white outline-none flex-1 w-full"
+          className="bg-transparent text-3xl font-bold text-white outline-none flex-1 w-full placeholder-gray-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
         <button
           onClick={onSelectToken}
-          className="flex items-center gap-2 bg-[#1B2131] hover:bg-[#2B3A54] py-1 px-3 rounded-full transition-colors"
+          className="flex items-center gap-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] py-2 px-4 rounded-full transition-colors border-2 border-[#FFB930]/40"
         >
           {token ? (
             <>
-              <img src={token.icon} alt={token.name} className="w-5 h-5 rounded-full" />
-              <span className="text-white font-medium">{token.ticker}</span>
-              <span className="text-[#5D6785]">▼</span>
+              <img src={token.icon} alt={token.name} className="w-6 h-6 rounded-full" />
+              <span className="text-[#FFB930] font-bold text-lg">{token.ticker}</span>
+              <span className="text-[#FFB930] font-bold">▼</span>
             </>
           ) : (
-            <span className="text-white font-medium">Select token ▼</span>
+            <span className="text-[#FFB930] font-bold text-lg">Select token ▼</span>
           )}
         </button>
       </div>
@@ -355,16 +408,15 @@ const SwapInput: React.FC<{
   );
 };
 
-const SwapArrow: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+const SwapArrow: React.FC = () => (
   <div className="flex justify-center -my-2 z-10">
-    <button
-      onClick={onClick}
-      className="bg-[#131A2A] p-2 rounded-xl border border-[#1B2131] hover:bg-[#1B2131] transition-colors"
+    <div
+      className="bg-[#1a1a1a] p-3 rounded-xl border-2 border-[#FFB930]/10 opacity-50 cursor-not-allowed"
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-[#5D6785]">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 13L17 13M17 13L13 17M17 13L13 9" />
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-[#FFB930]/50">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M7 13L17 13M17 13L13 17M17 13L13 9" />
       </svg>
-    </button>
+    </div>
   </div>
 );
 
@@ -382,17 +434,94 @@ const toBaseUnit = (amount: string, decimals: number): string => {
   return `${wholePart}${paddedDecimal}`;
 };
 
-// Main Component
-export const AshSwapWidget: React.FC = () => {
+// Add resolveWarning function
+const resolveWarning = async (warning: string): Promise<boolean> => {
+  console.log('Swap warning:', warning);
+  // For now, we'll accept all warnings. In production, you might want to show a confirmation dialog
+  return true;
+};
+
+// Helper functions
+const getAggregationData = async (aggregatorService: Aggregator, firstTokenIdentifier: string, secondTokenIdentifier: string, amount: string, slippage = 200) => {
+  const tokens = await aggregatorService.getTokens();
+
+  const { sorResponse, getInteraction } = await aggregatorService
+    .aggregate(firstTokenIdentifier, secondTokenIdentifier, amount, slippage);
+
+  // @ts-ignore Probably mismatch between AshSwap and MvX Interaction
+  const interaction: Interaction | null = await getInteraction(async () => true)
+    .catch(() => null);
+
+  return { data: sorResponse, interaction, tokens };
+};
+
+function prepareFinalInteraction(interaction: Interaction, address: string, amount: string) {
+  const { chainId } = getNetworkConfig();
+
+  const finalArgs = interaction.getArguments();
+
+  // Adjust for expected arguments length
+  const expectedArgsLength = 3;
+  if (finalArgs.length === expectedArgsLength) {
+    // Insert a new BooleanValue before the last argument
+    finalArgs.splice(finalArgs.length - 1, 0, new BooleanValue(false));
+  }
+
+  const contract = new SmartContract({ address: new Address(QX_ASHSWAP_AGGREGATOR_SC) });
+  let finalInteraction = new Interaction(contract, new ContractFunction('swap'), finalArgs)
+    .withSender(new Address(address))
+    .withChainID(chainId)
+    .withGasLimit(interaction.getGasLimit().valueOf());
+
+  if (new BigNumber(interaction.getValue().toString()).toNumber() > 0) {
+    finalInteraction = finalInteraction.withValue(amount);
+  } else {
+    const transfers = interaction.getTokenTransfers();
+    if (!transfers || transfers.length === 0) {
+      throw new Error('No token transfers found.');
+    }
+    const [transfer] = transfers;
+    finalInteraction = finalInteraction.withSingleESDTTransfer(
+      TokenTransfer.fungibleFromBigInteger(transfer.tokenIdentifier, amount)
+    );
+  }
+
+  return finalInteraction;
+}
+
+// Update the component props
+interface AshSwapWidgetProps {
+  availableTokens: Token[];
+  isLoadingTokens: boolean;
+}
+
+export const AshSwapWidget: React.FC<AshSwapWidgetProps> = ({ availableTokens, isLoadingTokens }) => {
   const { address } = useGetAccount();
-  const [tokenIn, setTokenIn] = useState<Token | null>(null);
-  const [tokenOut, setTokenOut] = useState<Token | null>(null);
+  const { chainId } = getNetworkConfig();
+  const { toast, ToastContainer } = useToast();
+  
+  // Find USDC and RARE tokens from available tokens
+  const defaultUSDC = availableTokens.find(t => t.identifier === 'USDC-c76f1f');
+  const defaultRARE = availableTokens.find(t => t.identifier === 'RARE-99e8b0');
+  
+  // Initialize with default tokens if found, otherwise use first available tokens
+  const [tokenIn, setTokenIn] = useState<Token | null>(defaultUSDC || null);
+  const [tokenOut, setTokenOut] = useState<Token | null>(defaultRARE || null);
   const [amount, setAmount] = useState('');
-  const [quote, setQuote] = useState<QuoteResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isTokenInModalOpen, setIsTokenInModalOpen] = useState(false);
   const [isTokenOutModalOpen, setIsTokenOutModalOpen] = useState(false);
+  const [interaction, setInteraction] = useState<Interaction | null>(null);
+  const [outAmount, setOutAmount] = useState('');
+  const [quoteInfo, setQuoteInfo] = useState<QuoteInfo | null>(null);
+
+  const aggregatorService = useMemo(() => 
+    new Aggregator({ 
+      chainId: ChainId.Mainnet
+    }), 
+    []
+  );
 
   // Update the quote fetching effect
   useEffect(() => {
@@ -401,20 +530,30 @@ export const AshSwapWidget: React.FC = () => {
 
       try {
         setIsLoading(true);
-        const from = tokenIn.identifier === 'EGLD' ? 'WEGLD-bd4d79' : tokenIn.identifier;
-        const to = tokenOut.identifier === 'EGLD' ? 'WEGLD-bd4d79' : tokenOut.identifier;
-        const adjustedAmount = adjustAmountWithDecimals(amount, tokenIn.decimals);
+        const swapAmount = new BigNumber(amount)
+          .multipliedBy(1 - FEE)
+          .multipliedBy(Math.pow(10, tokenIn.decimals))
+          .toFixed(0);
 
-        const response = await axios.get<QuoteResponse>(`${QX_CONSTANTS.API_URL}${QX_CONSTANTS.ENDPOINTS.QUOTE}`, {
-          params: {
-            from,
-            to,
-            amount: adjustedAmount
-          }
+        const { data, interaction: newInteraction } = await getAggregationData(
+          aggregatorService,
+          tokenIn.identifier === 'EGLD' ? 'WEGLD-bd4d79' : tokenIn.identifier,
+          tokenOut.identifier === 'EGLD' ? 'WEGLD-bd4d79' : tokenOut.identifier,
+          swapAmount
+        );
+
+        setInteraction(newInteraction);
+        setQuoteInfo({
+          effectivePrice: data.effectivePrice,
+          priceImpact: data.priceImpact,
+          warning: data.warning
         });
-
-        // Store the entire response data
-        setQuote(response.data);
+        setOutAmount(data.returnAmount ? 
+          new BigNumber(data.returnAmount)
+            .multipliedBy(Math.pow(10, tokenOut.decimals))
+            .toString() : 
+          '0'
+        );
         setError(null);
       } catch (err) {
         setError('Failed to get quote');
@@ -425,285 +564,185 @@ export const AshSwapWidget: React.FC = () => {
     };
 
     getQuote();
-  }, [tokenIn, tokenOut, amount, address]);
+  }, [tokenIn, tokenOut, amount, address, aggregatorService]);
 
-  // Update the swap handler
+  // Update the swap handler with toast notifications
   const handleSwap = useCallback(async () => {
-    if (!quote || !address || !tokenIn || !tokenOut || !amount) return;
+    if (!interaction || !address || !tokenIn || !tokenOut || !amount) return;
 
     try {
-      // Get the first swap from the quote
-      const swap = quote.swaps[0];
-      if (!swap) {
-        throw new Error('No swap route available');
-      }
+      const actualAmount = new BigNumber(amount)
+        .multipliedBy(Math.pow(10, tokenIn.decimals))
+        .toFixed(0);
 
-      // Format steps data
-      let stepsData = '';
-      // First, add the number of steps
-      stepsData += quote.swaps.length.toString(16).padStart(8, '0');
-      
-      for (const swap of quote.swaps) {
-        // Token in identifier
-        const tokenInHex = Buffer.from(swap.assetIn).toString('hex');
-        stepsData += tokenInHex.length.toString(16).padStart(8, '0') + tokenInHex;
-        
-        // Token out identifier
-        const tokenOutHex = Buffer.from(swap.assetOut).toString('hex');
-        stepsData += tokenOutHex.length.toString(16).padStart(8, '0') + tokenOutHex;
-        
-        // Amount in
-        const amountHex = BigInt(toBaseUnit(swap.amount, tokenIn.decimals)).toString(16).padStart(32, '0');
-        stepsData += amountHex;
-        
-        // Pool address (should be 32 bytes)
-        const poolAddressHex = Buffer.from(swap.poolId).toString('hex');
-        stepsData += poolAddressHex;
-        
-        // Function name
-        const functionNameHex = Buffer.from(swap.functionName).toString('hex');
-        stepsData += functionNameHex.length.toString(16).padStart(8, '0') + functionNameHex;
-        
-        // Arguments array
-        stepsData += swap.arguments.length.toString(16).padStart(8, '0');
-        for (const arg of swap.arguments) {
-          const argHex = Buffer.from(arg).toString('hex');
-          stepsData += argHex.length.toString(16).padStart(8, '0') + argHex;
-        }
-      }
+      const finalInteraction = prepareFinalInteraction(interaction, address, actualAmount);
 
-      // Format limits data
-      let limitsData = '';
-      // Number of limits
-      limitsData += '01'; // One limit
-      
-      // Token identifier
-      const limitTokenHex = Buffer.from(tokenOut.identifier === 'EGLD' ? 'WEGLD-bd4d79' : tokenOut.identifier).toString('hex');
-      limitsData += limitTokenHex.length.toString(16).padStart(8, '0') + limitTokenHex;
-      
-      // Amount limit
-      const limitAmountHex = BigInt(toBaseUnit(quote.returnAmount, tokenOut.decimals)).toString(16).padStart(32, '0');
-      limitsData += limitAmountHex;
-
-      // Prepare the transaction
-      let tx;
-      
-      if (tokenIn.identifier === 'EGLD') {
-        // For EGLD, use direct value transfer
-        tx = {
-          value: quote.swapAmount,
-          data: Buffer.from(`swap@${stepsData}@${limitsData}@${tokenOut.identifier === 'EGLD' ? '01' : '00'}`).toString('base64'),
-          receiver: new Address(QX_CONSTANTS.AGGREGATOR_SC_ADDRESS),
-          sender: new Address(address),
-          gasLimit: QX_CONSTANTS.GAS_LIMIT,
-          chainID: QX_CONSTANTS.CHAIN_ID,
-          version: 1
-        };
-      } else {
-        // For ESDT tokens, use ESDTTransfer
-        const encodedTokenId = Buffer.from(tokenIn.identifier).toString('hex');
-        const amountHex = BigInt(toBaseUnit(quote.swapAmount, tokenIn.decimals)).toString(16).padStart(32, '0');
-        
-        tx = {
-          value: '0',
-          data: Buffer.from(`ESDTTransfer@${encodedTokenId}@${amountHex}@${Buffer.from('swap').toString('hex')}@${stepsData}@${limitsData}@${tokenOut.identifier === 'EGLD' ? '01' : '00'}`).toString('base64'),
-          receiver: new Address(QX_CONSTANTS.AGGREGATOR_SC_ADDRESS),
-          sender: new Address(address),
-          gasLimit: QX_CONSTANTS.GAS_LIMIT,
-          chainID: QX_CONSTANTS.CHAIN_ID,
-          version: 1
-        };
-      }
-
-      // Log the transaction for debugging
-      console.log('Final Transaction:', {
-        ...tx,
-        data: Buffer.from(tx.data, 'base64').toString('utf8'),
-        value: tx.value.toString(),
-        decodedData: {
-          tokenId: tokenIn.identifier,
-          amount: quote.swapAmount,
-          amountInBaseUnits: toBaseUnit(quote.swapAmount, tokenIn.decimals),
-          rawStepsData: stepsData,
-          rawLimitsData: limitsData
-        }
+      toast({
+        title: "Transaction Pending",
+        description: "Your swap transaction is being processed...",
+        duration: 5000,
       });
 
-      // Send the transaction
       const { sessionId } = await sendTransactions({
-        transactions: [tx],
+        transactions: [finalInteraction.buildTransaction()],
         transactionsDisplayInfo: {
           processingMessage: 'Processing Swap',
           errorMessage: 'Swap failed',
           successMessage: 'Swap successful'
         },
-        redirectAfterSign: false
+        redirectAfterSign: false,
+        callbackRoute: window.location.pathname
+      });
+
+      // Show success toast
+      toast({
+        title: "Transaction Successful",
+        description: "Your swap has been completed successfully!",
+        duration: 5000,
       });
 
       console.log('Transaction sent with sessionId:', sessionId);
       setError(null);
       setAmount('');
-      setQuote(null);
+      setOutAmount('');
 
     } catch (err) {
       console.error('Swap error:', err);
+      // Show error toast
+      toast({
+        title: "Transaction Failed",
+        description: err instanceof Error ? err.message : 'Failed to prepare swap',
+        duration: 5000,
+        variant: "destructive",
+      });
       setError(err instanceof Error ? err.message : 'Failed to prepare swap');
     }
-  }, [quote, address, tokenIn, tokenOut, amount]);
-
-  const handleSwapDirection = () => {
-    setTokenIn(tokenOut);
-    setTokenOut(tokenIn);
-    setAmount('');
-    setQuote(null);
-  };
+  }, [interaction, address, tokenIn, tokenOut, amount, toast]);
 
   return (
-    <SwapCard>
-      <SwapHeader />
-      
-      <div className="space-y-1">
-        <SwapInput
-          value={amount}
-          onChange={setAmount}
-          token={tokenIn}
-          onSelectToken={() => setIsTokenInModalOpen(true)}
-          label="You pay"
-        />
+    <>
+      <div className="bg-[#1a1a1a] rounded-[24px] p-6 border-2 border-[#FFB930]/30">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-[#FFB930]">Swap</h2>
+          <div className="text-[#FFB930]">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+        </div>
 
-        <SwapArrow onClick={handleSwapDirection} />
+        <div className="space-y-2">
+          <SwapInput
+            value={amount}
+            onChange={setAmount}
+            token={tokenIn}
+            onSelectToken={() => setIsTokenInModalOpen(true)}
+            label="You pay"
+          />
 
-        <SwapInput
-          value={quote ? (parseFloat(quote.returnAmount) || '').toString() : ''}
-          onChange={() => {}}
-          token={tokenOut}
-          onSelectToken={() => setIsTokenOutModalOpen(true)}
-          label="You receive"
-          isOutput
-        />
+          <SwapArrow />
 
-        {quote && (
-          <div className="px-4 py-2 text-sm">
-            <div className="flex justify-between text-[#5D6785]">
-              <span>Rate</span>
-              <span>1 {tokenIn?.ticker} = {(1/quote.effectivePrice).toFixed(6)} {tokenOut?.ticker}</span>
-            </div>
-            <div className="flex justify-between text-[#5D6785]">
-              <span>Price Impact</span>
-              <span className={`${quote.priceImpact > 0.01 ? 'text-[#FD4040]' : 'text-[#3DBA4C]'}`}>
-                {(quote.priceImpact * 100).toFixed(2)}%
-              </span>
-            </div>
-            {quote.warning && quote.warning !== "None" && (
-              <div className="text-[#FFA500] mt-1">
-                Warning: {quote.warning}
+          <SwapInput
+            value={outAmount}
+            onChange={() => {}}
+            token={tokenOut}
+            onSelectToken={() => setIsTokenOutModalOpen(true)}
+            label="You receive"
+            isOutput
+          />
+
+          {interaction && quoteInfo && (
+            <div className="px-4 py-3 text-base bg-[#1a1a1a] rounded-lg mt-4 border-2 border-[#FFB930]/30">
+              <div className="flex justify-between text-[#FFB930] font-bold">
+                <span>Rate</span>
+                <span>1 {tokenIn?.ticker} = {(1/quoteInfo.effectivePrice).toFixed(6)} {tokenOut?.ticker}</span>
               </div>
-            )}
-          </div>
-        )}
+              <div className="flex justify-between text-[#FFB930] font-bold">
+                <span>Price Impact</span>
+                <span className={`${quoteInfo.priceImpact > 0.01 ? 'text-red-500' : 'text-[#FFB930]'}`}>
+                  {(quoteInfo.priceImpact * 100).toFixed(2)}%
+                </span>
+              </div>
+            </div>
+          )}
 
-        <button
-          onClick={handleSwap}
-          disabled={isLoading || !quote || !address}
-          className={`
-            w-full py-4 rounded-[20px] mt-2 font-medium text-lg
-            ${!address ? 'bg-[#4C82FB] hover:bg-[#5B8EFF]' :
-              isLoading || !quote ? 'bg-[#1B2131] text-[#5D6785] cursor-not-allowed' :
-              'bg-[#4C82FB] hover:bg-[#5B8EFF]'}
-            transition-colors text-white
-          `}
-        >
-          {!address ? 'Connect Wallet' : 
-           isLoading ? 'Processing...' : 
-           !quote ? 'Enter an amount' :
-           'Swap'}
-        </button>
+          <button
+            onClick={handleSwap}
+            disabled={isLoading || !interaction || !address}
+            className={`
+              w-full py-4 rounded-[20px] mt-4 font-bold text-xl
+              ${!address ? 'bg-[#FFB930] hover:bg-[#FFB930]/90 text-black' :
+                isLoading || !interaction ? 'bg-[#2a2a2a] text-[#9ca3af] cursor-not-allowed border-2 border-[#FFB930]/30' :
+                'bg-[#FFB930] hover:bg-[#FFB930]/90 text-black'}
+              transition-colors border-2 border-[#FFB930]/30
+            `}
+          >
+            {!address ? 'Connect Wallet' : 
+             isLoading ? 'Processing...' : 
+             !interaction ? 'Enter an amount' :
+             'Swap'}
+          </button>
 
-        {error && (
-          <div className="text-[#FD4040] text-center mt-2 text-sm">
-            {error}
-          </div>
-        )}
+          {error && (
+            <div className="text-red-500 text-center mt-2 text-sm">
+              {error}
+            </div>
+          )}
+        </div>
+
+        {/* Token Selection Modal */}
+        <TokenSelectorModal
+          isOpen={isTokenInModalOpen}
+          onClose={() => setIsTokenInModalOpen(false)}
+          onSelect={setTokenIn}
+          selectedToken={tokenIn}
+          filterTokens={false}
+          tokens={availableTokens}
+          isLoading={isLoadingTokens}
+        />
+        <TokenSelectorModal
+          isOpen={isTokenOutModalOpen}
+          onClose={() => setIsTokenOutModalOpen(false)}
+          onSelect={setTokenOut}
+          selectedToken={tokenOut}
+          filterTokens={true}
+          allowedTokens={ALLOWED_RECEIVE_TOKENS}
+          tokens={availableTokens}
+          isLoading={isLoadingTokens}
+        />
       </div>
-
-      {/* Token Selection Modals */}
-      <TokenSelectorModal
-        isOpen={isTokenInModalOpen}
-        onClose={() => setIsTokenInModalOpen(false)}
-        onSelect={setTokenIn}
-        selectedToken={tokenIn}
-      />
-      <TokenSelectorModal
-        isOpen={isTokenOutModalOpen}
-        onClose={() => setIsTokenOutModalOpen(false)}
-        onSelect={setTokenOut}
-        selectedToken={tokenOut}
-      />
-    </SwapCard>
+      <ToastContainer />
+    </>
   );
 };
 
-// Updated Token Selector Modal with Uniswap style
+// Update TokenSelectorModal styling
 const TokenSelectorModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   onSelect: (token: Token) => void;
   selectedToken: Token | null;
-}> = ({ isOpen, onClose, onSelect, selectedToken }) => {
+  filterTokens?: boolean;
+  allowedTokens?: string[];
+  tokens: Token[];
+  isLoading: boolean;
+}> = ({ isOpen, onClose, onSelect, selectedToken, filterTokens = false, allowedTokens = [], tokens, isLoading }) => {
   const [search, setSearch] = useState('');
-  const [tokens, setTokens] = useState<Token[]>(DEFAULT_TOKENS);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Fetch tokens when modal opens
-  useEffect(() => {
-    const fetchTokens = async () => {
-      if (!isOpen) return;
-      
-      try {
-        setIsLoading(true);
-        const response = await axios.get<MxToken[]>('https://api.multiversx.com/tokens?size=500');
-        
-        // Filter for valid tokens, less restrictive conditions
-        const validTokens = response.data
-          .filter(token => 
-            token.assets && // Just check if assets exist
-            token.ticker !== 'WEGLD-bd4d79' && // Filter out WEGLD since we have EGLD
-            token.decimals !== undefined // Make sure decimals are defined
-          )
-          .map(token => ({
-            identifier: token.identifier,
-            name: token.name,
-            ticker: token.ticker,
-            decimals: token.decimals,
-            icon: token.assets?.svgUrl || token.assets?.pngUrl || `https://media.elrond.com/tokens/asset/${token.identifier}/logo.svg`
-          }));
-
-        // Add EGLD at the top
-        setTokens([
-          {
-            identifier: 'EGLD',
-            name: 'MultiversX eGold',
-            ticker: 'EGLD',
-            decimals: 18,
-            icon: 'https://media.elrond.com/tokens/asset/WEGLD-bd4d79/logo.svg'
-          },
-          ...validTokens
-        ]);
-
-        console.log('Fetched tokens:', validTokens.length); // Debug log
-      } catch (error) {
-        console.error('Failed to fetch tokens:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTokens();
-  }, [isOpen]);
-
+  
   if (!isOpen) return null;
 
-  const filteredTokens = tokens.filter(token =>
+  let filteredTokens = [...tokens];
+  
+  // Filter tokens if needed
+  if (filterTokens && allowedTokens.length > 0) {
+    filteredTokens = filteredTokens.filter((token: Token) => 
+      allowedTokens.includes(token.ticker)
+    );
+  }
+
+  // Apply search filter
+  filteredTokens = filteredTokens.filter((token: Token) =>
     token.name.toLowerCase().includes(search.toLowerCase()) ||
     token.ticker.toLowerCase().includes(search.toLowerCase()) ||
     token.identifier.toLowerCase().includes(search.toLowerCase())
@@ -711,28 +750,28 @@ const TokenSelectorModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
-      <div className="bg-[#0D111C] rounded-[24px] w-[420px] max-h-[80vh] overflow-hidden">
-        <div className="p-4 border-b border-[#1B2131]">
+      <div className="bg-[#1a1a1a] rounded-[24px] w-[400px] max-h-[80vh] overflow-hidden border-2 border-[#FFB930]/30">
+        <div className="p-4 border-b border-[#FFB930]/30">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-medium text-white">Select a token</h3>
-            <button onClick={onClose} className="text-[#5D6785] hover:text-white">✕</button>
+            <h3 className="text-xl font-bold text-[#FFB930]">Select a token</h3>
+            <button onClick={onClose} className="text-[#FFB930] hover:text-[#FFB930]/80">✕</button>
           </div>
           <input
             type="text"
             placeholder="Search name or paste address"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-[#131A2A] text-white p-4 rounded-[20px] outline-none"
+            className="w-full bg-[#2a2a2a] text-white p-4 rounded-[20px] outline-none border-2 border-[#FFB930]/30 focus:border-[#FFB930] placeholder-gray-500"
           />
         </div>
         
         <div className="max-h-[300px] overflow-y-auto">
           {isLoading ? (
-            <div className="text-center py-4 text-[#5D6785]">Loading tokens...</div>
+            <div className="text-center py-4 text-[#FFB930]">Loading tokens...</div>
           ) : filteredTokens.length === 0 ? (
-            <div className="text-center py-4 text-[#5D6785]">No tokens found</div>
+            <div className="text-center py-4 text-[#FFB930]">No tokens found</div>
           ) : (
-            filteredTokens.map(token => (
+            filteredTokens.map((token: Token) => (
               <button
                 key={token.identifier}
                 onClick={() => {
@@ -740,14 +779,14 @@ const TokenSelectorModal: React.FC<{
                   onClose();
                 }}
                 className={`
-                  w-full flex items-center gap-4 p-4 hover:bg-[#131A2A] transition-colors
-                  ${selectedToken?.identifier === token.identifier ? 'bg-[#131A2A]' : ''}
+                  w-full flex items-center gap-4 p-4 hover:bg-[#2a2a2a] transition-colors border-b border-[#FFB930]/10
+                  ${selectedToken?.identifier === token.identifier ? 'bg-[#2a2a2a]' : ''}
                 `}
               >
                 <img src={token.icon} alt={token.name} className="w-8 h-8 rounded-full" />
                 <div className="text-left">
-                  <div className="text-white font-medium">{token.ticker}</div>
-                  <div className="text-sm text-[#5D6785]">{token.name}</div>
+                  <div className="text-[#FFB930] font-bold text-lg">{token.ticker}</div>
+                  <div className="text-sm text-[#FFB930]/70">{token.name}</div>
                 </div>
               </button>
             ))

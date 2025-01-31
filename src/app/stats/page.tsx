@@ -137,7 +137,6 @@ export default function Stats() {
             >
 
               <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl p-6 space-y-6">
-                {/* <AshSwapWidget /> */}
                 <div className="space-y-2">
                   <h2 className="text-2xl font-bold text-white">Game Statistics</h2>
                   <p className="text-zinc-400">Player performance overview</p>
