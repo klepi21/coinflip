@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useGetAccount } from '@multiversx/sdk-dapp/hooks';
 import { sendTransactions } from '@multiversx/sdk-dapp/services';
 import axios from 'axios';
-import { Address, Transaction } from '@multiversx/sdk-core';
+import { Address, Transaction, TokenPayment, SmartContract, ContractFunction, Interaction, TokenTransfer, BigUIntValue, BooleanValue } from '@multiversx/sdk-core';
 
 // Types
 interface Token {
@@ -91,7 +91,8 @@ const DEFAULT_TOKENS: Token[] = [
 
 const QX_CONSTANTS = {
   API_URL: 'https://aggregator.ashswap.io',
-  ROUTER_ADDRESS: 'erd1qqqqqqqqqqqqqpgqq66xk9gfr4e4m9r3j4yaz0u6xj4q36f3wmfs9k86q4',
+  ROUTER_ADDRESS: 'erd1qqqqqqqqqqqqqpgqfpxvzz7s3ws2at75g8lz92r4z5r24gl4u7zsz63spm',
+  AGGREGATOR_SC_ADDRESS: 'erd1qqqqqqqqqqqqqpgqfpxvzz7s3ws2at75g8lz92r4z5r24gl4u7zsz63spm',
   DEFAULT_SLIPPAGE: 0.5,
   GAS_LIMIT: 60_000_000,
   CHAIN_ID: '1',
@@ -100,6 +101,9 @@ const QX_CONSTANTS = {
     BUILD_TX: '/build-tx'
   }
 };
+
+// Add type for swap arguments
+type SwapArg = BigUIntValue | BooleanValue;
 
 // UI Components
 const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
@@ -169,19 +173,19 @@ const TokenSelector: React.FC<{
         setIsLoading(true);
         const response = await axios.get<MxToken[]>('https://api.multiversx.com/tokens');
         
-        // Filter for tokens that are listed and have price
+        // Filter for valid tokens, less restrictive conditions
         const validTokens = response.data
           .filter(token => 
-            token.assets?.status === 'success' && 
-            token.price && 
-            token.ticker !== 'WEGLD-bd4d79' // Filter out WEGLD since we have EGLD
+            token.assets && // Just check if assets exist
+            token.ticker !== 'WEGLD-bd4d79' && // Filter out WEGLD since we have EGLD
+            token.decimals !== undefined // Make sure decimals are defined
           )
           .map(token => ({
             identifier: token.identifier,
             name: token.name,
             ticker: token.ticker,
             decimals: token.decimals,
-            icon: token.assets?.svgUrl || token.assets?.pngUrl || ''
+            icon: token.assets?.svgUrl || token.assets?.pngUrl || `https://media.elrond.com/tokens/asset/${token.identifier}/logo.svg`
           }));
 
         // Add EGLD at the top
@@ -195,6 +199,8 @@ const TokenSelector: React.FC<{
           },
           ...validTokens
         ]);
+
+        console.log('Fetched tokens:', validTokens.length); // Debug log
       } catch (error) {
         console.error('Failed to fetch tokens:', error);
       } finally {
@@ -367,6 +373,15 @@ const encodeToBase64 = (str: string) => {
   return Buffer.from(str).toString('base64');
 };
 
+// Add helper function for decimal conversion
+const toBaseUnit = (amount: string, decimals: number): string => {
+  const parts = amount.split('.');
+  const wholePart = parts[0];
+  const decimalPart = parts[1] || '';
+  const paddedDecimal = decimalPart.padEnd(decimals, '0').slice(0, decimals);
+  return `${wholePart}${paddedDecimal}`;
+};
+
 // Main Component
 export const AshSwapWidget: React.FC = () => {
   const { address } = useGetAccount();
@@ -414,52 +429,109 @@ export const AshSwapWidget: React.FC = () => {
 
   // Update the swap handler
   const handleSwap = useCallback(async () => {
-    if (!quote || !address || !tokenIn || !tokenOut) return;
+    if (!quote || !address || !tokenIn || !tokenOut || !amount) return;
 
     try {
-      setIsLoading(true);
-
-      // Get the swaps from the quote response
-      const swaps = quote.swaps;
-      if (!swaps || swaps.length === 0) {
-        throw new Error('Invalid route');
+      // Get the first swap from the quote
+      const swap = quote.swaps[0];
+      if (!swap) {
+        throw new Error('No swap route available');
       }
 
-      // Build the transaction data using the swaps information
-      const transactions = swaps.map((swap: any) => {
-        let data = '';
-
-        // Build the transaction data based on the swap type
-        if (swap.functionName === 'swapMultiTokensFixedInput') {
-          data = [
-            'swapMultiTokensFixedInput',
-            swap.arguments[0],
-            swap.arguments[1],
-            encodeToBase64(swap.assetIn),
-            encodeToBase64(swap.assetOut)
-          ].join('@');
-        } else {
-          data = [
-            'swapTokensFixedInput',
-            encodeToBase64(swap.assetOut),
-            swap.arguments[0]
-          ].join('@');
+      // Format steps data
+      let stepsData = '';
+      // First, add the number of steps
+      stepsData += quote.swaps.length.toString(16).padStart(8, '0');
+      
+      for (const swap of quote.swaps) {
+        // Token in identifier
+        const tokenInHex = Buffer.from(swap.assetIn).toString('hex');
+        stepsData += tokenInHex.length.toString(16).padStart(8, '0') + tokenInHex;
+        
+        // Token out identifier
+        const tokenOutHex = Buffer.from(swap.assetOut).toString('hex');
+        stepsData += tokenOutHex.length.toString(16).padStart(8, '0') + tokenOutHex;
+        
+        // Amount in
+        const amountHex = BigInt(toBaseUnit(swap.amount, tokenIn.decimals)).toString(16).padStart(32, '0');
+        stepsData += amountHex;
+        
+        // Pool address (should be 32 bytes)
+        const poolAddressHex = Buffer.from(swap.poolId).toString('hex');
+        stepsData += poolAddressHex;
+        
+        // Function name
+        const functionNameHex = Buffer.from(swap.functionName).toString('hex');
+        stepsData += functionNameHex.length.toString(16).padStart(8, '0') + functionNameHex;
+        
+        // Arguments array
+        stepsData += swap.arguments.length.toString(16).padStart(8, '0');
+        for (const arg of swap.arguments) {
+          const argHex = Buffer.from(arg).toString('hex');
+          stepsData += argHex.length.toString(16).padStart(8, '0') + argHex;
         }
+      }
 
-        return {
-          value: '0',
-          data,
-          receiver: new Address(swap.poolId),
+      // Format limits data
+      let limitsData = '';
+      // Number of limits
+      limitsData += '01'; // One limit
+      
+      // Token identifier
+      const limitTokenHex = Buffer.from(tokenOut.identifier === 'EGLD' ? 'WEGLD-bd4d79' : tokenOut.identifier).toString('hex');
+      limitsData += limitTokenHex.length.toString(16).padStart(8, '0') + limitTokenHex;
+      
+      // Amount limit
+      const limitAmountHex = BigInt(toBaseUnit(quote.returnAmount, tokenOut.decimals)).toString(16).padStart(32, '0');
+      limitsData += limitAmountHex;
+
+      // Prepare the transaction
+      let tx;
+      
+      if (tokenIn.identifier === 'EGLD') {
+        // For EGLD, use direct value transfer
+        tx = {
+          value: quote.swapAmount,
+          data: Buffer.from(`swap@${stepsData}@${limitsData}@${tokenOut.identifier === 'EGLD' ? '01' : '00'}`).toString('base64'),
+          receiver: new Address(QX_CONSTANTS.AGGREGATOR_SC_ADDRESS),
           sender: new Address(address),
           gasLimit: QX_CONSTANTS.GAS_LIMIT,
           chainID: QX_CONSTANTS.CHAIN_ID,
           version: 1
         };
+      } else {
+        // For ESDT tokens, use ESDTTransfer
+        const encodedTokenId = Buffer.from(tokenIn.identifier).toString('hex');
+        const amountHex = BigInt(toBaseUnit(quote.swapAmount, tokenIn.decimals)).toString(16).padStart(32, '0');
+        
+        tx = {
+          value: '0',
+          data: Buffer.from(`ESDTTransfer@${encodedTokenId}@${amountHex}@${Buffer.from('swap').toString('hex')}@${stepsData}@${limitsData}@${tokenOut.identifier === 'EGLD' ? '01' : '00'}`).toString('base64'),
+          receiver: new Address(QX_CONSTANTS.AGGREGATOR_SC_ADDRESS),
+          sender: new Address(address),
+          gasLimit: QX_CONSTANTS.GAS_LIMIT,
+          chainID: QX_CONSTANTS.CHAIN_ID,
+          version: 1
+        };
+      }
+
+      // Log the transaction for debugging
+      console.log('Final Transaction:', {
+        ...tx,
+        data: Buffer.from(tx.data, 'base64').toString('utf8'),
+        value: tx.value.toString(),
+        decodedData: {
+          tokenId: tokenIn.identifier,
+          amount: quote.swapAmount,
+          amountInBaseUnits: toBaseUnit(quote.swapAmount, tokenIn.decimals),
+          rawStepsData: stepsData,
+          rawLimitsData: limitsData
+        }
       });
 
-      // Send transaction using MultiversX SDK
+      // Send the transaction
       const { sessionId } = await sendTransactions({
-        transactions,
+        transactions: [tx],
         transactionsDisplayInfo: {
           processingMessage: 'Processing Swap',
           errorMessage: 'Swap failed',
@@ -475,11 +547,9 @@ export const AshSwapWidget: React.FC = () => {
 
     } catch (err) {
       console.error('Swap error:', err);
-      setError(err instanceof Error ? err.message : 'Swap failed');
-    } finally {
-      setIsLoading(false);
+      setError(err instanceof Error ? err.message : 'Failed to prepare swap');
     }
-  }, [quote, address, tokenIn, tokenOut]);
+  }, [quote, address, tokenIn, tokenOut, amount]);
 
   const handleSwapDirection = () => {
     setTokenIn(tokenOut);
@@ -581,12 +651,62 @@ const TokenSelectorModal: React.FC<{
   selectedToken: Token | null;
 }> = ({ isOpen, onClose, onSelect, selectedToken }) => {
   const [search, setSearch] = useState('');
+  const [tokens, setTokens] = useState<Token[]>(DEFAULT_TOKENS);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch tokens when modal opens
+  useEffect(() => {
+    const fetchTokens = async () => {
+      if (!isOpen) return;
+      
+      try {
+        setIsLoading(true);
+        const response = await axios.get<MxToken[]>('https://api.multiversx.com/tokens?size=500');
+        
+        // Filter for valid tokens, less restrictive conditions
+        const validTokens = response.data
+          .filter(token => 
+            token.assets && // Just check if assets exist
+            token.ticker !== 'WEGLD-bd4d79' && // Filter out WEGLD since we have EGLD
+            token.decimals !== undefined // Make sure decimals are defined
+          )
+          .map(token => ({
+            identifier: token.identifier,
+            name: token.name,
+            ticker: token.ticker,
+            decimals: token.decimals,
+            icon: token.assets?.svgUrl || token.assets?.pngUrl || `https://media.elrond.com/tokens/asset/${token.identifier}/logo.svg`
+          }));
+
+        // Add EGLD at the top
+        setTokens([
+          {
+            identifier: 'EGLD',
+            name: 'MultiversX eGold',
+            ticker: 'EGLD',
+            decimals: 18,
+            icon: 'https://media.elrond.com/tokens/asset/WEGLD-bd4d79/logo.svg'
+          },
+          ...validTokens
+        ]);
+
+        console.log('Fetched tokens:', validTokens.length); // Debug log
+      } catch (error) {
+        console.error('Failed to fetch tokens:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTokens();
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const filteredTokens = DEFAULT_TOKENS.filter(token =>
+  const filteredTokens = tokens.filter(token =>
     token.name.toLowerCase().includes(search.toLowerCase()) ||
-    token.ticker.toLowerCase().includes(search.toLowerCase())
+    token.ticker.toLowerCase().includes(search.toLowerCase()) ||
+    token.identifier.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -607,25 +727,31 @@ const TokenSelectorModal: React.FC<{
         </div>
         
         <div className="max-h-[300px] overflow-y-auto">
-          {filteredTokens.map(token => (
-            <button
-              key={token.identifier}
-              onClick={() => {
-                onSelect(token);
-                onClose();
-              }}
-              className={`
-                w-full flex items-center gap-4 p-4 hover:bg-[#131A2A] transition-colors
-                ${selectedToken?.identifier === token.identifier ? 'bg-[#131A2A]' : ''}
-              `}
-            >
-              <img src={token.icon} alt={token.name} className="w-8 h-8 rounded-full" />
-              <div className="text-left">
-                <div className="text-white font-medium">{token.ticker}</div>
-                <div className="text-sm text-[#5D6785]">{token.name}</div>
-              </div>
-            </button>
-          ))}
+          {isLoading ? (
+            <div className="text-center py-4 text-[#5D6785]">Loading tokens...</div>
+          ) : filteredTokens.length === 0 ? (
+            <div className="text-center py-4 text-[#5D6785]">No tokens found</div>
+          ) : (
+            filteredTokens.map(token => (
+              <button
+                key={token.identifier}
+                onClick={() => {
+                  onSelect(token);
+                  onClose();
+                }}
+                className={`
+                  w-full flex items-center gap-4 p-4 hover:bg-[#131A2A] transition-colors
+                  ${selectedToken?.identifier === token.identifier ? 'bg-[#131A2A]' : ''}
+                `}
+              >
+                <img src={token.icon} alt={token.name} className="w-8 h-8 rounded-full" />
+                <div className="text-left">
+                  <div className="text-white font-medium">{token.ticker}</div>
+                  <div className="text-sm text-[#5D6785]">{token.name}</div>
+                </div>
+              </button>
+            ))
+          )}
         </div>
       </div>
     </div>
