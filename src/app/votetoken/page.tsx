@@ -27,7 +27,7 @@ const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28n
 const RARE_IDENTIFIER = 'RARE-99e8b0';
 const BOD_IDENTIFIER = 'BOD-204877';
 const ONE_IDENTIFIER = 'ONE-f9954f';
-const VOTE_MULTIPLIERS = [1, 5, 10, 50, 100];
+const VOTE_MULTIPLIERS = [1, 5, 10, 25];
 
 // Token data with images
 const TOKENS = {
