@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Vote, X } from "lucide-react"
 import Link from "next/link"
 
-// Define the vote end dates
-const fighterVoteEndDate = new Date('2025-02-14T23:59:59')
-const tokenVoteEndDate = new Date('2025-02-01T22:01:00') // Fixed end date and time
+// Define the vote end dates (in UTC)
+const fighterVoteEndDate = new Date(Date.UTC(2025, 1, 14, 23, 59, 59)) // February 14, 2025, 23:59:59 UTC
+const tokenVoteEndDate = new Date(Date.UTC(2025, 1, 1, 22, 1, 0)) // February 1, 2025, 22:01:00 UTC
 
 interface TimeLeft {
   days: number
@@ -20,7 +20,15 @@ interface TimeLeft {
 
 function calculateTimeLeft(endDate: Date): TimeLeft {
   const now = new Date()
-  const difference = endDate.getTime() - now.getTime()
+  const utcNow = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+    now.getUTCHours(),
+    now.getUTCMinutes(),
+    now.getUTCSeconds()
+  )
+  const difference = endDate.getTime() - utcNow
 
   if (difference <= 0) {
     return { days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true }
