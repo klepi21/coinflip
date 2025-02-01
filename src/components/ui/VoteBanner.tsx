@@ -8,7 +8,7 @@ import Link from "next/link"
 
 // Define the vote end dates (in UTC)
 const fighterVoteEndDate = new Date(Date.UTC(2025, 1, 14, 23, 59, 59)) // February 14, 2025, 23:59:59 UTC
-const tokenVoteEndDate = new Date(Date.UTC(2025, 1, 1, 22, 1, 0)) // February 1, 2025, 22:01:00 UTC
+const tokenVoteEndDate = new Date(Date.UTC(2025, 1, 3, 19, 0, 0)) // February 3, 2024, 19:00:00 UTC
 
 interface TimeLeft {
   days: number

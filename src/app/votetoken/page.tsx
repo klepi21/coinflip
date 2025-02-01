@@ -26,6 +26,8 @@ import Image from "next/image";
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
 const RARE_IDENTIFIER = 'RARE-99e8b0';
 const BOD_IDENTIFIER = 'BOD-204877';
+const BOBER_IDENTIFIER = 'BOBER-9eb764';
+const ONE_IDENTIFIER = 'ONE-f9954f';
 const VOTE_MULTIPLIERS = [1, 5, 10, 50, 100];
 
 // Token data with images
@@ -43,6 +45,20 @@ const TOKENS = {
     image: `https://tools.multiversx.com/assets-cdn/tokens/${BOD_IDENTIFIER}/icon.svg`,
     decimals: 18,
     voteAmount: '10000'
+  },
+  BOBER: {
+    id: 'BOBER',
+    name: 'BOBER',
+    image: `https://tools.multiversx.com/assets-cdn/tokens/${BOBER_IDENTIFIER}/icon.svg`,
+    decimals: 18,
+    voteAmount: '100'
+  },
+  ONE: {
+    id: 'ONE',
+    name: 'ONE',
+    image: `https://tools.multiversx.com/assets-cdn/tokens/${ONE_IDENTIFIER}/icon.svg`,
+    decimals: 18,
+    voteAmount: '0.5'
   }
 };
 
@@ -55,13 +71,13 @@ interface VoteOption {
 
 export default function VoteTokenPage() {
   const [votes, setVotes] = useState<VoteOption[]>([
-    { name: 'KWAK', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/KWAK-469ab0/icon.svg', option: 1 },
-    { name: 'ONE', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/ONE-f9954f/icon.svg', option: 2 },
-    { name: 'TOM', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/TOM-48414f/icon.svg', option: 3 },
-    { name: 'JEX', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/JEX-9040ca/icon.svg', option: 4 }
+    { name: 'TOM', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/TOM-48414f/icon.svg', option: 1 },
+    { name: '100X', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/100X-adac4c/icon.svg', option: 2 },
+    { name: 'BFY', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/BFY-8344ff/icon.svg', option: 3 },
+    { name: 'BATEMAN', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/BATEMAN-f6fd19/icon.svg', option: 4 }
   ]);
   const [selectedOption, setSelectedOption] = useState<VoteOption | null>(null);
-  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD'>('RARE');
+  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'BOBER' | 'ONE'>('RARE');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [multiplier, setMultiplier] = useState(1);
 
@@ -70,6 +86,8 @@ export default function VoteTokenPage() {
   const { isLoggedIn } = useWallet();
   const { balance: rareBalance, isLoading: isLoadingRare } = useTokenBalance(address || '', RARE_IDENTIFIER);
   const { balance: bodBalance, isLoading: isLoadingBod } = useTokenBalance(address || '', BOD_IDENTIFIER);
+  const { balance: boberBalance, isLoading: isLoadingBober } = useTokenBalance(address || '', BOBER_IDENTIFIER);
+  const { balance: oneBalance, isLoading: isLoadingOne } = useTokenBalance(address || '', ONE_IDENTIFIER);
 
   const fetchVotes = async () => {
     try {
@@ -115,7 +133,10 @@ export default function VoteTokenPage() {
     }
 
     // Check balance based on selected token
-    const currentBalance = selectedToken === 'RARE' ? rareBalance : bodBalance;
+    const currentBalance = selectedToken === 'RARE' ? rareBalance : 
+                          selectedToken === 'BOD' ? bodBalance :
+                          selectedToken === 'BOBER' ? boberBalance :
+                          oneBalance;
     const requiredAmount = Number(TOKENS[selectedToken].voteAmount);
     
     if (currentBalance < requiredAmount) {
@@ -140,7 +161,10 @@ export default function VoteTokenPage() {
         }
       );
       
-      const tokenId = selectedToken === 'RARE' ? RARE_IDENTIFIER : BOD_IDENTIFIER;
+      const tokenId = selectedToken === 'RARE' ? RARE_IDENTIFIER : 
+                     selectedToken === 'BOD' ? BOD_IDENTIFIER :
+                     selectedToken === 'BOBER' ? BOBER_IDENTIFIER :
+                     ONE_IDENTIFIER;
       const amount = TOKENS[selectedToken].voteAmount;
       
       // Create ESDTTransfer transaction data
@@ -214,7 +238,7 @@ export default function VoteTokenPage() {
                     {Object.entries(TOKENS).map(([key, token]) => ( 
                       <button
                         key={key}
-                        onClick={() => setSelectedToken(key as 'RARE' | 'BOD')}
+                        onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'ONE')}
                         className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
                           selectedToken === key 
                             ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black text-black' 
@@ -324,11 +348,14 @@ export default function VoteTokenPage() {
 
               <div className="flex items-center gap-2 text-xs">
                 <span className="text-zinc-500">Balance:</span>
-                {isLoadingRare || isLoadingBod ? (
+                {isLoadingRare || isLoadingBod || isLoadingBober || isLoadingOne ? (
                   <span className="text-zinc-400">Loading...</span>
                 ) : (
                   <span className="text-white font-medium">
-                    {(selectedToken === 'RARE' ? rareBalance : bodBalance).toFixed(2)} {selectedToken}
+                    {(selectedToken === 'RARE' ? rareBalance : 
+                     selectedToken === 'BOD' ? bodBalance :
+                     selectedToken === 'BOBER' ? boberBalance :
+                     oneBalance).toFixed(2)} {selectedToken}
                   </span>
                 )}
               </div>

@@ -17,6 +17,8 @@ import { TokenPayment } from "@multiversx/sdk-core";
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
 const RARE_IDENTIFIER = 'RARE-99e8b0';
 const BOD_IDENTIFIER = 'BOD-204877';
+const BOBER_IDENTIFIER = 'BOBER-9eb764';
+const ONE_IDENTIFIER = 'ONE-f9954f';
 
 // Token data with images
 const TOKENS = {
@@ -33,6 +35,20 @@ const TOKENS = {
     image: `https://tools.multiversx.com/assets-cdn/tokens/${BOD_IDENTIFIER}/icon.svg`,
     decimals: 18,
     minAmount: 100000
+  },
+  BOBER: {
+    id: 'BOBER',
+    name: 'BOBER',
+    image: `https://tools.multiversx.com/assets-cdn/tokens/${BOBER_IDENTIFIER}/icon.svg`,
+    decimals: 18,
+    minAmount: 2000
+  },
+  ONE: {
+    id: 'ONE',
+    name: 'ONE',
+    image: `https://tools.multiversx.com/assets-cdn/tokens/${ONE_IDENTIFIER}/icon.svg`,
+    decimals: 18,
+    minAmount: 10
   },
   EGLD: {
     id: 'EGLD',
@@ -65,7 +81,7 @@ const GAME_MULTIPLIERS = [1, 2, 5, 10, 15];
 
 export default function Create() {
   const [amount, setAmount] = useState('');
-  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'EGLD'>('RARE');
+  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'EGLD'>('RARE');
   const [multiplier, setMultiplier] = useState(1);
   const [selectedSide, setSelectedSide] = useState<'GRM' | 'SASU' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -89,9 +105,11 @@ export default function Create() {
 
   const { isLoggedIn, address } = useWallet();
   const { account } = useGetAccountInfo();
-  const { balance: rareBalance, isLoading: isLoadingRareBalance } = useTokenBalance(address || '', RARE_IDENTIFIER);
-  const { balance: bodBalance, isLoading: isLoadingBodBalance } = useTokenBalance(address || '', BOD_IDENTIFIER);
-  const isLoadingBalance = isLoadingRareBalance || isLoadingBodBalance;
+  const { balance: rareBalance, isLoading: isLoadingRare } = useTokenBalance(address || '', RARE_IDENTIFIER);
+  const { balance: bodBalance, isLoading: isLoadingBod } = useTokenBalance(address || '', BOD_IDENTIFIER);
+  const { balance: boberBalance, isLoading: isLoadingBober } = useTokenBalance(address || '', BOBER_IDENTIFIER);
+  const { balance: oneBalance, isLoading: isLoadingOne } = useTokenBalance(address || '', ONE_IDENTIFIER);
+  const isLoadingBalance = isLoadingRare || isLoadingBod || isLoadingBober || isLoadingOne;
 
   // Reset popup when component mounts or when sessionId changes to null
   useEffect(() => {
@@ -182,8 +200,10 @@ export default function Create() {
     };
     
     const currentBalance = selectedToken === 'RARE' ? rareBalance : 
-                          selectedToken === 'BOD' ? bodBalance : 
-                          Number(account.balance) / Math.pow(10, 18); // Convert EGLD balance from atomic units
+                          selectedToken === 'BOD' ? bodBalance :
+                          selectedToken === 'BOBER' ? boberBalance :
+                          selectedToken === 'ONE' ? oneBalance :
+                          Number(account.balance) / Math.pow(10, 18);
     const amountValue = parseFloat(amount);
     const totalAmount = amountValue * multiplier;
     
@@ -355,23 +375,23 @@ export default function Create() {
                         {Object.entries(TOKENS).map(([key, token]) => (
                           <button
                             key={key}
-                            onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'EGLD')}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
+                            onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'EGLD')}
+                            className={`flex items-center justify-center w-12 h-12 rounded-xl border transition-all ${
                               selectedToken === key 
-                                ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black text-black' 
-                                : 'border-zinc-800 hover:border-[#C99733] text-white'
+                                ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black' 
+                                : 'border-zinc-800 hover:border-[#C99733]'
                             }`}
+                            title={`${token.name} (min: ${token.minAmount})`}
                           >
-                            <div className="w-5 h-5 rounded-full overflow-hidden">
+                            <div className="w-8 h-8 rounded-full overflow-hidden">
                               <Image
                                 src={token.image}
                                 alt={token.name}
-                                width={20}
-                                height={20}
+                                width={32}
+                                height={32}
                                 className="w-full h-full object-cover"
                               />
                             </div>
-                            <span className="font-medium">{token.name}</span>
                           </button>
                         ))}
                       </div>
@@ -488,7 +508,7 @@ export default function Create() {
                         <span className="text-white font-medium">
                           {selectedToken === 'EGLD' 
                             ? (Number(account.balance) / Math.pow(10, 18)).toFixed(4)
-                            : (selectedToken === 'RARE' ? rareBalance : bodBalance).toFixed(2)} {selectedToken}
+                            : (selectedToken === 'RARE' ? rareBalance : selectedToken === 'BOD' ? bodBalance : selectedToken === 'BOBER' ? boberBalance : oneBalance).toFixed(2)} {selectedToken}
                         </span>
                       )}
                     </div>
@@ -566,23 +586,23 @@ export default function Create() {
                     {Object.entries(TOKENS).map(([key, token]) => (
                       <button
                         key={key}
-                        onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'EGLD')}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
+                        onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'EGLD')}
+                        className={`flex items-center justify-center w-12 h-12 rounded-xl border transition-all ${
                           selectedToken === key 
-                            ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black text-black' 
-                            : 'border-zinc-800 hover:border-[#C99733] text-white'
+                            ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black' 
+                            : 'border-zinc-800 hover:border-[#C99733]'
                         }`}
+                        title={`${token.name} (min: ${token.minAmount})`}
                       >
-                        <div className="w-5 h-5 rounded-full overflow-hidden">
+                        <div className="w-8 h-8 rounded-full overflow-hidden">
                           <Image
                             src={token.image}
                             alt={token.name}
-                            width={20}
-                            height={20}
+                            width={32}
+                            height={32}
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <span className="font-medium">{token.name}</span>
                       </button>
                     ))}
                   </div>
@@ -699,7 +719,7 @@ export default function Create() {
                     <span className="text-white font-medium">
                       {selectedToken === 'EGLD' 
                         ? (Number(account.balance) / Math.pow(10, 18)).toFixed(4)
-                        : (selectedToken === 'RARE' ? rareBalance : bodBalance).toFixed(2)} {selectedToken}
+                        : (selectedToken === 'RARE' ? rareBalance : selectedToken === 'BOD' ? bodBalance : selectedToken === 'BOBER' ? boberBalance : oneBalance).toFixed(2)} {selectedToken}
                     </span>
                   )}
                 </div>
