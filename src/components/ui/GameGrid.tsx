@@ -63,7 +63,8 @@ const SIDES = {
 const formatTokenAmount = (amount: string, token: string): string => {
   try {
     // Convert the amount to a number and divide by 10^18 (TOKEN_DECIMALS)
-    const value = Number(amount) / Math.pow(10, TOKEN_DECIMALS);
+    const BigNumber = require('bignumber.js');
+    const value = new BigNumber(amount).dividedBy(new BigNumber(10).pow(TOKEN_DECIMALS));
     
     // For EGLD show 2 decimal places, for other tokens show whole number
     return token === 'EGLD' ? value.toFixed(2) : Math.floor(value).toString();
