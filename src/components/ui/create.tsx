@@ -150,7 +150,10 @@ export default function Create() {
         const baseAmount = BigInt(amount);
         const totalAmount = baseAmount * BigInt(multiplier);
         const rawAmount = (totalAmount * BigInt(10 ** decimalAmount)).toString(16).padStart(decimalAmount * 2, '0');
-        const tokenIdentifier = selectedToken === 'RARE' ? RARE_IDENTIFIER : BOD_IDENTIFIER;
+        const tokenIdentifier = selectedToken === 'RARE' ? RARE_IDENTIFIER : 
+                               selectedToken === 'BOD' ? BOD_IDENTIFIER :
+                               selectedToken === 'BOBER' ? BOBER_IDENTIFIER :
+                               ONE_IDENTIFIER;
         transaction = {
           value: '0',
           data: `ESDTTransfer@${Buffer.from(tokenIdentifier).toString('hex')}@${rawAmount}@${Buffer.from('create').toString('hex')}@${toHexEven(multiplier)}@${toHexEven(sideValue)}`,
