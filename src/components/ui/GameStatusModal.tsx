@@ -76,7 +76,7 @@ export function GameStatusModal({ isOpen, onClose, currentStep, gameResult }: Ga
                 const isComplete = STEPS.findIndex(s => s.id === currentStep) > index;
 
                 return (
-                  <div key={step.id} className="flex items-center">
+                  <div key={step.id} className="flex items-center py-1">
                     <div className="relative flex items-center justify-center">
                       <div 
                         className={`w-10 h-10 rounded-full border-2 flex items-center justify-center
