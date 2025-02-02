@@ -62,11 +62,11 @@ const TOKENS = {
 const SIDES = {
   GRM: {
     name: 'GRM',
-    image: '/img/grm.png'
+    image: '/img/grm.png?v=3'
   },
   SASU: {
     name: 'SASU',
-    image: '/img/sasu.png'
+    image: '/img/sasu.png?v=3'
   }
 };
 
