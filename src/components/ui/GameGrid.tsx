@@ -793,7 +793,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             />
                           </div>
                           <span className="text-sm font-medium text-black">
-                            {formatTokenAmount(game.amount, game.token)} {game.token.split('-')[0]}
+                            {formatTokenAmount(game.amount, game.token)} {/*{game.token.split('-')[0]} */}
                           </span>
                         </div>
                       </div>
@@ -825,7 +825,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             />
                           </div>
                           <span className="text-sm font-medium text-black">
-                            {formatTokenAmount(game.amount, game.token)} {game.token.split('-')[0]}
+                            {formatTokenAmount(game.amount, game.token)}  {/*{game.token.split('-')[0]} */}
                           </span>
                         </div>
                       </div>
