@@ -855,7 +855,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           disabled={!canJoinGame(game.amount, game.token)}
                           className={`w-full font-semibold py-2 px-4 whitespace-nowrap rounded-full text-sm transition-colors shadow-lg border-8 border-black ${
                             canJoinGame(game.amount, game.token)
-                              ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] hover:opacity-90 text-black'
+                              ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black'
                               : 'bg-zinc-600 cursor-not-allowed text-zinc-400'
                           }`}
                           title={!canJoinGame(game.amount, game.token) ? `Insufficient balance (${formatTokenAmount(game.amount, game.token)})` : ''}
