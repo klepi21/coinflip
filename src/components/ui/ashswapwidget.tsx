@@ -354,7 +354,7 @@ const SwapInput: React.FC<{
           setBalance(balanceInToken);
         }
       } catch (error) {
-        console.error('Failed to fetch balance:', error);
+        console.error('Failed to fetch balance:', error); 
         setBalance('0');
       }
     };
