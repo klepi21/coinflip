@@ -33,36 +33,19 @@ const MINCU_IDENTIFIER = 'MINCU-38e93d';
 const LUCIAN_IDENTIFIER = 'LUCIAN-e61415';
 const RARE_IDENTIFIER = 'RARE-99e8b0';
 const BOD_IDENTIFIER = 'BOD-204877';
+const BOBER_IDENTIFIER = 'BOBER-9eb764';
+const ONE_IDENTIFIER = 'ONE-f9954f';
 
 // Token configuration
 const TOKEN_DECIMALS = 18;
 
 // Token data with images
-const TOKENS = {
-  EGLD: {
-    id: 'EGLD',
-    name: 'EGLD',
-    image: `https://s2.coinmarketcap.com/static/img/coins/200x200/6892.png`,
-    decimals: 18
-  },
-  LUCIAN: {
-    id: 'LUCIAN',
-    name: 'LUCIAN',
-    image: 'https://pbs.twimg.com/media/Gh5Ylu9WAAAFfCE?format=jpg&name=large',
-    decimals: 18
-  },
-  RARE: {
-    id: 'RARE',
-    name: 'RARE',
-    image: 'https://tools.multiversx.com/assets-cdn/tokens/RARE-99e8b0/icon.svg',
-    decimals: 18
-  },
-  BOD: {
-    id: 'BOD',
-    name: 'BOD',
-    image: 'https://tools.multiversx.com/assets-cdn/tokens/BOD-204877/icon.png',
-    decimals: 18
-  }
+const TOKEN_IMAGES: Record<string, string> = {
+  [RARE_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${RARE_IDENTIFIER}/icon.svg`,
+  [BOD_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${BOD_IDENTIFIER}/icon.svg`,
+  [BOBER_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${BOBER_IDENTIFIER}/icon.svg`,
+  [ONE_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${ONE_IDENTIFIER}/icon.svg`,
+  'EGLD': 'https://s2.coinmarketcap.com/static/img/coins/200x200/6892.png'
 };
 
 // Add SIDES constant at the top with other constants
@@ -668,8 +651,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       <div className="flex-1 p-4 flex flex-col items-center justify-center">
                         <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
                           <Image
-                            src="https://tools.multiversx.com/assets-cdn/tokens/RARE-99e8b0/icon.svg"
-                            alt="Creator"
+                            src={TOKEN_IMAGES[game.token] || TOKEN_IMAGES[BOD_IDENTIFIER]}
+                            alt={game.token.split('-')[0]}
                             width={48}
                             height={48}
                             className="w-full h-full object-cover"
@@ -684,10 +667,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           </span>
                           <Image
                             src={game.token === 'EGLD' 
-                              ? TOKENS.EGLD.image 
+                              ? TOKEN_IMAGES['EGLD'] 
                               : game.token === RARE_IDENTIFIER 
-                                ? TOKENS.RARE.image 
-                                : TOKENS.BOD.image}
+                                ? TOKEN_IMAGES[RARE_IDENTIFIER] 
+                                : TOKEN_IMAGES[BOD_IDENTIFIER]}
                             alt={game.token}
                             width={24}
                             height={24}
@@ -709,8 +692,12 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       <div className="flex-1 p-4 flex flex-col items-center justify-center">
                         <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
                           <Image
-                            src="https://tools.multiversx.com/assets-cdn/tokens/BOD-204877/icon.png"
-                            alt="Rival"
+                            src={game.token === 'EGLD' 
+                              ? TOKEN_IMAGES['EGLD'] 
+                              : game.token === RARE_IDENTIFIER 
+                                ? TOKEN_IMAGES[RARE_IDENTIFIER] 
+                                : TOKEN_IMAGES[BOD_IDENTIFIER]}
+                            alt={game.token}
                             width={48}
                             height={48}
                             className="w-full h-full object-cover"
@@ -727,10 +714,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           </span>
                           <Image
                             src={game.token === 'EGLD' 
-                              ? TOKENS.EGLD.image 
+                              ? TOKEN_IMAGES['EGLD'] 
                               : game.token === RARE_IDENTIFIER 
-                                ? TOKENS.RARE.image 
-                                : TOKENS.BOD.image}
+                                ? TOKEN_IMAGES[RARE_IDENTIFIER] 
+                                : TOKEN_IMAGES[BOD_IDENTIFIER]}
                             alt={game.token}
                             width={16}
                             height={16}
@@ -778,20 +765,18 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           {`${game.creator.slice(0, 3)}...${game.creator.slice(-4)}`}
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-black text-sm font-medium">
-                            {formatTokenAmount(game.amount, game.token)}
+                          <div className="w-5 h-5 rounded-full overflow-hidden">
+                            <Image
+                              src={TOKEN_IMAGES[game.token] || TOKEN_IMAGES[BOD_IDENTIFIER]}
+                              alt={game.token.split('-')[0]}
+                              width={20}
+                              height={20}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <span className="text-sm font-medium text-black">
+                            {(Number(game.amount) / (10 ** 18)).toFixed(2)}
                           </span>
-                          <Image
-                            src={game.token === 'EGLD' 
-                              ? TOKENS.EGLD.image 
-                              : game.token === RARE_IDENTIFIER 
-                                ? TOKENS.RARE.image 
-                                : TOKENS.BOD.image}
-                            alt={game.token}
-                            width={16}
-                            height={16}
-                            className="w-6 h-6"
-                          />
                         </div>
                       </div>
 
@@ -812,20 +797,18 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             : 'Play to win'}
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-black text-sm font-medium">
-                            {formatTokenAmount(game.amount, game.token)}
+                          <div className="w-5 h-5 rounded-full overflow-hidden">
+                            <Image
+                              src={TOKEN_IMAGES[game.token] || TOKEN_IMAGES[BOD_IDENTIFIER]}
+                              alt={game.token.split('-')[0]}
+                              width={20}
+                              height={20}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <span className="text-sm font-medium text-black">
+                            {(Number(game.amount) / (10 ** 18)).toFixed(2)} 
                           </span>
-                          <Image
-                            src={game.token === 'EGLD' 
-                              ? TOKENS.EGLD.image 
-                              : game.token === RARE_IDENTIFIER 
-                                ? TOKENS.RARE.image 
-                                : TOKENS.BOD.image}
-                            alt={game.token}
-                            width={16}
-                            height={16}
-                            className="w-6 h-6"
-                          />
                         </div>
                       </div>
                     </div>
