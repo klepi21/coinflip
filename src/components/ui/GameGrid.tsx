@@ -62,10 +62,11 @@ const SIDES = {
 
 const formatTokenAmount = (amount: string, token: string): string => {
   try {
-    const value = Number(amount) / (10 ** TOKEN_DECIMALS);
-    return token === 'EGLD' 
-      ? value.toFixed(2)
-      : Math.floor(value).toString(); // No decimals for tokens
+    // Convert the amount to a number and divide by 10^18 (TOKEN_DECIMALS)
+    const value = Number(amount) / Math.pow(10, TOKEN_DECIMALS);
+    
+    // For EGLD show 2 decimal places, for other tokens show whole number
+    return token === 'EGLD' ? value.toFixed(2) : Math.floor(value).toString();
   } catch (error) {
     console.error('Error formatting token amount:', error);
     return '0';
