@@ -164,13 +164,14 @@ export default function RootLayout({
                       onClick={() => setIsSwapOpen(!isSwapOpen)}
                       style={{ transformOrigin: 'right center' }}
                       className={`
-                        bg-[#1a1a1a] text-[#FFB930] px-6 py-3
+                        bg-[#1a1a1a] text-[#FFB930] px-6 py-1 md:py-3
                         border border-[#FFB930]/20 
                         rounded-xl font-semibold text-lg
                         transform -rotate-90
                         hover:bg-[#2a2a2a] transition-all duration-300
                         shadow-lg hover:shadow-[#FFB930]/10
                         whitespace-nowrap
+                        max-md:opacity-80
                       `}
                     >
                       Swap Tokens
