@@ -63,12 +63,9 @@ const SIDES = {
 const formatTokenAmount = (amount: string, token: string): string => {
   try {
     const value = Number(amount) / (10 ** TOKEN_DECIMALS);
-    // Use Intl.NumberFormat to format the number
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: token === 'EGLD' ? 2 : 0,
-      useGrouping: true
-    }).format(value);
+    return token === 'EGLD' 
+      ? value.toFixed(2)
+      : Math.floor(value).toString(); // No decimals for tokens
   } catch (error) {
     console.error('Error formatting token amount:', error);
     return '0';
@@ -108,10 +105,12 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const { games, isInitialLoading, isRefreshing, refetchGames } = useGames();
   const { network } = useGetNetworkConfig();
   const { address: connectedAddress } = useGetAccountInfo();
-  const accountInfo = useGetAccountInfo();
+  const { account } = useGetAccountInfo();
   const { balance: mincuBalance, isLoading: isLoadingBalance } = useTokenBalance(connectedAddress || '', MINCU_IDENTIFIER);
   const { balance: rareBalance, isLoading: isLoadingRare } = useTokenBalance(connectedAddress || '', RARE_IDENTIFIER);
   const { balance: bodBalance, isLoading: isLoadingBod } = useTokenBalance(connectedAddress || '', BOD_IDENTIFIER);
+  const { balance: oneBalance, isLoading: isLoadingOne } = useTokenBalance(connectedAddress || '', ONE_IDENTIFIER);
+  const { balance: boberBalance, isLoading: isLoadingBober } = useTokenBalance(connectedAddress || '', BOBER_IDENTIFIER);
 
   const [previousGames, setPreviousGames] = useState<Game[]>([]);
   const [disappearingGames, setDisappearingGames] = useState<Game[]>([]);
@@ -247,10 +246,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       if (!sessionId) {
         throw new Error('Failed to get transaction session ID');
       }
-      console.log('Account info:', accountInfo.shard);
+      console.log('Account info:', account.shard);
 
       // Wait for initial blockchain confirmation
-      await new Promise(resolve => setTimeout(resolve, accountInfo.shard === 1 ? 10000 : 25000));
+      await new Promise(resolve => setTimeout(resolve, account.shard === 1 ? 10000 : 25000));
       await refreshAccount();
 
       setTransactionStep('checking');
@@ -343,7 +342,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       }
 
       // Wait for initial blockchain confirmation
-      await new Promise(resolve => setTimeout(resolve, accountInfo.shard === 1 ? 10000 : 25000));
+      await new Promise(resolve => setTimeout(resolve, account.shard === 1 ? 10000 : 25000));
       await refreshAccount();
 
       // Additional wait to ensure smart contract state is updated
@@ -414,13 +413,32 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   };
 
   const canJoinGame = (gameAmount: string, tokenIdentifier: string): boolean => {
-    if (!connectedAddress || isLoadingBalance) return false;
+    if (!connectedAddress || isLoadingRare || isLoadingBod || isLoadingOne || isLoadingBober) return false;
     
     try {
-      const currentBalance = tokenIdentifier === RARE_IDENTIFIER ? rareBalance : bodBalance;
+      let currentBalance;
+      switch (tokenIdentifier) {
+        case RARE_IDENTIFIER:
+          currentBalance = rareBalance;
+          break;
+        case BOD_IDENTIFIER:
+          currentBalance = bodBalance;
+          break;
+        case ONE_IDENTIFIER:
+          currentBalance = oneBalance;
+          break;
+        case BOBER_IDENTIFIER:
+          currentBalance = boberBalance;
+          break;
+        case 'EGLD':
+          currentBalance = Number(account.balance) / Math.pow(10, 18);
+          break;
+        default:
+          return false;
+      }
+      
       // Convert amounts to numbers for comparison
       const requiredAmount = Number(gameAmount) / (10 ** TOKEN_DECIMALS);
-      
       return currentBalance >= requiredAmount;
     } catch (error) {
       console.error('Error checking balance:', error);
@@ -775,7 +793,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             />
                           </div>
                           <span className="text-sm font-medium text-black">
-                            {(Number(game.amount) / (10 ** 18)).toFixed(2)}
+                            {formatTokenAmount(game.amount, game.token)} {game.token.split('-')[0]}
                           </span>
                         </div>
                       </div>
@@ -807,7 +825,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             />
                           </div>
                           <span className="text-sm font-medium text-black">
-                            {(Number(game.amount) / (10 ** 18)).toFixed(2)} 
+                            {formatTokenAmount(game.amount, game.token)} {game.token.split('-')[0]}
                           </span>
                         </div>
                       </div>
