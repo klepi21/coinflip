@@ -165,7 +165,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         const endpointDefinition = contract.getEndpoint('getId');
         const resultParser = new ResultsParser();
         const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
-        const totalGames = Number(results.values[0].valueOf().toString());
+        const totalGames = Number(results.values[0].valueOf().toString()); 
         setTotalGames(totalGames);
       }
     } catch (error) {
