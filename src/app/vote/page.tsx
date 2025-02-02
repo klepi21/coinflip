@@ -296,7 +296,8 @@ export default function Vote() {
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <span className="font-medium">{token.voteAmount} {token.name}</span>
+                        <span className="font-medium">{token.voteAmount}</span>
+                        <span className="hidden md:flex">{token.name}</span>
                       </button>
                     ))}
                   </div>
