@@ -211,7 +211,7 @@ export default function VoteTokenPage() {
         }}
       />
       <div className="h-full overflow-auto pt-24">
-        <div className="container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <div className="container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-center relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

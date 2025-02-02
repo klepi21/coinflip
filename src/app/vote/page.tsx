@@ -263,8 +263,8 @@ export default function Vote() {
           className: 'my-toast-class',
         }}
       />
-      <div className="h-full overflow-auto pt-24">
-        <div className="container max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-center relative z-10">
+      <div className="h-full overflow-auto">
+        <div className="container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-center relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
