@@ -35,6 +35,7 @@ const RARE_IDENTIFIER = 'RARE-99e8b0';
 const BOD_IDENTIFIER = 'BOD-204877';
 const BOBER_IDENTIFIER = 'BOBER-9eb764';
 const ONE_IDENTIFIER = 'ONE-f9954f';
+const TOM_IDENTIFIER = 'TOM-48414f';
 
 // Token configuration
 const TOKEN_DECIMALS = 18;
@@ -45,6 +46,7 @@ const TOKEN_IMAGES: Record<string, string> = {
   [BOD_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${BOD_IDENTIFIER}/icon.svg`,
   [BOBER_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${BOBER_IDENTIFIER}/icon.svg`,
   [ONE_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${ONE_IDENTIFIER}/icon.svg`,
+  [TOM_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${TOM_IDENTIFIER}/icon.svg`,
   'EGLD': 'https://s2.coinmarketcap.com/static/img/coins/200x200/6892.png'
 };
 
@@ -113,6 +115,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const { balance: bodBalance, isLoading: isLoadingBod } = useTokenBalance(connectedAddress || '', BOD_IDENTIFIER);
   const { balance: oneBalance, isLoading: isLoadingOne } = useTokenBalance(connectedAddress || '', ONE_IDENTIFIER);
   const { balance: boberBalance, isLoading: isLoadingBober } = useTokenBalance(connectedAddress || '', BOBER_IDENTIFIER);
+  const { balance: tomBalance, isLoading: isLoadingTom } = useTokenBalance(connectedAddress || '', TOM_IDENTIFIER);
 
   const [previousGames, setPreviousGames] = useState<Game[]>([]);
   const [disappearingGames, setDisappearingGames] = useState<Game[]>([]);
@@ -415,7 +418,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   };
 
   const canJoinGame = (gameAmount: string, tokenIdentifier: string): boolean => {
-    if (!connectedAddress || isLoadingRare || isLoadingBod || isLoadingOne || isLoadingBober) return false;
+    if (!connectedAddress || isLoadingRare || isLoadingBod || isLoadingBober || isLoadingOne || isLoadingTom) return false;
     
     try {
       let currentBalance;
@@ -431,6 +434,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
           break;
         case BOBER_IDENTIFIER:
           currentBalance = boberBalance;
+          break;
+        case TOM_IDENTIFIER:
+          currentBalance = tomBalance;
           break;
         case 'EGLD':
           currentBalance = Number(account.balance) / Math.pow(10, 18);
