@@ -8,7 +8,7 @@ import Link from "next/link"
 
 // Define the vote end dates (in UTC)
 const fighterVoteEndDate = new Date(Date.UTC(2025, 1, 14, 23, 59, 59)) // February 14, 2025, 23:59:59 UTC
-const tokenVoteEndDate = new Date(Date.UTC(2025, 1, 3, 19, 0, 0)) // February 3, 2024, 19:00:00 UTC
+const tokenVoteEndDate = new Date(Date.UTC(2025, 1, 14, 18, 0, 0)) // February 14, 2024, 18:00:00 UTC
 
 interface TimeLeft {
   days: number
@@ -154,7 +154,7 @@ export function VoteBanner() {
                     <div className="space-y-0.5">
                       <p className="text-sm font-medium text-white">Vote for next token!</p>
                       <p className="text-sm text-zinc-400">
-                        Choose your favorite token to be added next.
+                        Choose between BATEMAN, FOXSY, DRX, and MXDOGE.
                       </p>
                     </div>
                     <div className="flex gap-3 max-md:flex-wrap">
