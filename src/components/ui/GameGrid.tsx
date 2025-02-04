@@ -86,6 +86,7 @@ type PopupState = {
 };
 
 type FilterType = 'all' | 'highest' | 'lowest' | 'yours';
+type TokenFilter = 'all' | 'EGLD' | 'RARE-99e8b0' | 'BOD-204877' | 'BOBER-9eb764' | 'ONE-f9954f' | 'TOM-48414f';
 
 type GridView = '2x2' | '3x3';
 
@@ -96,6 +97,7 @@ type Props = {
 export default function GameGrid({ onActiveGamesChange }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState<FilterType>('all');
+  const [tokenFilter, setTokenFilter] = useState<TokenFilter>('all');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedGames, setSelectedGames] = useState<Game[]>([]);
   const [gridView, setGridView] = useState<GridView>('3x3');
@@ -463,7 +465,12 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const filteredGames = (() => {
     let filtered = games;
     
-    // First apply owner filter
+    // First apply token filter
+    if (tokenFilter !== 'all') {
+      filtered = filtered.filter(game => game.token === tokenFilter);
+    }
+    
+    // Then apply owner filter
     if (filter === 'yours') {
       filtered = filtered.filter(game => game.creator.toLowerCase() === connectedAddress?.toLowerCase());
     }
@@ -535,6 +542,42 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
           <div className="bg-[#1A1A1A] rounded-full px-3 lg:px-6 py-1.5 lg:py-2 text-white">
             <span className="font-bold">{totalGames - games.length}</span> PLAYED
           </div>
+        </div>
+        
+        {/* Token Filter */}
+        <div className="flex items-center gap-4 bg-[#1A1A1A] rounded-xl p-2">
+          <button
+            onClick={() => setTokenFilter('all')}
+            className={`px-3 py-1.5 rounded-lg transition-colors ${
+              tokenFilter === 'all' 
+                ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' 
+                : 'text-white hover:text-[#C99733]'
+            }`}
+          >
+            All
+          </button>
+          {Object.entries(TOKEN_IMAGES).map(([token, image]) => (
+            <button
+              key={token}
+              onClick={() => setTokenFilter(token as TokenFilter)}
+              className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all ${
+                tokenFilter === token 
+                  ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] p-1' 
+                  : 'hover:bg-zinc-800'
+              }`}
+              title={token === 'EGLD' ? 'EGLD' : token.split('-')[0]}
+            >
+              <div className="w-6 h-6 rounded-full overflow-hidden">
+                <Image
+                  src={image}
+                  alt={token}
+                  width={24}
+                  height={24}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </button>
+          ))}
         </div>
         
         {/* Filter and View Controls */}
