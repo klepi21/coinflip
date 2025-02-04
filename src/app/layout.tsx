@@ -16,6 +16,8 @@ import { VoteBanner } from '@/components/ui/VoteBanner';
 import { useState, useEffect } from 'react';
 import { AshSwapWidget } from '@/components/ui/ashswapwidget';
 import axios from 'axios';
+import { Toaster } from 'sonner';
+import Script from 'next/script';
 
 const comic = Comic_Neue({
   weight: ['400', '700'],
@@ -126,6 +128,29 @@ export default function RootLayout({
             }
           `}
         </style>
+        <Script id="dynamic-favicon">
+          {`
+            function updateFavicon() {
+              const favicons = [
+                '/img/grm2.png',
+                '/img/option2.png',
+                '/img/option4.png'
+              ];
+              const randomIndex = Math.floor(Math.random() * favicons.length);
+              const link = document.querySelector("link[rel~='icon']");
+              if (!link) {
+                const newLink = document.createElement('link');
+                newLink.rel = 'icon';
+                document.head.appendChild(newLink);
+              }
+              document.querySelector("link[rel~='icon']").href = favicons[randomIndex];
+            }
+            // Update favicon every 3 seconds
+            setInterval(updateFavicon, 20000);
+            // Initial update
+            updateFavicon();
+          `}
+        </Script>
       </head>
       <body className="bg-black">
         <ThemeProvider attribute="class" defaultTheme="light">
@@ -225,6 +250,7 @@ export default function RootLayout({
             </WalletProvider>
           </DappProvider>
         </ThemeProvider>
+        <Toaster />
       </body>
     </html>
   );
