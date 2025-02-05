@@ -31,6 +31,23 @@ const TOKEN_DECIMALS = 18;
 const RARE_IDENTIFIER = 'RARE-99e8b0';
 const BOD_IDENTIFIER = 'BOD-204877';
 
+const TOKEN_IMAGES: Record<string, string> = {
+  [RARE_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${RARE_IDENTIFIER}/icon.svg`,
+  [BOD_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${BOD_IDENTIFIER}/icon.svg`,
+  'EGLD': 'https://s2.coinmarketcap.com/static/img/coins/200x200/6892.png'
+};
+
+const formatTokenAmount = (amount: string, token: string): string => {
+  try {
+    const BigNumber = require('bignumber.js');
+    const value = new BigNumber(amount).dividedBy(new BigNumber(10).pow(TOKEN_DECIMALS));
+    return token === 'EGLD' ? value.toFixed(2) : Math.floor(value).toString();
+  } catch (error) {
+    console.error('Error formatting token amount:', error);
+    return '0';
+  }
+};
+
 export default function GamePage() {
   const searchParams = useSearchParams();
   const gameId = searchParams.get('id');
@@ -245,9 +262,18 @@ export default function GamePage() {
                     Created by: {game.creator.slice(0, 8)}...{game.creator.slice(-4)}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full overflow-hidden">
+                    <Image
+                      src={TOKEN_IMAGES[game.token] || TOKEN_IMAGES['EGLD']}
+                      alt={game.token}
+                      width={24}
+                      height={24}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <div className="text-lg font-bold text-[#C99733]">
-                    {Number(game.amount) / (10 ** TOKEN_DECIMALS)} {game.token.split('-')[0]}
+                    {formatTokenAmount(game.amount, game.token)} {game.token.split('-')[0]}
                   </div>
                 </div>
               </div>
