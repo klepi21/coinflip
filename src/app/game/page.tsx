@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { 
   Address,
   TokenPayment,
@@ -23,6 +23,7 @@ import { useGames } from '@/hooks/useGames';
 import Image from "next/image";
 import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
 import flipcoinAbi from '@/config/flipcoin.abi.json';
+import { Twitter } from 'lucide-react';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -45,6 +46,8 @@ export default function GamePage() {
   const { games, isInitialLoading, refetchGames } = useGames();
 
   const game = games.find(g => g.id === Number(gameId));
+
+  const router = useRouter();
 
   const canJoinGame = (gameAmount: string, tokenIdentifier: string): boolean => {
     if (!connectedAddress || isLoadingRare || isLoadingBod) return false;
@@ -150,7 +153,7 @@ export default function GamePage() {
   const handleCloseStatusModal = () => {
     setShowStatusModal(false);
     setGameResult(null);
-    window.location.reload();
+    router.push('/');
   };
 
   const checkGameWinner = async (gameId: number): Promise<string> => {
@@ -283,9 +286,23 @@ export default function GamePage() {
                         className="w-full h-full object-contain"
                       />
                     </div>
-                    <div className="text-white text= font-bold">{game.side === 0 ? 'SASU' : 'GRM'}</div>
+                    <div className="text-white font-bold">{game.side === 0 ? 'SASU' : 'GRM'}</div>
                   </div>
                 </div>
+
+                {/* Twitter Share Button - Moved to bottom right */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const text = `Join me in this epic battle on F.0! 🎮\nPrize pool: ${Number(game.amount) / (10 ** TOKEN_DECIMALS)} ${game.token.split('-')[0]}\n`;
+                    const url = `${window.location.origin}/game?id=${game.id}`;
+                    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                  }}
+                  className="absolute bottom-4 right-4 p-2 bg-black/50 hover:bg-[#C99733] rounded-full transition-colors z-10 backdrop-blur-sm group"
+                  title="Share on Twitter"
+                >
+                  <Twitter className="w-4 h-4 text-white" />
+                </button>
               </div>
 
               {/* Join Button */}
