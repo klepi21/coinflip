@@ -832,9 +832,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          const text = `Join me in this epic battle on F.0! 🎮\nPrize pool: ${formatTokenAmount(game.amount, game.token)} ${game.token.split('-')[0]}\n\n@SuperRare_Bears #MultiversX $EGLD\n\n`;
-                          const url = `${window.location.origin}/game?id=${game.id}`;
-                          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                          const gameUrl = `${window.location.protocol}//${window.location.host}/game?id=${game.id}`;
+                          const shareText = `Join me in this epic battle on F.0! 🎮\nPrize pool: ${formatTokenAmount(game.amount, game.token)} ${game.token.split('-')[0]}\n\n@SuperRare_Bears #MultiversX $EGLD #P2E #Gaming`;
+                          const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(gameUrl)}`;
+                          window.open(shareUrl, '_blank', 'noopener,noreferrer');
                         }}
                         className="p-1.5 bg-black/50 hover:bg-[#C99733] rounded-full transition-colors backdrop-blur-sm group"
                         title="Share on X (Twitter)"
