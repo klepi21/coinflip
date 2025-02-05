@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, LayoutGrid, Grid2X2, Grid3X3, Twitter } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, LayoutGrid, Grid2X2, Grid3X3, Twitter, Copy, Check } from "lucide-react";
 import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
 import { 
   AbiRegistry, 
@@ -128,6 +128,15 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const [gameResult, setGameResult] = useState<GameResult>(null);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
+
+  const [copiedGameId, setCopiedGameId] = useState<number | null>(null);
+
+  const handleCopyLink = (gameId: number) => {
+    const url = `${window.location.origin}/game?id=${gameId}`;
+    navigator.clipboard.writeText(url);
+    setCopiedGameId(gameId);
+    setTimeout(() => setCopiedGameId(null), 2000);
+  };
 
   // Track disappearing games with full game data
   useEffect(() => {
@@ -818,19 +827,38 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                 >
                   {/* Main box with players */}
                   <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg">
-                    {/* Share Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const text = `Join me in this epic battle on F.0! 🎮\nPrize pool: ${formatTokenAmount(game.amount, game.token)} ${game.token.split('-')[0]}\n`;
-                        const url = `${window.location.origin}/game?id=${game.id}`;
-                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
-                      }}
-                      className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-[#C99733] rounded-full transition-colors z-10 backdrop-blur-sm group"
-                      title="Share on Twitter"
-                    >
-                      <Twitter className="w-4 h-4 text-white" />
-                    </button>
+                    {/* Share Buttons */}
+                    <div className="absolute top-2 right-2 flex gap-2 z-10">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const text = `Join me in this epic battle on F.0! 🎮\nPrize pool: ${formatTokenAmount(game.amount, game.token)} ${game.token.split('-')[0]}\n\n@SuperRare_Bears #MultiversX $EGLD #P2E #Gaming\n`;
+                          const url = `${window.location.origin}/game?id=${game.id}`;
+                          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                        }}
+                        className="p-1.5 bg-black/50 hover:bg-[#C99733] rounded-full transition-colors backdrop-blur-sm group"
+                        title="Share on X (Twitter)"
+                      >
+                        <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+                        </svg>
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopyLink(game.id);
+                        }}
+                        className="p-1.5 bg-black/50 hover:bg-[#C99733] rounded-full transition-colors backdrop-blur-sm group"
+                        title="Copy game link"
+                      >
+                        {copiedGameId === game.id ? (
+                          <Check className="w-3 h-3 text-white" />
+                        ) : (
+                          <Copy className="w-3 h-3 text-white" />
+                        )}
+                      </button>
+                    </div>
 
                     <div className="flex relative min-h-[180px]" style={{
                       backgroundImage: "url('/img/fightback.jpg')",
