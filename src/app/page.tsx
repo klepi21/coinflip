@@ -17,6 +17,7 @@ import { AnimatedText } from "@/components/ui/animated-underline-text-one";
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { RetroGrid } from '@/components/ui/retro-grid';
+import { ParticleButton } from '@/components/ui/particle-button';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -71,6 +72,32 @@ export default function Home() {
             <p className="text-xl md:text-4xl font-bold text-white text-center">
               Squash Beefs, One Smush at a Time!
             </p>
+            
+            {/* FUD OUT Button */}
+            <div className="relative mt-8 flex flex-col items-center">
+              <ParticleButton
+                className="bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-bold py-3 px-8 text-lg hover:opacity-90"
+                successDuration={6000}
+                onClick={() => {
+                  const tooltip = document.getElementById('fud-tooltip');
+                  if (tooltip) {
+                    tooltip.classList.remove('hidden');
+                    setTimeout(() => {
+                      tooltip.classList.add('hidden');
+                    }, 6000);
+                  }
+                }}
+              >
+                FUD OUT!
+              </ParticleButton>
+              
+              <div 
+                id="fud-tooltip" 
+                className="hidden absolute top-full mt-4 p-4 bg-black/90 border border-[#FFD163]/20 rounded-xl text-white text-sm max-w-[300px] text-center"
+              >
+                We are sorry for the inconvenience. The FUD only gets out from here and not back in.
+              </div>
+            </div>
           </div>
         </div>
 
@@ -92,7 +119,7 @@ export default function Home() {
         <div className="flex justify-center mb-4">
           <img src="/img/SRBLABS.png" alt="SRBLABS Logo" className="w-20 h-auto mr-4" />
         </div>
-        <p className="max-w-full mx-auto mb-2 text-xs text-white/80">Peer-to-peer gaming for true degens—provably fair, unapologetically risky, and absolutely addictive. Just don’t forget: 18+ and don't get rugged by your local laws.</p>
+        <p className="max-w-full mx-auto mb-2 text-xs text-white/80">Peer-to-peer gaming for true degens—provably fair, unapologetically risky, and absolutely addictive. Just don't forget: 18+ and don't get rugged by your local laws.</p>
       </div>
     </main>
   );
