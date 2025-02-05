@@ -72,17 +72,19 @@ export default function Home() {
       <div className="w-full md:container mx-auto flex-1 mb-auto relative z-10">
         {/* Title Section */}
         <div className="flex flex-col items-center py-4 md:py-12 mb-16">
-          <div className="flex flex-col items-center w-full">
+          <div className="flex items-center gap-6 justify-center">
             <p className="text-xl md:text-4xl font-bold text-white text-center">
               Squash Beefs, One Smush at a Time!
             </p>
             
             {/* FUD OUT Button */}
-            <div className="relative mt-8 flex flex-col items-center">
+            <div className="relative flex items-center">
               <ParticleButton
                 className={cn(
-                  "bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-bold py-3 px-8 text-lg rounded-xl",
-                  isButtonClicked ? "scale-95 opacity-90" : "hover:opacity-90"
+                  "bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-bold py-3 px-8 text-lg rounded-xl shadow-lg",
+                  isButtonClicked ? 
+                    "scale-95 opacity-90 shadow-[inset_0_4px_10px_rgba(0,0,0,0.3)]" : 
+                    "hover:opacity-90 hover:shadow-[0_0_20px_rgba(201,151,51,0.3)]"
                 )}
                 successDuration={6000}
                 onClick={() => {
@@ -100,10 +102,10 @@ export default function Home() {
               <AnimatePresence>
                 {showTooltip && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full mt-4 p-4 bg-black/90 border border-[#FFD163]/20 rounded-xl text-white text-sm max-w-[300px] text-center backdrop-blur-sm shadow-xl"
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    className="absolute left-full ml-4 p-4 bg-black/90 border border-[#FFD163]/20 rounded-xl text-white text-sm max-w-[300px] text-center backdrop-blur-sm shadow-xl"
                   >
                     We are sorry for the inconvenience. The FUD only gets out from here and not back in.
                   </motion.div>
