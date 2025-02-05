@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, LayoutGrid, Grid2X2, Grid3X3 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, LayoutGrid, Grid2X2, Grid3X3, Twitter } from "lucide-react";
 import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
 import { 
   AbiRegistry, 
@@ -818,6 +818,20 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                 >
                   {/* Main box with players */}
                   <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg">
+                    {/* Share Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const text = `Join me in this epic battle on F.0! 🎮\nPrize pool: ${formatTokenAmount(game.amount, game.token)} ${game.token.split('-')[0]}\n`;
+                        const url = `${window.location.origin}/game?id=${game.id}`;
+                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                      }}
+                      className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-[#C99733] rounded-full transition-colors z-10 backdrop-blur-sm group"
+                      title="Share on Twitter"
+                    >
+                      <Twitter className="w-4 h-4 text-white" />
+                    </button>
+
                     <div className="flex relative min-h-[180px]" style={{
                       backgroundImage: "url('/img/fightback.jpg')",
                       backgroundSize: 'contain',
