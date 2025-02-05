@@ -733,7 +733,12 @@ export default function Create() {
                     <span className="text-white font-medium">
                       {selectedToken === 'EGLD' 
                         ? (Number(account.balance) / Math.pow(10, 18)).toFixed(4)
-                        : (selectedToken === 'RARE' ? rareBalance : selectedToken === 'BOD' ? bodBalance : selectedToken === 'BOBER' ? boberBalance : oneBalance).toFixed(2)} {selectedToken}
+                        : (selectedToken === 'RARE' ? rareBalance : 
+                           selectedToken === 'BOD' ? bodBalance : 
+                           selectedToken === 'BOBER' ? boberBalance : 
+                           selectedToken === 'ONE' ? oneBalance :
+                           selectedToken === 'TOM' ? tomBalance :
+                           0).toFixed(2)} {selectedToken}
                     </span>
                   )}
                 </div>
