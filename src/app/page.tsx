@@ -20,6 +20,7 @@ import { RetroGrid } from '@/components/ui/retro-grid';
 import { ParticleButton } from '@/components/ui/particle-button';
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { FudGauge } from '@/components/ui/fud-gauge';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -120,11 +121,29 @@ export default function Home() {
           {/* Left Half - Create Game */}
           <div className="w-full md:w-1/3">
             <CreateDynamic />
+            
+            {/* FUD to FOMO Gauge - Only visible on desktop */}
+            <div className="hidden md:block mt-6 p-6 bg-[#1A1A1A] backdrop-blur-sm rounded-xl border border-zinc-800 shadow-xl">
+              <div className="flex flex-col items-center">
+                <h3 className="text-lg font-bold text-white mb-2">MultiversX FUD/FOMO Index</h3>
+                <p className="text-sm text-zinc-400 mb-6">Sentiment Analysis: Market Metrics & Social Signals</p>
+                <FudGauge value={38} size={280} />
+              </div>
+            </div>
           </div>
 
-          {/* Right Half - Game Grid */}
+          {/* Right Half - Game Grid and Mobile FUD Gauge */}
           <div className="w-full md:w-2/3" style={{ marginTop: '-86px' }}>
             <GameGridDynamic onActiveGamesChange={setActiveGames} />
+            
+            {/* FUD to FOMO Gauge - Only visible on mobile */}
+            <div className="block md:hidden mt-8 p-6 bg-[#1A1A1A] backdrop-blur-sm rounded-xl border border-zinc-800 shadow-xl">
+              <div className="flex flex-col items-center">
+                <h3 className="text-lg font-bold text-white mb-2">MultiversX FUD/FOMO Index</h3>
+                <p className="text-sm text-zinc-400 mb-6">Sentiment Analysis: Market Metrics & Social Signals</p>
+                <FudGauge value={38} size={280} />
+              </div>
+            </div>
           </div>
         </div>
       </div>

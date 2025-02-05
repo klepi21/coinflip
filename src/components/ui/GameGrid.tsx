@@ -25,6 +25,7 @@ import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { GlovesAnimation } from './GlovesAnimation';
 import { GameStatusModal } from './GameStatusModal';
 import { toast, Toaster } from 'sonner';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -125,6 +126,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const [transactionStep, setTransactionStep] = useState<'signing' | 'processing' | 'checking' | 'revealing'>('signing');
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [gameResult, setGameResult] = useState<GameResult>(null);
+
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   // Track disappearing games with full game data
   useEffect(() => {
@@ -458,7 +461,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
   // Adjust games per page based on grid view
   const getGamesPerPage = () => {
-    return gridView === '2x2' ? 6 : 9;
+    if (gridView === '3x3') {
+      return isMobile ? 6 : 15; // 2x3 on mobile, 3x5 on desktop
+    }
+    return isMobile ? 4 : 12; // 2x2 on mobile, 3x4 on desktop
   };
 
   // Filter and sort games based on selection
