@@ -5,7 +5,12 @@ import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { 
   Address,
-  TokenPayment
+  TokenPayment,
+  SmartContract,
+  AbiRegistry,
+  U64Value,
+  ContractFunction,
+  ResultsParser
 } from "@multiversx/sdk-core";
 import { useGetNetworkConfig, useGetAccountInfo } from "@multiversx/sdk-dapp/hooks";
 import { sendTransactions } from "@multiversx/sdk-dapp/services";
@@ -16,6 +21,8 @@ import { GameStatusModal } from '@/components/ui/GameStatusModal';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { useGames } from '@/hooks/useGames';
 import Image from "next/image";
+import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
+import flipcoinAbi from '@/config/flipcoin.abi.json';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -62,18 +69,28 @@ export default function GamePage() {
       setTransactionStep('signing');
       setGameResult(null);
 
+      const contract = new SmartContract({
+        address: new Address(SC_ADDRESS),
+        abi: AbiRegistry.create(flipcoinAbi)
+      });
 
+      const transaction = contract.methods
+        .join([new U64Value(game.id)])
+        .withSender(new Address(connectedAddress))
+        .withGasLimit(10000000)
+        .withChainID(network.chainId);
 
-      const transaction = {
-        value: '0',
-        data: `ESDTTransfer@${Buffer.from(game.token).toString('hex')}@${game.amount}@join@${game.id}`,
-        receiver: SC_ADDRESS,
-        gasLimit: 10000000,
-        chainID: network.chainId
-      };
+      if (game.token === 'EGLD') {
+        transaction.withValue(game.amount);
+      } else {
+        const payment = TokenPayment.fungibleFromAmount(game.token, game.amount, 0);
+        transaction.withSingleESDTTransfer(payment);
+      }
+
+      const tx = transaction.buildTransaction();
       
       const { sessionId } = await sendTransactions({
-        transactions: [transaction],
+        transactions: [tx],
         transactionsDisplayInfo: {
           processingMessage: 'Processing game transaction',
           errorMessage: 'An error occurred during game transaction',
@@ -94,17 +111,35 @@ export default function GamePage() {
       // Additional wait to ensure smart contract state is updated
       await new Promise(resolve => setTimeout(resolve, 4000));
 
+      let retries = 3;
+      let winner = null;
+
       setTransactionStep('revealing');
 
-      // Refresh games to get the updated state
-      await refetchGames();
-
-      // Check if we won
-      const updatedGame = games.find(g => g.id === game.id);
-      if (updatedGame?.winner) {
-        const isWinner = updatedGame.winner.toLowerCase() === connectedAddress?.toLowerCase();
-        setGameResult(isWinner ? 'win' : 'lose');
+      while (retries > 0 && !winner) {
+        try {
+          winner = await checkGameWinner(game.id);
+          if (winner) break;
+        } catch (error) {
+          retries--;
+          if (retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
       }
+
+      if (!winner) {
+        throw new Error('Could not determine game result');
+      }
+
+      const isWinner = winner.toLowerCase() === connectedAddress?.toLowerCase();
+      setGameResult(isWinner ? 'win' : 'lose');
+
+      // Refresh all necessary states
+      await Promise.all([
+        refreshAccount(),
+        refetchGames()
+      ]);
 
     } catch (error) {
       console.error('Join game error:', error);
@@ -116,6 +151,28 @@ export default function GamePage() {
     setShowStatusModal(false);
     setGameResult(null);
     window.location.reload();
+  };
+
+  const checkGameWinner = async (gameId: number): Promise<string> => {
+    const provider = new ProxyNetworkProvider(network.apiAddress);
+    const contract = new SmartContract({
+      address: new Address(SC_ADDRESS),
+      abi: AbiRegistry.create(flipcoinAbi)
+    });
+
+    const query = contract.createQuery({
+      func: new ContractFunction('getWinner'),
+      args: [new U64Value(gameId)]
+    });
+    const queryResponse = await provider.queryContract(query);
+    
+    const endpointDefinition = contract.getEndpoint('getWinner');
+    const resultParser = new ResultsParser();
+    const { values } = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
+    
+    // Convert the Address value to string properly
+    const winnerAddress = values[0].valueOf().toString();
+    return winnerAddress;
   };
 
   if (isInitialLoading) {
