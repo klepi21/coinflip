@@ -18,6 +18,8 @@ import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { RetroGrid } from '@/components/ui/retro-grid';
 import { ParticleButton } from '@/components/ui/particle-button';
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -29,6 +31,8 @@ export default function Home() {
   const [totalGamesPlayed, setTotalGamesPlayed] = useState<number>(0);
   const [activeGames, setActiveGames] = useState<number>(0);
   const { network } = useGetNetworkConfig();
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [isButtonClicked, setIsButtonClicked] = useState(false);
 
   const fetchTotalGames = async () => {
     try {
@@ -76,27 +80,35 @@ export default function Home() {
             {/* FUD OUT Button */}
             <div className="relative mt-8 flex flex-col items-center">
               <ParticleButton
-                className="bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-bold py-3 px-8 text-lg hover:opacity-90"
+                className={cn(
+                  "bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-bold py-3 px-8 text-lg rounded-xl",
+                  isButtonClicked ? "scale-95 opacity-90" : "hover:opacity-90"
+                )}
                 successDuration={6000}
                 onClick={() => {
-                  const tooltip = document.getElementById('fud-tooltip');
-                  if (tooltip) {
-                    tooltip.classList.remove('hidden');
-                    setTimeout(() => {
-                      tooltip.classList.add('hidden');
-                    }, 6000);
-                  }
+                  setIsButtonClicked(true);
+                  setShowTooltip(true);
+                  setTimeout(() => {
+                    setIsButtonClicked(false);
+                    setShowTooltip(false);
+                  }, 6000);
                 }}
               >
                 FUD OUT!
               </ParticleButton>
               
-              <div 
-                id="fud-tooltip" 
-                className="hidden absolute top-full mt-4 p-4 bg-black/90 border border-[#FFD163]/20 rounded-xl text-white text-sm max-w-[300px] text-center"
-              >
-                We are sorry for the inconvenience. The FUD only gets out from here and not back in.
-              </div>
+              <AnimatePresence>
+                {showTooltip && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full mt-4 p-4 bg-black/90 border border-[#FFD163]/20 rounded-xl text-white text-sm max-w-[300px] text-center backdrop-blur-sm shadow-xl"
+                  >
+                    We are sorry for the inconvenience. The FUD only gets out from here and not back in.
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>

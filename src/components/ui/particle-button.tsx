@@ -29,7 +29,7 @@ function SuccessParticles({
             {[...Array(6)].map((_, i) => (
                 <motion.div
                     key={i}
-                    className="fixed w-1 h-1 bg-black dark:bg-white rounded-full"
+                    className="fixed w-2 h-2 bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full shadow-lg"
                     style={{ left: centerX, top: centerY }}
                     initial={{
                         scale: 0,
@@ -37,12 +37,12 @@ function SuccessParticles({
                         y: 0,
                     }}
                     animate={{
-                        scale: [0, 1, 0],
-                        x: [0, (i % 2 ? 1 : -1) * (Math.random() * 50 + 20)],
-                        y: [0, -Math.random() * 50 - 20],
+                        scale: [0, 1.5, 0],
+                        x: [0, (i % 2 ? 1 : -1) * (Math.random() * 100 + 50)],
+                        y: [0, -Math.random() * 100 - 50],
                     }}
                     transition={{
-                        duration: 0.6,
+                        duration: 0.8,
                         delay: i * 0.1,
                         ease: "easeOut",
                     }}
@@ -64,7 +64,13 @@ function ParticleButton({
     const buttonRef = useRef<HTMLButtonElement>(null);
 
     const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
+        if (onClick) {
+            onClick(e);
+        }
         setShowParticles(true);
+        if (onSuccess) {
+            onSuccess();
+        }
 
         setTimeout(() => {
             setShowParticles(false);
@@ -86,7 +92,7 @@ function ParticleButton({
                 {...props}
             >
                 {children}
-                <MousePointerClick className="h-4 w-4" />
+                <MousePointerClick className="h-4 w-4 ml-2" />
             </Button>
         </>
     );
