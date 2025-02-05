@@ -103,23 +103,27 @@ export default function RootLayout({
         <meta name="description" content="F.0. - Fud Out, a blockchain-based PvP coin flip fighting game" />
         <title>F.O. - Fud Out, a blockchain-based PvP coin flip fighting game</title>
         <meta name="description" content="Experience the thrill of PvP combat with F.0. - Fud Out, a blockchain-based coin flip fighting game. Compete against other players and claim your rewards." />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://fudout.vercel.app" />
         <meta property="og:title" content="F.0. - Fud Out, a blockchain-based PvP coin flip fighting game" />
         <meta property="og:description" content="Compete in PvP coin flip battles with F.0. - Fud Out, a blockchain-based fighting game" />
-        <meta property="og:image" content="https://fudout.vercel.app/img/fudout.png?v=2" />
-        <meta property="og:image:secure_url" content="https://fudout.vercel.app/img/fudout.png?v=2" />
-        <meta property="og:image:alt" content="F.0. - Fud Out Game Logo" />
+        <meta property="og:image" content="https://fudout.vercel.app/img/pick.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:url" content="https://fudout.vercel.app" />
-        <meta property="og:type" content="website" />
         <meta property="og:site_name" content="F.0. - Fud Out" />
+
+        {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@fudout" />
+        <meta name="twitter:site" content="@SuperRare_Bears" />
+        <meta name="twitter:creator" content="@SuperRare_Bears" />
         <meta name="twitter:title" content="F.0. - Fud Out, a blockchain-based PvP coin flip fighting game" />
         <meta name="twitter:description" content="Compete in PvP coin flip battles with F.0. - Fud Out, a blockchain-based fighting game" />
-        <meta name="twitter:image" content="https://fudout.vercel.app/img/fudout.png?v=2" />
-        <meta name="twitter:image:alt" content="F.0. - Fud Out Game Logo" />
-        <meta name="twitter:url" content="https://fudout.vercel.app" />
+        <meta name="twitter:image" content="https://fudout.vercel.app/img/pick.png" />
+        <meta name="twitter:image:alt" content="F.0. - Fud Out Game Preview" />
+
+        {/* Additional SEO */}
         <link rel="canonical" href="https://fudout.vercel.app" />
         <style>
           {`
