@@ -551,11 +551,105 @@
                     "multi_result": true
                 }
             ]
+        },
+        {
+            "name": "setToken",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "token",
+                    "type": "TokenIdentifier"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setAmount",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Deposits the amount of the token to the faucet."
+            ],
+            "name": "deposit",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Claims the amount of the token from the faucet.",
+                "",
+                "Requirements:",
+                "- The faucet is fully set up.",
+                "- The faucet has enough balance.",
+                "- The caller has not claimed in this epoch."
+            ],
+            "name": "claim",
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Returns:",
+                "",
+                "- The token of the faucet.",
+                "- The amount of the token.",
+                "- Whether the faucet has enough balance.",
+                "- Whether the caller can claim."
+            ],
+            "name": "getFaucetInfo",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "FaucetInfo"
+                }
+            ]
         }
     ],
     "esdtAttributes": [],
     "hasCallback": false,
     "types": {
+        "FaucetInfo": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "token",
+                    "type": "TokenIdentifier"
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "has_enough_balance",
+                    "type": "bool"
+                },
+                {
+                    "name": "can_claim",
+                    "type": "bool"
+                }
+            ]
+        },
         "Game": {
             "type": "struct",
             "fields": [

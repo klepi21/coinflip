@@ -104,17 +104,18 @@ export function TubelightNav() {
       <div className="absolute inset-x-0 h-8 top-1/2 -translate-y-1/2 mx-1">
         <div
           className={`absolute h-full bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full transition-all duration-300 ${
-            pathname === '/' ? 'left-0 w-[calc(25%-3px)]' : 
-            pathname === '/vote' ? 'left-[25%] w-[calc(25%-3px)]' : 
-            pathname === '/votetoken' ? 'left-[50%] w-[calc(25%-3px)]' :
-            'left-[75%] w-[calc(25%-3px)]'
+            pathname === '/' ? 'left-0 w-[calc(20%-3px)]' : 
+            pathname === '/vote' ? 'left-[20%] w-[calc(20%-3px)]' : 
+            pathname === '/votetoken' ? 'left-[40%] w-[calc(20%-3px)]' :
+            pathname === '/faucet' ? 'left-[60%] w-[calc(20%-3px)]' :
+            'left-[80%] w-[calc(20%-3px)]'
           }`}
         />
       </div>
 
       <Link
         href="/"
-        className={`relative z-10 px-4 py-2 text-sm font-medium transition-colors text-center w-1/4 whitespace-nowrap ${
+        className={`relative z-10 px-4 py-2 text-sm font-medium transition-colors text-center w-1/5 whitespace-nowrap ${
           pathname === '/' ? 'text-black' : 'text-white hover:text-zinc-300'
         }`}
       >
@@ -122,7 +123,7 @@ export function TubelightNav() {
       </Link>
       <Link
         href="/vote"
-        className={`relative z-10 px-4 py-2 text-sm font-medium transition-colors text-center w-1/4 whitespace-nowrap ${
+        className={`relative z-10 px-4 py-2 text-sm font-medium transition-colors text-center w-1/5 whitespace-nowrap ${
           pathname === '/vote' ? 'text-black' : 'text-white hover:text-zinc-300'
         }`}
       >
@@ -130,13 +131,21 @@ export function TubelightNav() {
       </Link>
       <Link
         href="/votetoken"
-        className={`relative z-10 px-4 py-2 text-sm font-medium transition-colors text-center w-1/4 whitespace-nowrap ${
+        className={`relative z-10 px-4 py-2 text-sm font-medium transition-colors text-center w-1/5 whitespace-nowrap ${
           pathname === '/votetoken' ? 'text-black' : 'text-white hover:text-zinc-300'
         }`}
       >
         Vote Token
       </Link>
-      <div className="relative w-1/4">
+      <Link
+        href="/faucet"
+        className={`relative z-10 px-4 py-2 text-sm font-medium transition-colors text-center w-1/5 whitespace-nowrap ${
+          pathname === '/faucet' ? 'text-black' : 'text-white hover:text-zinc-300'
+        }`}
+      >
+        Faucet
+      </Link>
+      <div className="relative w-1/5">
         <Link
           href="/stats"
           className="relative z-10 px-4 py-2 text-sm font-medium text-zinc-500 cursor-not-allowed text-center block whitespace-nowrap"
