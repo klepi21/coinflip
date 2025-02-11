@@ -37,6 +37,11 @@ interface FaucetInfo {
   can_claim: boolean;
 }
 
+interface NetworkStats {
+  roundsPassed: number;
+  roundsPerEpoch: number;
+}
+
 export default function Faucet() {
   const [timeLeft, setTimeLeft] = useState({
     hours: 0,
@@ -49,6 +54,8 @@ export default function Faucet() {
   const { network } = useGetNetworkConfig();
   const [depositAmount, setDepositAmount] = useState('');
   const [isDepositing, setIsDepositing] = useState(false);
+  const [networkStats, setNetworkStats] = useState<NetworkStats | null>(null);
+  const [countdown, setCountdown] = useState<string>('');
 
   const fetchFaucetInfo = async () => {
     if (!address) return;
@@ -82,11 +89,54 @@ export default function Faucet() {
     }
   };
 
+  const fetchNetworkStats = async () => {
+    try {
+      const response = await fetch('https://api.multiversx.com/stats');
+      const data = await response.json();
+      setNetworkStats({
+        roundsPassed: data.roundsPassed,
+        roundsPerEpoch: data.roundsPerEpoch
+      });
+    } catch (error) {
+      console.error('Error fetching network stats:', error);
+    }
+  };
+
+  const calculateCountdown = () => {
+    if (!networkStats) return;
+
+    const roundsLeft = networkStats.roundsPerEpoch - networkStats.roundsPassed;
+    const secondsLeft = roundsLeft * 6;
+    
+    const hours = Math.floor(secondsLeft / 3600);
+    const minutes = Math.floor((secondsLeft % 3600) / 60);
+    const seconds = secondsLeft % 60;
+
+    setCountdown(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+  };
+
   useEffect(() => {
     if (address) {
       fetchFaucetInfo();
     }
   }, [address, network.apiAddress]);
+
+  useEffect(() => {
+    fetchNetworkStats();
+    const interval = setInterval(() => {
+      fetchNetworkStats();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (networkStats) {
+      calculateCountdown();
+      const interval = setInterval(calculateCountdown, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [networkStats]);
 
   const handleClaim = async () => {
     if (!isLoggedIn || !faucetInfo) {
@@ -247,16 +297,7 @@ export default function Faucet() {
                   <h2 className="text-2xl font-bold text-white mb-4">Claim Tokens</h2>
                   <p className="text-zinc-400 mb-8 flex items-center gap-2">
                     Get 
-                    <span className="flex items-center gap-1">
-                      <Image
-                        src={`https://tools.multiversx.com/assets-cdn/tokens/${RARE_IDENTIFIER}/icon.svg`}
-                        alt="RARE"
-                        width={16}
-                        height={16}
-                        className="w-4 h-4"
-                      />
                       RARE
-                    </span> 
                     tokens to participate in voting and other activities. You can claim once per epoch.
                   </p>
 
@@ -278,6 +319,33 @@ export default function Faucet() {
                         {faucetInfo?.has_enough_balance ? 'Available' : 'Insufficient'}
                       </span>
                     </div>
+                    {!faucetInfo?.can_claim && countdown && (
+                      <div className="mt-4 pt-4 border-t border-zinc-800">
+                        <div className="flex items-center justify-between">
+                          <span className="text-zinc-400">Next Claim In</span>
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
+                              <div className="bg-[#1A1A1A] px-2 py-1 rounded-md border border-zinc-800">
+                                <span className="font-mono text-[#C99733]">{countdown.split(':')[0]}</span>
+                              </div>
+                              <span className="text-zinc-500">h</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="bg-[#1A1A1A] px-2 py-1 rounded-md border border-zinc-800">
+                                <span className="font-mono text-[#C99733]">{countdown.split(':')[1]}</span>
+                              </div>
+                              <span className="text-zinc-500">m</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="bg-[#1A1A1A] px-2 py-1 rounded-md border border-zinc-800">
+                                <span className="font-mono text-[#C99733]">{countdown.split(':')[2]}</span>
+                              </div>
+                              <span className="text-zinc-500">s</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Claim Button */}
@@ -305,16 +373,8 @@ export default function Faucet() {
                   <div className="mt-6">
                     <p className="text-sm text-zinc-400 flex items-center gap-2">
                       This faucet provides 
-                      <span className="flex items-center gap-1">
-                        <Image
-                          src={`https://tools.multiversx.com/assets-cdn/tokens/${RARE_IDENTIFIER}/icon.svg`}
-                          alt="RARE"
-                          width={16}
-                          height={16}
-                          className="w-4 h-4"
-                        />
+
                         RARE
-                      </span> 
                       tokens for Vote purposes. You can claim once per epoch.
                     </p>
                   </div>
