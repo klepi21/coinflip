@@ -262,9 +262,9 @@ export default function Faucet() {
                   {/* Claim Button */}
                   <button
                     onClick={handleClaim}
-                    disabled={!isLoggedIn || !faucetInfo?.can_claim || isLoading}
+                    disabled={!isLoggedIn || !faucetInfo?.can_claim || isLoading || !faucetInfo?.has_enough_balance}
                     className={`w-full py-4 px-6 rounded-xl font-medium transition-all ${
-                      !isLoggedIn || !faucetInfo?.can_claim || isLoading
+                      !isLoggedIn || !faucetInfo?.can_claim || isLoading || !faucetInfo?.has_enough_balance
                         ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                         : 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black hover:opacity-90'
                     }`}
@@ -273,9 +273,11 @@ export default function Faucet() {
                       ? 'Connect Wallet to Claim' 
                       : isLoading 
                         ? 'Processing...' 
-                        : faucetInfo?.can_claim 
-                          ? 'Claim Tokens' 
-                          : 'Already Claimed'}
+                        : !faucetInfo?.has_enough_balance
+                          ? 'Insufficient Faucet Balance'
+                          : faucetInfo?.can_claim 
+                            ? 'Claim Tokens' 
+                            : 'Already Claimed'}
                   </button>
 
                   {/* Note */}
