@@ -140,18 +140,25 @@ export default function Faucet() {
   }, [timeLeft]);
 
   const handleClaim = async () => {
-    if (!isLoggedIn || !faucetInfo) {
-      toast.error('Please connect your wallet first');
-      return;
-    }
-
-    if (!faucetInfo.can_claim) {
-      toast.error('You cannot claim at this time');
-      return;
-    }
+    if (!isLoggedIn || !faucetInfo?.can_claim || !faucetInfo?.has_enough_balance) return;
 
     try {
       setIsLoading(true);
+      
+      // Show loading toast
+      const loadingToastId = toast.loading(
+        <div className="flex flex-col space-y-2">
+          <p className="font-medium text-white">Processing Claim...</p>
+          <p className="text-sm text-zinc-400">Please wait while we process your claim</p>
+        </div>,
+        {
+          style: {
+            background: '#1A1A1A',
+            border: '1px solid rgba(201, 151, 51, 0.1)',
+          }
+        }
+      );
+
       const contract = new SmartContract({
         address: new Address(SC_ADDRESS),
         abi: AbiRegistry.create(flipcoinAbi)
@@ -160,27 +167,58 @@ export default function Faucet() {
       const transaction = contract.methods
         .claim([])
         .withGasLimit(10000000)
-        .withChainID(network.chainId)
-        .buildTransaction();
+        .withChainID(network.chainId);
 
       const { sessionId } = await sendTransactions({
-        transactions: [transaction],
+        transactions: [transaction.buildTransaction()],
         transactionsDisplayInfo: {
           processingMessage: 'Processing claim transaction',
           errorMessage: 'An error occurred during claiming',
-          successMessage: 'Successfully claimed tokens!'
+          successMessage: 'Claim successful'
         }
       });
 
       if (sessionId) {
-        // Wait for transaction to be processed
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Wait for initial blockchain confirmation
+        await new Promise(resolve => setTimeout(resolve, 15000));
         await refreshAccount();
+
+        // Additional wait to ensure smart contract state is updated
+        await new Promise(resolve => setTimeout(resolve, 4000));
+
+        // Dismiss loading toast and show success toast
+        toast.dismiss(loadingToastId);
+        toast.success(
+          <div className="flex flex-col space-y-2">
+            <p className="font-medium text-white">Claim Successful!</p>
+            <p className="text-sm text-zinc-400">Your tokens have been sent to your wallet.</p>
+          </div>,
+          {
+            style: {
+              background: '#1A1A1A',
+              border: '1px solid rgba(201, 151, 51, 0.1)',
+            },
+            duration: 5000,
+          }
+        );
+
+        // Refresh faucet info to update UI
         await fetchFaucetInfo();
       }
     } catch (error) {
-      console.error('Error claiming:', error);
-      toast.error('Failed to claim tokens');
+      console.error('Claim error:', error);
+      toast.error(
+        <div className="flex flex-col space-y-2">
+          <p className="font-medium text-white">Claim Failed</p>
+          <p className="text-sm text-zinc-400">Please try again later.</p>
+        </div>,
+        {
+          style: {
+            background: '#1A1A1A',
+            border: '1px solid rgba(201, 151, 51, 0.1)',
+          }
+        }
+      );
     } finally {
       setIsLoading(false);
     }
@@ -353,7 +391,7 @@ export default function Faucet() {
                   <button
                     onClick={handleClaim}
                     disabled={!isLoggedIn || !faucetInfo?.can_claim || isLoading || !faucetInfo?.has_enough_balance}
-                    className={`w-full py-4 px-6 rounded-xl font-medium transition-all ${
+                    className={`w-full h-12 rounded-xl font-medium transition-all ${
                       !isLoggedIn || !faucetInfo?.can_claim || isLoading || !faucetInfo?.has_enough_balance
                         ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                         : 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black hover:opacity-90'
@@ -362,7 +400,7 @@ export default function Faucet() {
                     {!isLoggedIn 
                       ? 'Connect Wallet to Claim' 
                       : isLoading 
-                        ? 'Processing...' 
+                        ? 'Processing Claim...' 
                         : !faucetInfo?.has_enough_balance
                           ? 'Insufficient Faucet Balance'
                           : faucetInfo?.can_claim 
