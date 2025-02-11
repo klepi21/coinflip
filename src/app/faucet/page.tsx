@@ -224,8 +224,18 @@ export default function Faucet() {
                   {/* Token Info */}
                   {faucetInfo && (
                     <div className="text-center space-y-2">
-                      <h3 className="text-xl font-bold text-white">
-                        {Number(faucetInfo.amount) / (10 ** 18)} {faucetInfo.token.split('-')[0]}
+                      <h3 className="text-xl font-bold text-white flex items-center justify-center gap-2">
+                        {Number(faucetInfo.amount) / (10 ** 18)}
+                        <span className="flex items-center gap-1">
+                          <Image
+                            src={`https://tools.multiversx.com/assets-cdn/tokens/${RARE_IDENTIFIER}/icon.svg`}
+                            alt="RARE"
+                            width={24}
+                            height={24}
+                            className="w-6 h-6"
+                          />
+                          {faucetInfo.token.split('-')[0]}
+                        </span>
                       </h3>
                       <p className="text-sm text-zinc-400">Available to claim</p>
                     </div>
@@ -235,8 +245,19 @@ export default function Faucet() {
                 {/* Right Column */}
                 <div className="flex flex-col justify-center">
                   <h2 className="text-2xl font-bold text-white mb-4">Claim Tokens</h2>
-                  <p className="text-zinc-400 mb-8">
-                    Get RARE tokens to participate in voting and other activities. You can claim once per epoch.
+                  <p className="text-zinc-400 mb-8 flex items-center gap-2">
+                    Get 
+                    <span className="flex items-center gap-1">
+                      <Image
+                        src={`https://tools.multiversx.com/assets-cdn/tokens/${RARE_IDENTIFIER}/icon.svg`}
+                        alt="RARE"
+                        width={16}
+                        height={16}
+                        className="w-4 h-4"
+                      />
+                      RARE
+                    </span> 
+                    tokens to participate in voting and other activities. You can claim once per epoch.
                   </p>
 
                   {/* Status */}
@@ -282,8 +303,19 @@ export default function Faucet() {
 
                   {/* Note */}
                   <div className="mt-6">
-                    <p className="text-sm text-zinc-400">
-                      This faucet provides RARE tokens for Vote purposes. You can claim once per epoch.
+                    <p className="text-sm text-zinc-400 flex items-center gap-2">
+                      This faucet provides 
+                      <span className="flex items-center gap-1">
+                        <Image
+                          src={`https://tools.multiversx.com/assets-cdn/tokens/${RARE_IDENTIFIER}/icon.svg`}
+                          alt="RARE"
+                          width={16}
+                          height={16}
+                          className="w-4 h-4"
+                        />
+                        RARE
+                      </span> 
+                      tokens for Vote purposes. You can claim once per epoch.
                     </p>
                   </div>
                 </div>
@@ -293,7 +325,18 @@ export default function Faucet() {
             {/* Admin Deposit Section */}
             {isLoggedIn && address && ADMIN_ADDRESSES.includes(address) && (
               <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl p-8">
-                <h3 className="text-xl font-bold text-white mb-4">Admin Deposit</h3>
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  Admin Deposit
+                  <span className="flex items-center gap-1">
+                    <Image
+                      src={`https://tools.multiversx.com/assets-cdn/tokens/${RARE_IDENTIFIER}/icon.svg`}
+                      alt="RARE"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                  </span>
+                </h3>
                 <div className="flex gap-4">
                   <input
                     type="number"
