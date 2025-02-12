@@ -37,18 +37,21 @@ interface FaucetInfo {
   can_claim: boolean;
 }
 
+interface NetworkStats {
+  roundsPassed: number;
+  roundsPerEpoch: number;
+}
+
 export default function Faucet() {
-  const [timeLeft, setTimeLeft] = useState({
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-  });
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [faucetInfo, setFaucetInfo] = useState<FaucetInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { isLoggedIn, address } = useWallet();
   const { network } = useGetNetworkConfig();
   const [depositAmount, setDepositAmount] = useState('');
   const [isDepositing, setIsDepositing] = useState(false);
+  const [networkStats, setNetworkStats] = useState<NetworkStats | null>(null);
+  const [countdown, setCountdown] = useState<string>('');
 
   const fetchFaucetInfo = async () => {
     if (!address) return;
@@ -82,25 +85,102 @@ export default function Faucet() {
     }
   };
 
+  const fetchNetworkStats = async () => {
+    try {
+      const response = await fetch('https://api.multiversx.com/stats');
+      const data = await response.json();
+      setNetworkStats({
+        roundsPassed: data.roundsPassed,
+        roundsPerEpoch: data.roundsPerEpoch
+      });
+    } catch (error) {
+      console.error('Error fetching network stats:', error);
+    }
+  };
+
+  const calculateTimeLeft = () => {
+    if (timeLeft === null) return;
+    
+    const hours = Math.floor(timeLeft / 3600);
+    const minutes = Math.floor((timeLeft % 3600) / 60);
+    const seconds = timeLeft % 60;
+
+    return {
+      hours: hours.toString().padStart(2, '0'),
+      minutes: minutes.toString().padStart(2, '0'),
+      seconds: seconds.toString().padStart(2, '0')
+    };
+  };
+
+  const calculateCountdown = () => {
+    if (!networkStats) return;
+
+    const roundsLeft = networkStats.roundsPerEpoch - networkStats.roundsPassed;
+    const secondsLeft = roundsLeft * 6;
+    
+    const hours = Math.floor(secondsLeft / 3600);
+    const minutes = Math.floor((secondsLeft % 3600) / 60);
+    const seconds = secondsLeft % 60;
+
+    setCountdown(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+  };
+
   useEffect(() => {
     if (address) {
       fetchFaucetInfo();
     }
   }, [address, network.apiAddress]);
 
-  const handleClaim = async () => {
-    if (!isLoggedIn || !faucetInfo) {
-      toast.error('Please connect your wallet first');
-      return;
-    }
+  useEffect(() => {
+    fetchNetworkStats();
+    const interval = setInterval(() => {
+      fetchNetworkStats();
+    }, 60000); // Refresh every minute
 
-    if (!faucetInfo.can_claim) {
-      toast.error('You cannot claim at this time');
-      return;
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (networkStats) {
+      calculateCountdown();
+      const interval = setInterval(calculateCountdown, 1000);
+      return () => clearInterval(interval);
     }
+  }, [networkStats]);
+
+  useEffect(() => {
+    if (timeLeft === null) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prevTime => {
+        if (prevTime === null || prevTime <= 0) return null;
+        return prevTime - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  const handleClaim = async () => {
+    if (!isLoggedIn || !faucetInfo?.can_claim || !faucetInfo?.has_enough_balance) return;
 
     try {
       setIsLoading(true);
+      
+      // Show loading toast
+      const loadingToastId = toast.loading(
+        <div className="flex flex-col space-y-2">
+          <p className="font-medium text-white">Processing Claim...</p>
+          <p className="text-sm text-zinc-400">Please wait while we process your claim</p>
+        </div>,
+        {
+          style: {
+            background: '#1A1A1A',
+            border: '1px solid rgba(201, 151, 51, 0.1)',
+          }
+        }
+      );
+
       const contract = new SmartContract({
         address: new Address(SC_ADDRESS),
         abi: AbiRegistry.create(flipcoinAbi)
@@ -109,27 +189,58 @@ export default function Faucet() {
       const transaction = contract.methods
         .claim([])
         .withGasLimit(10000000)
-        .withChainID(network.chainId)
-        .buildTransaction();
+        .withChainID(network.chainId);
 
       const { sessionId } = await sendTransactions({
-        transactions: [transaction],
+        transactions: [transaction.buildTransaction()],
         transactionsDisplayInfo: {
           processingMessage: 'Processing claim transaction',
           errorMessage: 'An error occurred during claiming',
-          successMessage: 'Successfully claimed tokens!'
+          successMessage: 'Claim successful'
         }
       });
 
       if (sessionId) {
-        // Wait for transaction to be processed
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Wait for initial blockchain confirmation
+        await new Promise(resolve => setTimeout(resolve, 15000));
         await refreshAccount();
+
+        // Additional wait to ensure smart contract state is updated
+        await new Promise(resolve => setTimeout(resolve, 4000));
+
+        // Dismiss loading toast and show success toast
+        toast.dismiss(loadingToastId);
+        toast.success(
+          <div className="flex flex-col space-y-2">
+            <p className="font-medium text-white">Claim Successful!</p>
+            <p className="text-sm text-zinc-400">Your tokens have been sent to your wallet.</p>
+          </div>,
+          {
+            style: {
+              background: '#1A1A1A',
+              border: '1px solid rgba(201, 151, 51, 0.1)',
+            },
+            duration: 5000,
+          }
+        );
+
+        // Refresh faucet info to update UI
         await fetchFaucetInfo();
       }
     } catch (error) {
-      console.error('Error claiming:', error);
-      toast.error('Failed to claim tokens');
+      console.error('Claim error:', error);
+      toast.error(
+        <div className="flex flex-col space-y-2">
+          <p className="font-medium text-white">Claim Failed</p>
+          <p className="text-sm text-zinc-400">Please try again later.</p>
+        </div>,
+        {
+          style: {
+            background: '#1A1A1A',
+            border: '1px solid rgba(201, 151, 51, 0.1)',
+          }
+        }
+      );
     } finally {
       setIsLoading(false);
     }
@@ -157,7 +268,7 @@ export default function Faucet() {
       const transaction = contract.methods
         .deposit([])
         .withSingleESDTTransfer(payment)
-        .withGasLimit(10000000)
+        .withGasLimit(6000000)
         .withChainID(network.chainId)
         .buildTransaction();
 
@@ -247,16 +358,7 @@ export default function Faucet() {
                   <h2 className="text-2xl font-bold text-white mb-4">Claim Tokens</h2>
                   <p className="text-zinc-400 mb-8 flex items-center gap-2">
                     Get 
-                    <span className="flex items-center gap-1">
-                      <Image
-                        src={`https://tools.multiversx.com/assets-cdn/tokens/${RARE_IDENTIFIER}/icon.svg`}
-                        alt="RARE"
-                        width={16}
-                        height={16}
-                        className="w-4 h-4"
-                      />
                       RARE
-                    </span> 
                     tokens to participate in voting and other activities. You can claim once per epoch.
                   </p>
 
@@ -278,13 +380,40 @@ export default function Faucet() {
                         {faucetInfo?.has_enough_balance ? 'Available' : 'Insufficient'}
                       </span>
                     </div>
+                    {!faucetInfo?.can_claim && countdown && (
+                      <div className="mt-4 pt-4 border-t border-zinc-800">
+                        <div className="flex items-center justify-between">
+                          <span className="text-zinc-400">Next Claim In</span>
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
+                              <div className="bg-[#1A1A1A] px-2 py-1 rounded-md border border-zinc-800">
+                                <span className="font-mono text-[#C99733]">{countdown.split(':')[0]}</span>
+                              </div>
+                              <span className="text-zinc-500">h</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="bg-[#1A1A1A] px-2 py-1 rounded-md border border-zinc-800">
+                                <span className="font-mono text-[#C99733]">{countdown.split(':')[1]}</span>
+                              </div>
+                              <span className="text-zinc-500">m</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="bg-[#1A1A1A] px-2 py-1 rounded-md border border-zinc-800">
+                                <span className="font-mono text-[#C99733]">{countdown.split(':')[2]}</span>
+                              </div>
+                              <span className="text-zinc-500">s</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Claim Button */}
                   <button
                     onClick={handleClaim}
                     disabled={!isLoggedIn || !faucetInfo?.can_claim || isLoading || !faucetInfo?.has_enough_balance}
-                    className={`w-full py-4 px-6 rounded-xl font-medium transition-all ${
+                    className={`w-full h-12 rounded-xl font-medium transition-all ${
                       !isLoggedIn || !faucetInfo?.can_claim || isLoading || !faucetInfo?.has_enough_balance
                         ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                         : 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black hover:opacity-90'
@@ -293,7 +422,7 @@ export default function Faucet() {
                     {!isLoggedIn 
                       ? 'Connect Wallet to Claim' 
                       : isLoading 
-                        ? 'Processing...' 
+                        ? 'Processing Claim...' 
                         : !faucetInfo?.has_enough_balance
                           ? 'Insufficient Faucet Balance'
                           : faucetInfo?.can_claim 
@@ -305,16 +434,8 @@ export default function Faucet() {
                   <div className="mt-6">
                     <p className="text-sm text-zinc-400 flex items-center gap-2">
                       This faucet provides 
-                      <span className="flex items-center gap-1">
-                        <Image
-                          src={`https://tools.multiversx.com/assets-cdn/tokens/${RARE_IDENTIFIER}/icon.svg`}
-                          alt="RARE"
-                          width={16}
-                          height={16}
-                          className="w-4 h-4"
-                        />
+
                         RARE
-                      </span> 
                       tokens for Vote purposes. You can claim once per epoch.
                     </p>
                   </div>
