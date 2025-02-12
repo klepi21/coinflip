@@ -188,7 +188,7 @@ export default function Faucet() {
 
       const transaction = contract.methods
         .claim([])
-        .withGasLimit(10000000)
+        .withGasLimit(70000000)
         .withChainID(network.chainId);
 
       const { sessionId } = await sendTransactions({
