@@ -246,7 +246,7 @@ export default function Faucet() {
       const transaction = contract.methods
         .deposit([])
         .withSingleESDTTransfer(payment)
-        .withGasLimit(10000000)
+        .withGasLimit(6000000)
         .withChainID(network.chainId)
         .buildTransaction();
 
