@@ -186,13 +186,15 @@ export default function Faucet() {
         abi: AbiRegistry.create(flipcoinAbi)
       });
 
-      const transaction = contract.methods
-        .claim([])
-        .withGasLimit(70000000)
-        .withChainID(network.chainId);
+      const transaction = {
+        value: '0',
+        data: 'claim',
+        receiver: SC_ADDRESS,
+        gasLimit: 70000000,
+      };
 
       const { sessionId } = await sendTransactions({
-        transactions: [transaction.buildTransaction()],
+        transactions: [transaction],
         transactionsDisplayInfo: {
           processingMessage: 'Processing claim transaction',
           errorMessage: 'An error occurred during claiming',
