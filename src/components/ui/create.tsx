@@ -20,7 +20,6 @@ const BOD_IDENTIFIER = 'BOD-204877';
 const BOBER_IDENTIFIER = 'BOBER-9eb764';
 const ONE_IDENTIFIER = 'ONE-f9954f';
 const TOM_IDENTIFIER = 'TOM-48414f';
-const BATEMAN_IDENTIFIER = 'BATEMAN-f6fd19';
 
 // Token data with images
 const TOKENS = {
@@ -65,13 +64,6 @@ const TOKENS = {
     image: `https://s2.coinmarketcap.com/static/img/coins/200x200/6892.png`,
     decimals: 18,
     minAmount: 0.1
-  },
-  BATEMAN: {
-    id: 'BATEMAN',
-    name: 'BATEMAN',
-    image: `https://tools.multiversx.com/assets-cdn/tokens/${BATEMAN_IDENTIFIER}/icon.svg`,
-    decimals: 18,
-    minAmount: 50000
   }
 };
 
@@ -95,19 +87,9 @@ const toHexEven = (num: number) => {
 
 const GAME_MULTIPLIERS = [1, 2, 5, 10, 15];
 
-const TOKEN_OPTIONS = [
-  { id: 'EGLD', name: 'EGLD', image: '/img/egld.svg', minAmount: '0.05' },
-  { id: 'RARE-99e8b0', name: 'RARE', image: 'https://tools.multiversx.com/assets-cdn/tokens/RARE-99e8b0/icon.svg', minAmount: '10' },
-  { id: 'BOD-204877', name: 'BOD', image: 'https://tools.multiversx.com/assets-cdn/tokens/BOD-204877/icon.svg', minAmount: '10000' },
-  { id: 'BOBER-9eb764', name: 'BOBER', image: 'https://tools.multiversx.com/assets-cdn/tokens/BOBER-9eb764/icon.svg', minAmount: '10000' },
-  { id: 'ONE-f9954f', name: 'ONE', image: 'https://tools.multiversx.com/assets-cdn/tokens/ONE-f9954f/icon.svg', minAmount: '0.5' },
-  { id: 'TOM-48414f', name: 'TOM', image: 'https://tools.multiversx.com/assets-cdn/tokens/TOM-48414f/icon.svg', minAmount: '10000' },
-  { id: 'BATEMAN-f6fd19', name: 'BATEMAN', image: 'https://tools.multiversx.com/assets-cdn/tokens/BATEMAN-f6fd19/icon.svg', minAmount: '50000' }
-];
-
 export default function Create() {
   const [amount, setAmount] = useState('');
-  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD' | 'BATEMAN'>('RARE');
+  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD'>('RARE');
   const [multiplier, setMultiplier] = useState(1);
   const [selectedSide, setSelectedSide] = useState<'GRM' | 'SASU' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -136,8 +118,7 @@ export default function Create() {
   const { balance: boberBalance, isLoading: isLoadingBober } = useTokenBalance(address || '', BOBER_IDENTIFIER);
   const { balance: oneBalance, isLoading: isLoadingOne } = useTokenBalance(address || '', ONE_IDENTIFIER);
   const { balance: tomBalance, isLoading: isLoadingTom } = useTokenBalance(address || '', TOM_IDENTIFIER);
-  const { balance: batemanBalance, isLoading: isLoadingBateman } = useTokenBalance(address || '', BATEMAN_IDENTIFIER);
-  const isLoadingBalance = isLoadingRare || isLoadingBod || isLoadingBober || isLoadingOne || isLoadingTom || isLoadingBateman;
+  const isLoadingBalance = isLoadingRare || isLoadingBod || isLoadingBober || isLoadingOne || isLoadingTom;
 
   // Reset popup when component mounts or when sessionId changes to null
   useEffect(() => {
@@ -182,8 +163,6 @@ export default function Create() {
                                selectedToken === 'BOD' ? BOD_IDENTIFIER :
                                selectedToken === 'BOBER' ? BOBER_IDENTIFIER :
                                selectedToken === 'ONE' ? ONE_IDENTIFIER :
-                               selectedToken === 'TOM' ? TOM_IDENTIFIER :
-                               selectedToken === 'BATEMAN' ? BATEMAN_IDENTIFIER :
                                TOM_IDENTIFIER;
         transaction = {
           value: '0',
@@ -238,7 +217,6 @@ export default function Create() {
                           selectedToken === 'BOBER' ? boberBalance :
                           selectedToken === 'ONE' ? oneBalance :
                           selectedToken === 'TOM' ? tomBalance :
-                          selectedToken === 'BATEMAN' ? batemanBalance :
                           Number(account.balance) / Math.pow(10, 18);
     const amountValue = parseFloat(amount);
     const totalAmount = amountValue * multiplier;
@@ -408,12 +386,12 @@ export default function Create() {
                     <div>
                       <label className="block text-zinc-400 text-sm mb-2">Select Token</label>
                       <div className="flex gap-2">
-                        {TOKEN_OPTIONS.map((token) => (
+                        {Object.entries(TOKENS).map(([key, token]) => (
                           <button
-                            key={token.id}
-                            onClick={() => setSelectedToken(token.id as 'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD' | 'BATEMAN')}
+                            key={key}
+                            onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD')}
                             className={`flex items-center justify-center w-12 h-12 rounded-xl border transition-all ${
-                              selectedToken === token.id 
+                              selectedToken === key 
                                 ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black' 
                                 : 'border-zinc-800 hover:border-[#C99733]'
                             }`}
@@ -619,12 +597,12 @@ export default function Create() {
                 <div>
                   <label className="block text-zinc-400 text-sm mb-2">Select Token</label>
                   <div className="flex gap-2">
-                    {TOKEN_OPTIONS.map((token) => (
+                    {Object.entries(TOKENS).map(([key, token]) => (
                       <button
-                        key={token.id}
-                        onClick={() => setSelectedToken(token.id as 'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD' | 'BATEMAN')}
+                        key={key}
+                        onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD')}
                         className={`flex items-center justify-center w-12 h-12 rounded-xl border transition-all ${
-                          selectedToken === token.id 
+                          selectedToken === key 
                             ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black' 
                             : 'border-zinc-800 hover:border-[#C99733]'
                         }`}
@@ -760,7 +738,6 @@ export default function Create() {
                            selectedToken === 'BOBER' ? boberBalance : 
                            selectedToken === 'ONE' ? oneBalance :
                            selectedToken === 'TOM' ? tomBalance :
-                           selectedToken === 'BATEMAN' ? batemanBalance :
                            0).toFixed(2)} {selectedToken}
                     </span>
                   )}

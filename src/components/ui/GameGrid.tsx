@@ -87,23 +87,13 @@ type PopupState = {
 };
 
 type FilterType = 'all' | 'highest' | 'lowest' | 'yours';
-type TokenFilter = 'all' | 'EGLD' | 'RARE-99e8b0' | 'BOD-204877' | 'BOBER-9eb764' | 'ONE-f9954f' | 'TOM-48414f' | 'BATEMAN-f6fd19';
+type TokenFilter = 'all' | 'EGLD' | 'RARE-99e8b0' | 'BOD-204877' | 'BOBER-9eb764' | 'ONE-f9954f' | 'TOM-48414f';
 
 type GridView = '2x2' | '3x3';
 
 type Props = {
   onActiveGamesChange?: (count: number) => void;
 };
-
-const TOKEN_OPTIONS = [
-  { id: 'EGLD', name: 'EGLD', image: '/img/egld.svg', minAmount: '0.05' },
-  { id: 'RARE-99e8b0', name: 'RARE', image: 'https://tools.multiversx.com/assets-cdn/tokens/RARE-99e8b0/icon.svg', minAmount: '10' },
-  { id: 'BOD-204877', name: 'BOD', image: 'https://tools.multiversx.com/assets-cdn/tokens/BOD-204877/icon.svg', minAmount: '10000' },
-  { id: 'BOBER-9eb764', name: 'BOBER', image: 'https://tools.multiversx.com/assets-cdn/tokens/BOBER-9eb764/icon.svg', minAmount: '10000' },
-  { id: 'ONE-f9954f', name: 'ONE', image: 'https://tools.multiversx.com/assets-cdn/tokens/ONE-f9954f/icon.svg', minAmount: '0.5' },
-  { id: 'TOM-48414f', name: 'TOM', image: 'https://tools.multiversx.com/assets-cdn/tokens/TOM-48414f/icon.svg', minAmount: '10000' },
-  { id: 'BATEMAN-f6fd19', name: 'BATEMAN', image: 'https://tools.multiversx.com/assets-cdn/tokens/BATEMAN-f6fd19/icon.svg', minAmount: '50000' }
-];
 
 export default function GameGrid({ onActiveGamesChange }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -581,21 +571,21 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
           >
             All
           </button>
-          {TOKEN_OPTIONS.map((token) => (
+          {Object.entries(TOKEN_IMAGES).map(([token, image]) => (
             <button
-              key={token.id}
-              onClick={() => setTokenFilter(token.id as TokenFilter)}
+              key={token}
+              onClick={() => setTokenFilter(token as TokenFilter)}
               className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all ${
-                tokenFilter === token.id 
+                tokenFilter === token 
                   ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] p-1' 
                   : 'hover:bg-zinc-800'
               }`}
-              title={token.name}
+              title={token === 'EGLD' ? 'EGLD' : token.split('-')[0]}
             >
               <div className="w-6 h-6 rounded-full overflow-hidden">
                 <Image
-                  src={token.image}
-                  alt={token.name}
+                  src={image}
+                  alt={token}
                   width={24}
                   height={24}
                   className="w-full h-full object-cover"
