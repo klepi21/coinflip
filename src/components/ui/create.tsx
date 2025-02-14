@@ -23,7 +23,16 @@ const TOM_IDENTIFIER = 'TOM-48414f';
 const BATEMAN_IDENTIFIER = 'BATEMAN-f6fd19';
 
 // Token data with images
-const TOKENS = {
+type TokenData = {
+  id: string;
+  name: string;
+  image: string;
+  decimals: number;
+  minAmount: number;
+  displayMinAmount?: number;
+};
+
+const TOKENS: Record<string, TokenData> = {
   RARE: {
     id: 'RARE',
     name: 'RARE',
@@ -71,7 +80,8 @@ const TOKENS = {
     name: 'BATEMAN',
     image: `https://tools.multiversx.com/assets-cdn/tokens/${BATEMAN_IDENTIFIER}/icon.svg`,
     decimals: 18,
-    minAmount: 40000
+    minAmount: 49999,
+    displayMinAmount: 50000
   }
 };
 
@@ -246,7 +256,7 @@ export default function Create() {
     };
     if (amountValue < TOKENS[selectedToken].minAmount) return {
       disabled: true,
-      message: `Minimum amount is ${TOKENS[selectedToken].minAmount} ${selectedToken}`,
+      message: `Minimum amount is ${TOKENS[selectedToken].displayMinAmount || TOKENS[selectedToken].minAmount} ${selectedToken}`,
       action: handleCreateGame,
       text: 'Create Battle'
     };
@@ -446,7 +456,7 @@ export default function Create() {
                       />
                       {/* Helper message */}
                       <div className="text-sm text-zinc-500 mt-1">
-                        Minimum amount: {TOKENS[selectedToken].minAmount} {selectedToken}
+                        Minimum amount: {TOKENS[selectedToken].displayMinAmount || TOKENS[selectedToken].minAmount} {selectedToken}
                       </div>
                     </div>
 
@@ -657,7 +667,7 @@ export default function Create() {
                   />
                   {/* Helper message */}
                   <div className="text-sm text-zinc-500 mt-1">
-                    Minimum amount: {TOKENS[selectedToken].minAmount} {selectedToken}
+                    Minimum amount: {TOKENS[selectedToken].displayMinAmount || TOKENS[selectedToken].minAmount} {selectedToken}
                   </div>
                 </div>
 
