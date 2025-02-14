@@ -21,7 +21,7 @@ const navItems: NavItem[] = [
   { name: 'Vote Fighter', url: '/vote', icon: Vote },
   { name: 'Vote Token', url: '/votetoken', icon: Vote },
   { name: 'Faucet', url: '/faucet', icon: Coins },
-  { name: 'WoF', url: '/wof', icon: Vote },
+  // { name: 'WoF', url: '/wof', icon: Vote },
   { 
     name: 'Stats', 
     url: '/stats', 
