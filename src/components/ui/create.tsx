@@ -20,6 +20,7 @@ const BOD_IDENTIFIER = 'BOD-204877';
 const BOBER_IDENTIFIER = 'BOBER-9eb764';
 const ONE_IDENTIFIER = 'ONE-f9954f';
 const TOM_IDENTIFIER = 'TOM-48414f';
+const BATEMAN_IDENTIFIER = 'BATEMAN-f6fd19';
 
 // Token data with images
 const TOKENS = {
@@ -64,6 +65,13 @@ const TOKENS = {
     image: `https://s2.coinmarketcap.com/static/img/coins/200x200/6892.png`,
     decimals: 18,
     minAmount: 0.1
+  },
+  BATEMAN: {
+    id: 'BATEMAN',
+    name: 'BATEMAN',
+    image: `https://tools.multiversx.com/assets-cdn/tokens/${BATEMAN_IDENTIFIER}/icon.svg`,
+    decimals: 18,
+    minAmount: 50000
   }
 };
 
@@ -99,7 +107,7 @@ const TOKEN_OPTIONS = [
 
 export default function Create() {
   const [amount, setAmount] = useState('');
-  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD'>('RARE');
+  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD' | 'BATEMAN'>('RARE');
   const [multiplier, setMultiplier] = useState(1);
   const [selectedSide, setSelectedSide] = useState<'GRM' | 'SASU' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -128,7 +136,8 @@ export default function Create() {
   const { balance: boberBalance, isLoading: isLoadingBober } = useTokenBalance(address || '', BOBER_IDENTIFIER);
   const { balance: oneBalance, isLoading: isLoadingOne } = useTokenBalance(address || '', ONE_IDENTIFIER);
   const { balance: tomBalance, isLoading: isLoadingTom } = useTokenBalance(address || '', TOM_IDENTIFIER);
-  const isLoadingBalance = isLoadingRare || isLoadingBod || isLoadingBober || isLoadingOne || isLoadingTom;
+  const { balance: batemanBalance, isLoading: isLoadingBateman } = useTokenBalance(address || '', BATEMAN_IDENTIFIER);
+  const isLoadingBalance = isLoadingRare || isLoadingBod || isLoadingBober || isLoadingOne || isLoadingTom || isLoadingBateman;
 
   // Reset popup when component mounts or when sessionId changes to null
   useEffect(() => {
@@ -399,7 +408,7 @@ export default function Create() {
                         {TOKEN_OPTIONS.map((token) => (
                           <button
                             key={token.id}
-                            onClick={() => setSelectedToken(token.id as 'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD')}
+                            onClick={() => setSelectedToken(token.id as 'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD' | 'BATEMAN')}
                             className={`flex items-center justify-center w-12 h-12 rounded-xl border transition-all ${
                               selectedToken === token.id 
                                 ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black' 
@@ -610,7 +619,7 @@ export default function Create() {
                     {TOKEN_OPTIONS.map((token) => (
                       <button
                         key={token.id}
-                        onClick={() => setSelectedToken(token.id as 'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD')}
+                        onClick={() => setSelectedToken(token.id as 'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD' | 'BATEMAN')}
                         className={`flex items-center justify-center w-12 h-12 rounded-xl border transition-all ${
                           selectedToken === token.id 
                             ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black' 
