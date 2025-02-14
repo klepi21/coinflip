@@ -87,6 +87,16 @@ const toHexEven = (num: number) => {
 
 const GAME_MULTIPLIERS = [1, 2, 5, 10, 15];
 
+const TOKEN_OPTIONS = [
+  { id: 'EGLD', name: 'EGLD', image: '/img/egld.svg', minAmount: '0.05' },
+  { id: 'RARE-99e8b0', name: 'RARE', image: 'https://tools.multiversx.com/assets-cdn/tokens/RARE-99e8b0/icon.svg', minAmount: '10' },
+  { id: 'BOD-204877', name: 'BOD', image: 'https://tools.multiversx.com/assets-cdn/tokens/BOD-204877/icon.svg', minAmount: '10000' },
+  { id: 'BOBER-9eb764', name: 'BOBER', image: 'https://tools.multiversx.com/assets-cdn/tokens/BOBER-9eb764/icon.svg', minAmount: '10000' },
+  { id: 'ONE-f9954f', name: 'ONE', image: 'https://tools.multiversx.com/assets-cdn/tokens/ONE-f9954f/icon.svg', minAmount: '0.5' },
+  { id: 'TOM-48414f', name: 'TOM', image: 'https://tools.multiversx.com/assets-cdn/tokens/TOM-48414f/icon.svg', minAmount: '10000' },
+  { id: 'BATEMAN-f6fd19', name: 'BATEMAN', image: 'https://tools.multiversx.com/assets-cdn/tokens/BATEMAN-f6fd19/icon.svg', minAmount: '50000' }
+];
+
 export default function Create() {
   const [amount, setAmount] = useState('');
   const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD'>('RARE');
@@ -386,12 +396,12 @@ export default function Create() {
                     <div>
                       <label className="block text-zinc-400 text-sm mb-2">Select Token</label>
                       <div className="flex gap-2">
-                        {Object.entries(TOKENS).map(([key, token]) => (
+                        {TOKEN_OPTIONS.map((token) => (
                           <button
-                            key={key}
-                            onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD')}
+                            key={token.id}
+                            onClick={() => setSelectedToken(token.id as 'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD')}
                             className={`flex items-center justify-center w-12 h-12 rounded-xl border transition-all ${
-                              selectedToken === key 
+                              selectedToken === token.id 
                                 ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black' 
                                 : 'border-zinc-800 hover:border-[#C99733]'
                             }`}
@@ -597,12 +607,12 @@ export default function Create() {
                 <div>
                   <label className="block text-zinc-400 text-sm mb-2">Select Token</label>
                   <div className="flex gap-2">
-                    {Object.entries(TOKENS).map(([key, token]) => (
+                    {TOKEN_OPTIONS.map((token) => (
                       <button
-                        key={key}
-                        onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD')}
+                        key={token.id}
+                        onClick={() => setSelectedToken(token.id as 'RARE' | 'BOD' | 'BOBER' | 'ONE' | 'TOM' | 'EGLD')}
                         className={`flex items-center justify-center w-12 h-12 rounded-xl border transition-all ${
-                          selectedToken === key 
+                          selectedToken === token.id 
                             ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black' 
                             : 'border-zinc-800 hover:border-[#C99733]'
                         }`}
