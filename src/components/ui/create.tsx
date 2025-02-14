@@ -182,6 +182,8 @@ export default function Create() {
                                selectedToken === 'BOD' ? BOD_IDENTIFIER :
                                selectedToken === 'BOBER' ? BOBER_IDENTIFIER :
                                selectedToken === 'ONE' ? ONE_IDENTIFIER :
+                               selectedToken === 'TOM' ? TOM_IDENTIFIER :
+                               selectedToken === 'BATEMAN' ? BATEMAN_IDENTIFIER :
                                TOM_IDENTIFIER;
         transaction = {
           value: '0',
@@ -236,6 +238,7 @@ export default function Create() {
                           selectedToken === 'BOBER' ? boberBalance :
                           selectedToken === 'ONE' ? oneBalance :
                           selectedToken === 'TOM' ? tomBalance :
+                          selectedToken === 'BATEMAN' ? batemanBalance :
                           Number(account.balance) / Math.pow(10, 18);
     const amountValue = parseFloat(amount);
     const totalAmount = amountValue * multiplier;
@@ -757,6 +760,7 @@ export default function Create() {
                            selectedToken === 'BOBER' ? boberBalance : 
                            selectedToken === 'ONE' ? oneBalance :
                            selectedToken === 'TOM' ? tomBalance :
+                           selectedToken === 'BATEMAN' ? batemanBalance :
                            0).toFixed(2)} {selectedToken}
                     </span>
                   )}
