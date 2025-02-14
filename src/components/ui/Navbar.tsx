@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { Coins, Vote } from "lucide-react"
@@ -16,12 +16,18 @@ interface NavItem {
   badge?: string
 }
 
+interface NavBarProps {
+  items: NavItem[]
+  className?: string
+  activeTextColor?: string
+}
+
 const navItems: NavItem[] = [
   { name: 'Fight', url: '/', icon: Coins },
   { name: 'Vote Fighter', url: '/vote', icon: Vote },
   { name: 'Vote Token', url: '/votetoken', icon: Vote },
   { name: 'Faucet', url: '/faucet', icon: Coins },
-  { name: 'WoF', url: '/wof', icon: Vote },
+  { name: 'Wheel of Fomo', url: '/wof', icon: Vote },
   { 
     name: 'Stats', 
     url: '/stats', 
@@ -31,18 +37,11 @@ const navItems: NavItem[] = [
   }
 ];
 
-interface NavBarProps {
-  items: NavItem[]
-  className?: string
-  activeTextColor?: string
-}
-
 export function NavBar({ items, className, activeTextColor = 'text-black' }: NavBarProps) {
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState(items[0].name);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Set active tab based on current pathname
   useEffect(() => {
     const currentItem = items.find(item => item.url === pathname);
     if (currentItem) {
@@ -76,18 +75,26 @@ export function NavBar({ items, className, activeTextColor = 'text-black' }: Nav
             <Link
               key={item.name}
               href={item.url}
-              onClick={() => setActiveTab(item.name)}
+              onClick={() => !item.disabled && setActiveTab(item.name)}
               className={cn(
-                "relative cursor-pointer text-sm font-semibold px-6 py-2 rounded-full transition-colors",
+                "relative cursor-pointer text-sm font-semibold px-6 py-2 rounded-full transition-colors whitespace-nowrap",
                 "text-white/80 hover:text-white",
                 isActive && "bg-gradient-to-r from-[#C99733] to-[#FFD163]",
                 isActive && activeTextColor,
+                item.disabled && "cursor-not-allowed opacity-50"
               )}
             >
               <span className="hidden md:inline">{item.name}</span>
               <span className="md:hidden">
                 <Icon size={18} strokeWidth={2.5} />
               </span>
+              {item.badge && (
+                <div className="absolute -top-1 -right-1">
+                  <div className="bg-[#C99733] text-black text-[10px] px-1 rounded-full">
+                    {item.badge}
+                  </div>
+                </div>
+              )}
               {isActive && (
                 <motion.div
                   layoutId="lamp"
@@ -112,49 +119,4 @@ export function NavBar({ items, className, activeTextColor = 'text-black' }: Nav
       </div>
     </div>
   )
-}
-
-export function TubelightNav() {
-  const pathname = usePathname();
-
-  return (
-    <nav className="relative flex items-center justify-center gap-4 h-10 bg-black/50 rounded-full border border-zinc-800 px-1 min-w-[600px]">
-      <div className="absolute inset-x-0 h-8 top-1/2 -translate-y-1/2 mx-1">
-        <div
-          className={`absolute h-full bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full transition-all duration-300 ${
-            pathname === '/' ? 'left-0 w-[calc(16.666%-3px)]' : 
-            pathname === '/vote' ? 'left-[16.666%] w-[calc(16.666%-3px)]' : 
-            pathname === '/votetoken' ? 'left-[33.333%] w-[calc(16.666%-3px)]' :
-            pathname === '/faucet' ? 'left-[50%] w-[calc(16.666%-3px)]' :
-            pathname === '/wof' ? 'left-[66.666%] w-[calc(16.666%-3px)]' :
-            'left-[83.333%] w-[calc(16.666%-3px)]'
-          }`}
-        />
-      </div>
-
-      {navItems.map((item) => (
-        <Link
-          key={item.name}
-          href={item.url}
-          className={`relative z-10 px-4 py-2 text-sm font-medium transition-colors text-center w-1/6 whitespace-nowrap ${
-            pathname === item.url 
-              ? 'text-black' 
-              : item.disabled 
-                ? 'text-zinc-500 cursor-not-allowed' 
-                : 'text-white hover:text-zinc-300'
-          }`}
-          onClick={(e) => item.disabled && e.preventDefault()}
-        >
-          {item.name}
-          {item.badge && (
-            <div className="absolute -top-1 -right-1">
-              <div className="bg-[#C99733] text-black text-[10px] px-1 rounded-full">
-                {item.badge}
-              </div>
-            </div>
-          )}
-        </Link>
-      ))}
-    </nav>
-  );
 } 

@@ -15,6 +15,9 @@ import { useGetNetworkConfig, useGetAccountInfo } from "@multiversx/sdk-dapp/hoo
 import { RetroGrid } from '@/components/ui/retro-grid';
 import flipcoinAbi from '@/config/flipcoin.abi.json';
 import { AshSwapWidget } from "@/components/ui/ashswapwidget";
+import { sendTransactions } from "@multiversx/sdk-dapp/services";
+import { refreshAccount } from "@multiversx/sdk-dapp/utils/account";
+import { toast, Toaster } from 'sonner';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -110,9 +113,82 @@ export default function Stats() {
     currentPage * itemsPerPage
   );
 
+  const handleEndVoting = async () => {
+    try {
+      const data = 'endVoting';
+      
+      const transaction = {
+        value: '0',
+        data: data,
+        receiver: SC_ADDRESS,
+        gasLimit: 10000000,
+      };
+
+      const { sessionId } = await sendTransactions({
+        transactions: [transaction],
+        transactionsDisplayInfo: {
+          processingMessage: 'Ending voting session...',
+          errorMessage: 'An error occurred while ending voting',
+          successMessage: 'Successfully ended voting session!'
+        }
+      });
+
+      if (sessionId) {
+        await refreshAccount();
+        toast.success('Voting session ended successfully');
+      }
+    } catch (error) {
+      console.error('Error ending voting:', error);
+      toast.error('Failed to end voting session');
+    }
+  };
+
+  const handleStartVoting = async () => {
+    try {
+      // Convert 4 to hex: 04
+      const votingOptions = '04';
+      const data = `startVoting@${votingOptions}`;
+      
+      const transaction = {
+        value: '0',
+        data: data,
+        receiver: SC_ADDRESS,
+        gasLimit: 10000000,
+      };
+
+      const { sessionId } = await sendTransactions({
+        transactions: [transaction],
+        transactionsDisplayInfo: {
+          processingMessage: 'Starting new voting session...',
+          errorMessage: 'An error occurred while starting voting',
+          successMessage: 'Successfully started new voting session!'
+        }
+      });
+
+      if (sessionId) {
+        await refreshAccount();
+        toast.success('New voting session started successfully');
+      }
+    } catch (error) {
+      console.error('Error starting voting:', error);
+      toast.error('Failed to start voting session');
+    }
+  };
+
   return (
     <main className="relative h-screen overflow-hidden bg-black">
       <RetroGrid />
+      <Toaster 
+        theme="dark" 
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: '#1A1A1A',
+            border: '1px solid rgba(201, 151, 51, 0.1)',
+            color: 'white',
+          },
+        }}
+      />
       <div className="h-full overflow-auto pt-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-8">
         </div>
@@ -135,6 +211,27 @@ export default function Stats() {
               animate={{ opacity: 1, y: 0 }}
               className="w-full"
             >
+              {/* Admin Controls Section */}
+              <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl p-6 mb-6">
+                <div className="space-y-2 mb-4">
+                  <h2 className="text-2xl font-bold text-white">Admin Controls</h2>
+                  <p className="text-zinc-400">Manage voting sessions</p>
+                </div>
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleEndVoting}
+                    className="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium transition-colors"
+                  >
+                    End Voting
+                  </button>
+                  <button
+                    onClick={handleStartVoting}
+                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-medium hover:opacity-90 transition-opacity"
+                  >
+                    Start Voting (4 Options)
+                  </button>
+                </div>
+              </div>
 
               <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl p-6 space-y-6">
                 <div className="space-y-2">
