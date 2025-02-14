@@ -176,7 +176,7 @@ export default function RootLayout({
                   {/* Content */}
                   <div className="relative z-10">
                     <Navbar />
-                    {/* <VoteBanner /> */}
+                     <VoteBanner />
                     <main className="pt-0">
                       {children}
                     </main>
