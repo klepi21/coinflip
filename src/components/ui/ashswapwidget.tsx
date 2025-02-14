@@ -17,22 +17,7 @@ const FEE = 0.001; // 0.1%
 const EGLD_MINIMUM_VALUE = 0.005;
 
 // Allowed tokens for "You receive" section
-const ALLOWED_RECEIVE_TOKENS = ['RARE', 'BOD', 'KWAK', 'ONE', 'TOM', 'JEX'];
-
-// Add BATEMAN to the allowed tokens array
-const ALLOWED_OUTPUT_TOKENS = [
-  'EGLD',
-  'USDC-c76f1f',
-  'USDT-f8c08c',
-  'WEGLD-bd4d79',
-  'ASH-a642d1',
-  'RARE-99e8b0',
-  'BOD-204877',
-  'BOBER-9eb764',
-  'ONE-f9954f',
-  'TOM-48414f',
-  'BATEMAN-f6fd19'
-];
+const ALLOWED_RECEIVE_TOKENS = ['RARE', 'BOD', 'KWAK', 'ONE', 'TOM', 'JEX' ,'BATEMAN'];
 
 // Types
 interface Token {
@@ -748,7 +733,7 @@ export const AshSwapWidget: React.FC<AshSwapWidgetProps> = ({ availableTokens, i
           onSelect={setTokenOut}
           selectedToken={tokenOut}
           filterTokens={true}
-          allowedTokens={ALLOWED_OUTPUT_TOKENS}
+          allowedTokens={ALLOWED_RECEIVE_TOKENS}
           tokens={availableTokens}
           isLoading={isLoadingTokens}
         />
