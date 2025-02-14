@@ -71,7 +71,7 @@ const TOKENS = {
     name: 'BATEMAN',
     image: `https://tools.multiversx.com/assets-cdn/tokens/${BATEMAN_IDENTIFIER}/icon.svg`,
     decimals: 18,
-    minAmount: 50000
+    minAmount: 40000
   }
 };
 
