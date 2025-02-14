@@ -39,6 +39,9 @@ export default function Stats() {
   const { network } = useGetNetworkConfig();
   const { address } = useGetAccountInfo();
   const itemsPerPage = 10;
+  const [newToken, setNewToken] = useState('');
+  const [minimumAmountToken, setMinimumAmountToken] = useState('');
+  const [minimumAmount, setMinimumAmount] = useState('');
 
   const fetchScoreboard = async () => {
     try {
@@ -237,6 +240,86 @@ export default function Stats() {
     }
   };
 
+  const handleAddToken = async () => {
+    try {
+      if (!newToken) {
+        toast.error('Please enter a token identifier');
+        return;
+      }
+
+      // Convert token identifier to hex
+      const tokenHex = Buffer.from(newToken).toString('hex');
+      const data = `addTokens@${tokenHex}`;
+      
+      const transaction = {
+        value: '0',
+        data: data,
+        receiver: SC_ADDRESS,
+        gasLimit: 10000000,
+      };
+
+      const { sessionId } = await sendTransactions({
+        transactions: [transaction],
+        transactionsDisplayInfo: {
+          processingMessage: 'Adding new token...',
+          errorMessage: 'An error occurred while adding token',
+          successMessage: 'Successfully added new token!'
+        }
+      });
+
+      if (sessionId) {
+        await refreshAccount();
+        toast.success('Token added successfully');
+        setNewToken(''); // Clear input
+      }
+    } catch (error) {
+      console.error('Error adding token:', error);
+      toast.error('Failed to add token');
+    }
+  };
+
+  const handleSetMinimumAmount = async () => {
+    try {
+      if (!minimumAmountToken || !minimumAmount) {
+        toast.error('Please enter both token identifier and amount');
+        return;
+      }
+
+      // Convert token identifier to hex
+      const tokenHex = Buffer.from(minimumAmountToken).toString('hex');
+      // Convert amount to hex (assuming it's a number)
+      const amountHex = BigInt(minimumAmount).toString(16).padStart(16, '0');
+      
+      const data = `setMinimumAmount@${tokenHex}@${amountHex}`;
+      
+      const transaction = {
+        value: '0',
+        data: data,
+        receiver: SC_ADDRESS,
+        gasLimit: 10000000,
+      };
+
+      const { sessionId } = await sendTransactions({
+        transactions: [transaction],
+        transactionsDisplayInfo: {
+          processingMessage: 'Setting minimum amount...',
+          errorMessage: 'An error occurred while setting minimum amount',
+          successMessage: 'Successfully set minimum amount!'
+        }
+      });
+
+      if (sessionId) {
+        await refreshAccount();
+        toast.success('Minimum amount set successfully');
+        setMinimumAmountToken(''); // Clear inputs
+        setMinimumAmount('');
+      }
+    } catch (error) {
+      console.error('Error setting minimum amount:', error);
+      toast.error('Failed to set minimum amount');
+    }
+  };
+
   return (
     <main className="relative h-screen overflow-hidden bg-black">
       <RetroGrid />
@@ -271,7 +354,7 @@ export default function Stats() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full"
+              className="w-full space-y-6"
             >
               {/* Admin Controls Section */}
               <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl p-6 mb-6">
@@ -315,6 +398,65 @@ export default function Stats() {
                       >
                         Start Token Vote (4)
                       </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Token Management Section */}
+              <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl p-6">
+                <div className="space-y-2 mb-6">
+                  <h2 className="text-2xl font-bold text-white">Token Management</h2>
+                  <p className="text-zinc-400">Manage accepted tokens and minimum amounts</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Add Token Control */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-white">Add Token</h3>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Token identifier (e.g. RARE-99e8b0)"
+                        value={newToken}
+                        onChange={(e) => setNewToken(e.target.value)}
+                        className="flex-1 px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-[#C99733]"
+                      />
+                      <button
+                        onClick={handleAddToken}
+                        className="px-6 py-2 rounded-xl bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
+                      >
+                        Add Token
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Set Minimum Amount Control */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-white">Set Minimum Amount</h3>
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Token identifier"
+                        value={minimumAmountToken}
+                        onChange={(e) => setMinimumAmountToken(e.target.value)}
+                        className="w-full px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-[#C99733]"
+                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          placeholder="Minimum amount"
+                          value={minimumAmount}
+                          onChange={(e) => setMinimumAmount(e.target.value)}
+                          className="flex-1 px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-[#C99733]"
+                        />
+                        <button
+                          onClick={handleSetMinimumAmount}
+                          className="px-6 py-2 rounded-xl bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
+                        >
+                          Set Amount
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
