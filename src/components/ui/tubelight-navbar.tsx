@@ -117,32 +117,38 @@ export function NavBar({ items, className, activeTextColor = 'text-black' }: Nav
 export function TubelightNav() {
   const pathname = usePathname();
 
+  // Calculate number of active menu items (not commented out)
+  const activeItems = navItems.filter(item => !item.disabled).length;
+  const itemWidth = `${100 / activeItems}%`;
+
   return (
     <nav className="relative flex items-center justify-center gap-4 h-10 bg-black/50 rounded-full border border-zinc-800 px-1 min-w-[600px]">
       <div className="absolute inset-x-0 h-8 top-1/2 -translate-y-1/2 mx-1">
         <div
-          className={`absolute h-full bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full transition-all duration-300 ${
-            pathname === '/' ? 'left-0 w-[calc(16.666%-3px)]' : 
-            pathname === '/vote' ? 'left-[16.666%] w-[calc(16.666%-3px)]' : 
-            pathname === '/votetoken' ? 'left-[33.333%] w-[calc(16.666%-3px)]' :
-            pathname === '/faucet' ? 'left-[50%] w-[calc(16.666%-3px)]' :
-            pathname === '/wof' ? 'left-[66.666%] w-[calc(16.666%-3px)]' :
-            'left-[83.333%] w-[calc(16.666%-3px)]'
-          }`}
+          className={`absolute h-full bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full transition-all duration-300`}
+          style={{
+            width: itemWidth,
+            left: pathname === '/' ? '0' : 
+                  pathname === '/vote' ? itemWidth :
+                  pathname === '/votetoken' ? `calc(${itemWidth} * 2)` :
+                  pathname === '/faucet' ? `calc(${itemWidth} * 3)` :
+                  pathname === '/stats' ? `calc(${itemWidth} * 4)` : '0'
+          }}
         />
       </div>
 
-      {navItems.map((item) => (
+      {navItems.filter(item => !item.disabled).map((item, index) => (
         <Link
           key={item.name}
           href={item.url}
-          className={`relative z-10 px-4 py-2 text-sm font-medium transition-colors text-center w-1/6 whitespace-nowrap ${
+          className={`relative z-10 px-4 py-2 text-sm font-medium transition-colors text-center whitespace-nowrap ${
             pathname === item.url 
               ? 'text-black' 
               : item.disabled 
                 ? 'text-zinc-500 cursor-not-allowed' 
                 : 'text-white hover:text-zinc-300'
           }`}
+          style={{ width: itemWidth }}
           onClick={(e) => item.disabled && e.preventDefault()}
         >
           {item.name}

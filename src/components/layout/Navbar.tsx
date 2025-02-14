@@ -27,7 +27,6 @@ export function Navbar() {
     { name: 'Vote Fighter', url: '/vote', icon: Vote },
     { name: 'Vote Token', url: '/votetoken', icon: Vote },
     { name: 'Faucet', url: '/faucet', icon: Coins },
-    // { name: 'Wheel of Fomo', url: '/wof', icon: Vote },
     { 
       name: 'Stats', 
       url: '/stats', 
@@ -80,14 +79,14 @@ export function Navbar() {
           exit={{ opacity: 0, y: -20 }}
           className="absolute top-[60px] left-0 right-0 bg-black/95 backdrop-blur-lg border-t border-white/10 p-4 space-y-4 shadow-xl md:hidden"
         >
-          {navItems.map((item) => (
+          {navItems.filter(item => !item.disabled).map((item) => (
             <div key={item.name} className="relative">
               <Link
                 href={item.url}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-xl transition-colors",
                   pathname === item.url
-                    ? 'bg-white/10 text-white font-medium'
+                    ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-medium'
                     : 'text-white/80 hover:text-white hover:bg-white/5',
                   item.disabled && "cursor-not-allowed text-zinc-500 pointer-events-none"
                 )}
