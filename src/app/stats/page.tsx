@@ -175,6 +175,68 @@ export default function Stats() {
     }
   };
 
+  const handleEndTokenVoting = async () => {
+    try {
+      const data = 'endTokenVoting';
+      
+      const transaction = {
+        value: '0',
+        data: data,
+        receiver: SC_ADDRESS,
+        gasLimit: 10000000,
+      };
+
+      const { sessionId } = await sendTransactions({
+        transactions: [transaction],
+        transactionsDisplayInfo: {
+          processingMessage: 'Ending token voting session...',
+          errorMessage: 'An error occurred while ending token voting',
+          successMessage: 'Successfully ended token voting session!'
+        }
+      });
+
+      if (sessionId) {
+        await refreshAccount();
+        toast.success('Token voting session ended successfully');
+      }
+    } catch (error) {
+      console.error('Error ending token voting:', error);
+      toast.error('Failed to end token voting session');
+    }
+  };
+
+  const handleStartTokenVoting = async () => {
+    try {
+      // Convert 4 to hex: 04
+      const votingOptions = '04';
+      const data = `startTokenVoting@${votingOptions}`;
+      
+      const transaction = {
+        value: '0',
+        data: data,
+        receiver: SC_ADDRESS,
+        gasLimit: 10000000,
+      };
+
+      const { sessionId } = await sendTransactions({
+        transactions: [transaction],
+        transactionsDisplayInfo: {
+          processingMessage: 'Starting new token voting session...',
+          errorMessage: 'An error occurred while starting token voting',
+          successMessage: 'Successfully started new token voting session!'
+        }
+      });
+
+      if (sessionId) {
+        await refreshAccount();
+        toast.success('New token voting session started successfully');
+      }
+    } catch (error) {
+      console.error('Error starting token voting:', error);
+      toast.error('Failed to start token voting session');
+    }
+  };
+
   return (
     <main className="relative h-screen overflow-hidden bg-black">
       <RetroGrid />
@@ -217,19 +279,44 @@ export default function Stats() {
                   <h2 className="text-2xl font-bold text-white">Admin Controls</h2>
                   <p className="text-zinc-400">Manage voting sessions</p>
                 </div>
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleEndVoting}
-                    className="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium transition-colors"
-                  >
-                    End Voting
-                  </button>
-                  <button
-                    onClick={handleStartVoting}
-                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-medium hover:opacity-90 transition-opacity"
-                  >
-                    Start Voting (4 Options)
-                  </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Fighter Voting Controls */}
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-white">Fighter Voting</h3>
+                    <div className="flex gap-4">
+                      <button
+                        onClick={handleEndVoting}
+                        className="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium transition-colors"
+                      >
+                        End Fighter Vote
+                      </button>
+                      <button
+                        onClick={handleStartVoting}
+                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-medium hover:opacity-90 transition-opacity"
+                      >
+                        Start Fighter Vote (4)
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Token Voting Controls */}
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-white">Token Voting</h3>
+                    <div className="flex gap-4">
+                      <button
+                        onClick={handleEndTokenVoting}
+                        className="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium transition-colors"
+                      >
+                        End Token Vote
+                      </button>
+                      <button
+                        onClick={handleStartTokenVoting}
+                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-medium hover:opacity-90 transition-opacity"
+                      >
+                        Start Token Vote (4)
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
