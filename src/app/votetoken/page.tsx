@@ -63,10 +63,10 @@ interface VoteOption {
 
 export default function VoteTokenPage() {
   const [votes, setVotes] = useState<VoteOption[]>([
-    { name: 'BATEMAN', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/BATEMAN-f6fd19/icon.svg', option: 1 },
-    { name: 'FOXSY', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/FOXSY-5d5f3e/icon.svg', option: 2 },
-    { name: 'DRX', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/DRX-b7f337/icon.svg', option: 3 },
-    { name: 'MXDOGE', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/MXDOGE-378b61/icon.svg', option: 4 }
+    { name: 'DRX', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/DRX-b7f337/icon.svg', option: 1 },
+    { name: 'ROAR', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/ROAR-e5185d/icon.svg', option: 2 },
+    { name: 'VILLER', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/VILLER-cab1fb/icon.svg', option: 3 },
+    { name: 'GLONK', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/GLONK-9961fb/icon.svg', option: 4 }
   ]);
   const [selectedOption, setSelectedOption] = useState<VoteOption | null>(null);
   const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'ONE'>('RARE');
