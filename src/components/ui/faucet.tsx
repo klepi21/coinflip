@@ -17,7 +17,9 @@ import { Toaster } from "sonner";
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
 const RARE_IDENTIFIER = 'RARE-99e8b0';
 const ADMIN_ADDRESSES = [
-  'erd1qqqqqqqqqqqqqpgqd77h6vxl4zer7z7ETC'
+  'erd12xqam5lxx6xeteaewx25xarqd3ypleetkv35w40nuqchsxqar9zqkslg66',
+  'erd19dgrdm4md8yc7lhvrpgwnnpkzfwlglht8xv6c5nv9lvclx9kp62q2fcjzh',
+  'erd1u5p4njlv9rxvzvmhsxjypa69t2dran33x9ttpx0ghft7tt35wpfsxgynw4'
 ];
 
 export function FaucetComponent() {
