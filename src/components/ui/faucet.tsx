@@ -8,10 +8,20 @@ import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { sendTransactions } from "@multiversx/sdk-dapp/services";
 import { useTrackTransactionStatus } from "@multiversx/sdk-dapp/hooks/transactions";
 import { toast } from "sonner";
-import { useGetAccountInfo } from "@multiversx/sdk-dapp/hooks";
+import { useGetAccountInfo, useGetNetworkConfig } from "@multiversx/sdk-dapp/hooks";
 import { TokenPayment } from "@multiversx/sdk-core";
 import { RetroGrid } from "@/components/ui/retro-grid";
 import { Toaster } from "sonner";
+import { 
+  AbiRegistry, 
+  SmartContract, 
+  Address, 
+  ResultsParser,
+  ContractFunction,
+  AddressValue
+} from "@multiversx/sdk-core";
+import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
+import flipcoinAbi from '@/config/flipcoin.abi.json';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -30,6 +40,124 @@ export function FaucetComponent() {
   const [faucetInfo, setFaucetInfo] = useState<any>(null);
   const { isLoggedIn, address } = useWallet();
   const { account } = useGetAccountInfo();
+  const { network } = useGetNetworkConfig();
+
+  const fetchFaucetInfo = async () => {
+    try {
+      const provider = new ProxyNetworkProvider(network.apiAddress);
+      const contract = new SmartContract({
+        address: new Address(SC_ADDRESS),
+        abi: AbiRegistry.create(flipcoinAbi)
+      });
+
+      const query = contract.createQuery({
+        func: new ContractFunction("getFaucetInfo"),
+        args: [new AddressValue(new Address(address || SC_ADDRESS))]
+      });
+
+      const queryResponse = await provider.queryContract(query);
+      const endpointDefinition = contract.getEndpoint("getFaucetInfo");
+      const { values } = new ResultsParser().parseQueryResponse(queryResponse, endpointDefinition);
+      
+      const info = values[0].valueOf();
+      setFaucetInfo({
+        token: info.token.toString(),
+        amount: info.amount.toString(),
+        has_enough_balance: info.has_enough_balance,
+        can_claim: info.can_claim,
+        faucet_balance: info.faucet_balance?.toString() || '0'
+      });
+    } catch (error) {
+      console.error('Error fetching faucet info:', error);
+      toast.error('Failed to fetch faucet information');
+    }
+  };
+
+  useEffect(() => {
+    if (network.apiAddress) {
+      fetchFaucetInfo();
+      // Refresh every minute
+      const interval = setInterval(fetchFaucetInfo, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [network.apiAddress, address]);
+
+  const handleDeposit = async () => {
+    if (!isLoggedIn || !depositAmount) {
+      toast.error('Please enter an amount');
+      return;
+    }
+
+    try {
+      setIsDepositing(true);
+      
+      // Create ESDTTransfer transaction data
+      const encodedTokenId = Buffer.from(RARE_IDENTIFIER).toString('hex');
+      const rawAmount = (BigInt(depositAmount) * BigInt(10 ** 18)).toString(16).padStart(64, '0');
+      const data = `ESDTTransfer@${encodedTokenId}@${rawAmount}@6465706f736974`; // 'deposit' in hex
+
+      const transaction = {
+        value: '0',
+        data: data,
+        receiver: SC_ADDRESS,
+        gasLimit: 6000000
+      };
+
+      const { sessionId } = await sendTransactions({
+        transactions: [transaction],
+        transactionsDisplayInfo: {
+          processingMessage: 'Processing deposit transaction',
+          errorMessage: 'An error occurred during deposit',
+          successMessage: 'Successfully deposited tokens!'
+        }
+      });
+
+      if (sessionId) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await fetchFaucetInfo();
+        setDepositAmount('');
+      }
+    } catch (error) {
+      console.error('Error depositing:', error);
+      toast.error('Failed to deposit tokens');
+    } finally {
+      setIsDepositing(false);
+    }
+  };
+
+  const handleClaim = async () => {
+    if (!isLoggedIn) return;
+
+    try {
+      setIsLoading(true);
+      
+      const transaction = {
+        value: '0',
+        data: 'claim',
+        receiver: SC_ADDRESS,
+        gasLimit: 6000000
+      };
+
+      const { sessionId } = await sendTransactions({
+        transactions: [transaction],
+        transactionsDisplayInfo: {
+          processingMessage: 'Processing claim transaction',
+          errorMessage: 'An error occurred during claiming',
+          successMessage: 'Successfully claimed tokens!'
+        }
+      });
+
+      if (sessionId) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await fetchFaucetInfo();
+      }
+    } catch (error) {
+      console.error('Error claiming:', error);
+      toast.error('Failed to claim tokens');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="relative h-screen overflow-hidden bg-black">
@@ -145,10 +273,10 @@ export function FaucetComponent() {
 
                   {/* Claim Button */}
                   <button
-                    onClick={() => {}}
-                    disabled={!isLoggedIn || !faucetInfo?.can_claim || isLoading || !faucetInfo?.has_enough_balance}
+                    onClick={handleClaim}
+                    disabled={!isLoggedIn || !faucetInfo?.can_claim || isLoading}
                     className={`w-full h-12 rounded-xl font-medium transition-all ${
-                      !isLoggedIn || !faucetInfo?.can_claim || isLoading || !faucetInfo?.has_enough_balance
+                      !isLoggedIn || !faucetInfo?.can_claim || isLoading
                         ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                         : 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black hover:opacity-90'
                     }`}
@@ -157,11 +285,9 @@ export function FaucetComponent() {
                       ? 'Connect Wallet to Claim' 
                       : isLoading 
                         ? 'Processing Claim...' 
-                        : !faucetInfo?.has_enough_balance
-                          ? 'Insufficient Faucet Balance'
-                          : faucetInfo?.can_claim 
-                            ? 'Claim Tokens' 
-                            : 'Already Claimed'}
+                        : !faucetInfo?.can_claim
+                          ? 'Already Claimed'
+                          : 'Claim Tokens'}
                   </button>
 
                   {/* Note */}
@@ -198,7 +324,7 @@ export function FaucetComponent() {
                     className="flex-1 bg-black/30 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-[#C99733]"
                   />
                   <button
-                    onClick={() => {}}
+                    onClick={handleDeposit}
                     disabled={isDepositing || !depositAmount}
                     className={`px-6 rounded-xl font-medium transition-all ${
                       isDepositing || !depositAmount
