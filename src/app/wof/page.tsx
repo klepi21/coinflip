@@ -7,6 +7,7 @@ export default function WofPage() {
   return (
     <main className="relative min-h-screen bg-black">
       <RetroGrid />
+      <div className="h-30 mt-10" />
       <WheelOfFomo />
     </main>
   );

@@ -18,6 +18,7 @@ import { AshSwapWidget } from '@/components/ui/ashswapwidget';
 import axios from 'axios';
 import { Toaster } from 'sonner';
 import Script from 'next/script';
+import { usePathname } from 'next/navigation';
 
 const comic = Comic_Neue({
   weight: ['400', '700'],
@@ -63,6 +64,7 @@ export default function RootLayout({
   const [isSwapOpen, setIsSwapOpen] = useState(false);
   const [tokens, setTokens] = useState<Token[]>([]);
   const [isLoadingTokens, setIsLoadingTokens] = useState(true);
+  const pathname = usePathname();
 
   // Fetch tokens once when layout loads
   useEffect(() => {
@@ -159,7 +161,7 @@ export default function RootLayout({
       <body className="bg-black">
         <ThemeProvider attribute="class" defaultTheme="light">
           <DappProvider
-            environment="mainnet"
+            environment="devnet"
             dappConfig={{
               shouldUseWebViewProvider: true,
             }}
@@ -176,7 +178,7 @@ export default function RootLayout({
                   {/* Content */}
                   <div className="relative z-10">
                     <Navbar />
-                     <VoteBanner />
+                    {pathname !== '/wof' && <VoteBanner />}
                     <main className="pt-0">
                       {children}
                     </main>
