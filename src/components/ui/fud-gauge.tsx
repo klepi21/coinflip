@@ -30,6 +30,8 @@ const getColor = (value: number) => {
 export function FudGauge({ value = 50, size = 300, animated = true }: FudGaugeProps) {
   const [currentValue, setCurrentValue] = useState(0);
   const gaugeRef = useRef<HTMLDivElement>(null);
+  const gradientId = `gaugeGradient-${Math.random().toString(36).substr(2, 9)}`;
+  const needleGradientId = `needleGradient-${Math.random().toString(36).substr(2, 9)}`;
   
   useEffect(() => {
     if (animated) {
@@ -124,7 +126,6 @@ export function FudGauge({ value = 50, size = 300, animated = true }: FudGaugePr
       </button>
 
       <div ref={gaugeRef} className="relative">
-        {/* Background Arc */}
         <svg
           viewBox="0 0 200 100"
           className="w-full"
@@ -132,14 +133,14 @@ export function FudGauge({ value = 50, size = 300, animated = true }: FudGaugePr
         >
           {/* Gradient Definitions */}
           <defs>
-            <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" style={{ stopColor: '#e74c3c' }} />
               <stop offset="25%" style={{ stopColor: '#e67e22' }} />
               <stop offset="50%" style={{ stopColor: '#f1c40f' }} />
               <stop offset="75%" style={{ stopColor: '#2ecc71' }} />
               <stop offset="100%" style={{ stopColor: '#27ae60' }} />
             </linearGradient>
-            <linearGradient id="needleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id={needleGradientId} x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" style={{ stopColor: '#C99733' }} />
               <stop offset="100%" style={{ stopColor: '#FFD163' }} />
             </linearGradient>
@@ -158,7 +159,7 @@ export function FudGauge({ value = 50, size = 300, animated = true }: FudGaugePr
           <path
             d="M20 90 A 80 80 0 0 1 180 90"
             fill="none"
-            stroke="url(#gaugeGradient)"
+            stroke={`url(#${gradientId})`}
             strokeWidth="12"
             className="opacity-80"
           />
