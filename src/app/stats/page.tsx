@@ -18,15 +18,25 @@ import { AshSwapWidget } from "@/components/ui/ashswapwidget";
 import { sendTransactions } from "@multiversx/sdk-dapp/services";
 import { refreshAccount } from "@multiversx/sdk-dapp/utils/account";
 import { toast, Toaster } from 'sonner';
+import gameAbi from '@/config/game.abi.json';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
 const ADMIN_ADDRESSES = ['erd1u5p4njlv9rxvzvmhsxjypa69t2dran33x9ttpx0ghft7tt35wpfsxgynw4', 'erd1vvms6vgu0r6he4p20jp7z99wcrwwuk06rwey670kmszg4c7yfhws43xpxp','erd12xqam5lxx6xeteaewx25xarqd3ypleetkv35w40nuqchsxqar9zqkslg66'];
 
+// Add WoF constants
+const WOF_SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
+
 interface PlayerScore {
   address: string;
   wins: number;
   losses: number;
+}
+
+interface WofPlayerStats {
+  address: string;
+  totalPlayed: string;
+  totalWon: string;
 }
 
 export default function Stats() {
@@ -42,6 +52,9 @@ export default function Stats() {
   const [newToken, setNewToken] = useState('');
   const [minimumAmountToken, setMinimumAmountToken] = useState('');
   const [minimumAmount, setMinimumAmount] = useState('');
+  const [scoreboard, setScoreboard] = useState<PlayerScore[]>([]);
+  const [wofStats, setWofStats] = useState<WofPlayerStats[]>([]);
+  const [isLoadingWof, setIsLoadingWof] = useState(true);
 
   const fetchScoreboard = async () => {
     try {
@@ -85,9 +98,48 @@ export default function Stats() {
     }
   };
 
+  const fetchWofStats = async () => {
+    try {
+      setIsLoadingWof(true);
+      const provider = new ProxyNetworkProvider(network.apiAddress);
+      const contract = new SmartContract({
+        address: new Address(WOF_SC_ADDRESS),
+        abi: AbiRegistry.create(gameAbi)
+      });
+
+      const query = contract.createQuery({
+        func: new ContractFunction("getPlayersReport"),
+      });
+
+      const queryResponse = await provider.queryContract(query);
+      const endpointDefinition = contract.getEndpoint("getPlayersReport");
+      const { values } = new ResultsParser().parseQueryResponse(queryResponse, endpointDefinition);
+      
+      if (values?.[0]) {
+        const stats = values[0].valueOf().map((stat: any) => ({
+          address: stat.address.toString(),
+          totalPlayed: stat.total_played.toString(),
+          totalWon: stat.total_won.toString()
+        }));
+
+        // Sort by total played
+        stats.sort((a: WofPlayerStats, b: WofPlayerStats) => 
+          Number(BigInt(b.totalPlayed)) - Number(BigInt(a.totalPlayed))
+        );
+
+        setWofStats(stats);
+      }
+    } catch (error) {
+      console.error('Error fetching WoF stats:', error);
+    } finally {
+      setIsLoadingWof(false);
+    }
+  };
+
   useEffect(() => {
     if (ADMIN_ADDRESSES.includes(address)) {
       fetchScoreboard();
+      fetchWofStats();
     }
   }, [network.apiAddress, address]);
 
@@ -576,6 +628,69 @@ export default function Stats() {
                     </button>
                   </div>
                 )}
+              </div>
+
+              {/* Wheel of Fomo Stats */}
+              <div className="mt-16">
+                <h2 className="text-2xl font-bold text-white mb-6">Wheel of Fomo Stats</h2>
+                <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl overflow-hidden">
+                  {isLoadingWof ? (
+                    <div className="p-8 text-center">
+                      <div className="animate-spin w-6 h-6 border-2 border-[#C99733] border-t-transparent rounded-full mx-auto mb-2"></div>
+                      <p className="text-zinc-400">Loading stats...</p>
+                    </div>
+                  ) : wofStats.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-zinc-800">
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-400">Rank</th>
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-400">Player</th>
+                            <th className="px-6 py-4 text-right text-sm font-semibold text-zinc-400">Total Played</th>
+                            <th className="px-6 py-4 text-right text-sm font-semibold text-zinc-400">Total Won (EGLD)</th>
+                            <th className="px-6 py-4 text-right text-sm font-semibold text-zinc-400">Win Rate</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {wofStats.map((player, index) => {
+                            const totalPlayed = Number(BigInt(player.totalPlayed)) / 1e18;
+                            const totalWon = Number(BigInt(player.totalWon)) / 1e18;
+                            const winRate = totalPlayed > 0 ? (totalWon / totalPlayed) * 100 : 0;
+
+                            return (
+                              <tr 
+                                key={player.address} 
+                                className="border-b border-zinc-800/50 hover:bg-white/5 transition-colors"
+                              >
+                                <td className="px-6 py-4 text-sm text-zinc-400">#{index + 1}</td>
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-white font-medium">
+                                      {player.address.substring(0, 6)}...{player.address.substring(player.address.length - 4)}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 text-right text-white">{totalPlayed.toFixed(2)}</td>
+                                <td className="px-6 py-4 text-right text-white">{totalWon.toFixed(2)}</td>
+                                <td className="px-6 py-4 text-right">
+                                  <span className={`text-sm font-medium ${
+                                    winRate >= 50 ? 'text-green-500' : 'text-red-500'
+                                  }`}>
+                                    {winRate.toFixed(1)}%
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center text-zinc-400">
+                      No stats available
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           </div>

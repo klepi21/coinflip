@@ -70,6 +70,9 @@ export default function RootLayout({
   useEffect(() => {
     const fetchTokens = async () => {
       try {
+        // Add 1 second delay before fetching tokens list
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         const response = await axios.get<MxToken[]>('https://api.multiversx.com/tokens?size=500');
         
         const validTokens = response.data
@@ -161,7 +164,7 @@ export default function RootLayout({
       <body className="bg-black">
         <ThemeProvider attribute="class" defaultTheme="light">
           <DappProvider
-            environment="devnet"
+            environment="mainnet"
             dappConfig={{
               shouldUseWebViewProvider: true,
             }}

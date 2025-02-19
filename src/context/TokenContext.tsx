@@ -29,6 +29,9 @@ export function TokenProvider({ children }: { children: ReactNode }) {
 
     try {
       setIsLoading(true);
+      // Add 500ms delay before fetching balances
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const response = await fetch(`https://api.multiversx.com/accounts/${address}/tokens?size=500`);
       const tokens = await response.json();
       

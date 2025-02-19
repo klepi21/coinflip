@@ -9,7 +9,8 @@ import {
   Address, 
   ResultsParser,
   ContractFunction,
-  BigUIntValue
+  BigUIntValue,
+  TokenPayment
 } from "@multiversx/sdk-core";
 import { useGetNetworkConfig, useGetAccountInfo } from "@multiversx/sdk-dapp/hooks";
 import { sendTransactions } from "@multiversx/sdk-dapp/services";
@@ -26,6 +27,7 @@ const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28n
 const RARE_IDENTIFIER = 'RARE-99e8b0';
 const BOD_IDENTIFIER = 'BOD-204877';
 const ONE_IDENTIFIER = 'ONE-f9954f';
+const VOTE_MULTIPLIERS = [1, 5, 10, 25];
 
 // Token data with images
 const TOKENS = {
@@ -62,6 +64,7 @@ export default function Vote() {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'ONE'>('RARE');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [multiplier, setMultiplier] = useState(1);
   const accountInfo = useGetAccountInfo();
   const [totalVotes, setTotalVotes] = useState(0);
   const { network } = useGetNetworkConfig();
@@ -99,6 +102,7 @@ export default function Vote() {
       setTotalVotes(total);
     } catch (error) {
       console.error('Error fetching votes:', error);
+      toast.error('Failed to fetch votes');
     }
   };
 
@@ -145,104 +149,34 @@ export default function Vote() {
                      ONE_IDENTIFIER;
       const amount = TOKENS[selectedToken].voteAmount;
       
-      // Create ESDTTransfer transaction data
-      const encodedTokenId = Buffer.from(tokenId).toString('hex');
-      const rawAmount = (BigInt(amount) * BigInt(10 ** 18)).toString(16).padStart(64, '0');
-      const data = `ESDTTransfer@${encodedTokenId}@${rawAmount}@766f7465@0${selectedOption.toString(16)}`;
-
-      const transaction = {
+      // Create array of identical transactions based on multiplier
+      const transactions = Array(multiplier).fill({
         value: '0',
-        data: data,
+        data: `ESDTTransfer@${Buffer.from(tokenId).toString('hex')}@${(BigInt(amount) * BigInt(10 ** 18)).toString(16).padStart(64, '0')}@766f7465@0${selectedOption.toString(16)}`,
         receiver: SC_ADDRESS,
         gasLimit: 10000000,
-      };
+      });
 
-      const { sessionId, error } = await sendTransactions({
-        transactions: [transaction],
+      const { sessionId } = await sendTransactions({
+        transactions,
         transactionsDisplayInfo: {
-          processingMessage: 'Processing vote transaction',
-          errorMessage: 'An error occurred during voting',
-          successMessage: 'Vote submitted successfully'
+          processingMessage: `Voting ${multiplier} time${multiplier > 1 ? 's' : ''}...`,
+          errorMessage: 'An error has occurred during voting',
+          successMessage: `Successfully voted ${multiplier} time${multiplier > 1 ? 's' : ''}!`
         }
       });
 
-      if (error) {
-        toast.dismiss(loadingToastId);
-        throw new Error(error);
-      }
-
-      // Add delay before checking transaction status
-      await new Promise(resolve => setTimeout(resolve, accountInfo.shard === 1 ? 10000 : 25000));
-      await refreshAccount();
-
-      // Additional wait to ensure smart contract state is updated
-      await new Promise(resolve => setTimeout(resolve, 4000));
-
-      // Dismiss loading toast and show success toast
-      toast.dismiss(loadingToastId);
-      toast.success(
-        <div className="flex flex-col space-y-2">
-          <div className="p-4">
-            <p className="text-sm font-medium text-white">Vote Successful!</p>
-            <p className="mt-1 text-sm text-zinc-400">Your vote has been recorded.</p>
-          </div>
-          <div className="border-t border-zinc-800 p-2">
-            <button
-              onClick={() => {
-                fetchVotes();
-              }}
-              className="w-full p-2 text-sm font-medium text-[#C99733] hover:text-[#FFD163] transition-colors rounded-md hover:bg-zinc-800/50"
-            >
-              Refresh Results
-            </button>
-          </div>
-        </div>,
-        {
-          style: {
-            background: '#1A1A1A',
-            border: '1px solid rgba(201, 151, 51, 0.1)',
-          },
-          duration: 5000,
-        }
-      );
-
-      // Refresh data
-      await fetchVotes();
-      setSelectedOption(null);
-
-    } catch (error: any) {
-      console.error('Vote error:', error);
-      // Don't show error toast since the transaction might still be processing
-      if (error?.message?.includes('Request error on url')) {
-        toast.info(
-          <div className="flex flex-col space-y-2">
-            <p className="font-medium text-white">Transaction Processing</p>
-            <p className="text-sm text-zinc-400">Please wait for network confirmation</p>
-          </div>,
-          {
-            style: {
-              background: '#1A1A1A',
-              border: '1px solid rgba(201, 151, 51, 0.1)',
-            }
-          }
-        );
-        // Still refresh votes as the transaction might have gone through
+      if (sessionId) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await refreshAccount();
         await fetchVotes();
+        toast.dismiss(loadingToastId);
+        toast.success('Vote submitted successfully!');
         setSelectedOption(null);
-      } else {
-        toast.error(
-          <div className="flex flex-col space-y-2">
-            <p className="font-medium text-white">Error</p>
-            <p className="text-sm text-zinc-400">Something went wrong. Please try again.</p>
-          </div>,
-          {
-            style: {
-              background: '#1A1A1A',
-              border: '1px solid rgba(201, 151, 51, 0.1)',
-            }
-          }
-        );
       }
+    } catch (error) {
+      console.error('Error voting:', error);
+      toast.error('Failed to submit vote');
     } finally {
       setIsSubmitting(false);
     }
@@ -349,6 +283,25 @@ export default function Vote() {
                 })}
               </div>
 
+              <div className="mt-8">
+                <label className="block text-zinc-400 text-sm mb-2">How many votes to cast?</label>
+                <div className="flex gap-1">
+                  {VOTE_MULTIPLIERS.map((mult) => (
+                    <button
+                      key={mult}
+                      onClick={() => setMultiplier(mult)}
+                      className={`flex-1 h-10 rounded-xl text-sm ${
+                        multiplier === mult 
+                          ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' 
+                          : 'bg-zinc-800 text-white'
+                      } font-medium transition-all`}
+                    >
+                      {mult}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="pt-4 relative z-50">
                 <button
                   onClick={handleVote}
@@ -364,7 +317,7 @@ export default function Vote() {
                     : isSubmitting
                     ? 'Submitting...'
                     : selectedOption
-                    ? `Vote with ${TOKENS[selectedToken].voteAmount} ${selectedToken}`
+                    ? `Vote ${multiplier}x for Fighter ${selectedOption}`
                     : 'Select an Option'}
                 </button>
               </div>

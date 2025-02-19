@@ -21,12 +21,19 @@ import {
 import { useTrackTransactionStatus } from "@multiversx/sdk-dapp/hooks/transactions";
 import gameAbi from '@/config/game.abi.json';
 
+// Add font imports
+import { Bangers } from 'next/font/google';
+
+const bangers = Bangers({
+  weight: '400',
+  subsets: ['latin'],
+});
+
 // Add devnet configuration
 const DEVNET_CONFIG = {
   apiAddress: 'https://devnet-api.multiversx.com',
   chainId: 'D',
   shortId: 'devnet',
-  tokenId: 'USDC-350c4e', // Devnet USDC token ID
   contractAddress: 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx'
 };
 
@@ -43,18 +50,17 @@ interface RareOption {
 }
 
 const multipliers: WheelMultiplier[] = [
-  { value: '100x', multiplier: 100, color: '#BF9129', pattern: '🌟' },
-  { value: '10x', multiplier: 10, color: '#D1A23B', pattern: '💫' },
-  { value: '5x', multiplier: 5, color: '#E6B84D', pattern: '🚀' },
-  { value: '3x', multiplier: 3, color: '#FFD163', pattern: '⭐' },
-  { value: '1x', multiplier: 1, color: '#C99733', pattern: '🌠' },
-  { value: '0x', multiplier: 0, color: '#4A4A4A', pattern: '☄️' }
+  { value: '20x', multiplier: 20, color: '#C58D2D', pattern: '🌟' },
+  { value: '5x', multiplier: 5, color: '#A96E25', pattern: '💫' },
+  { value: '3x', multiplier: 3, color: '#885020', pattern: '🚀' },
+  { value: '1x', multiplier: 1, color: '#714222', pattern: '⭐' },
+  { value: '0x', multiplier: 0, color: '#613822', pattern: '☄️' }
 ];
 
 const rareOptions: RareOption[] = [
-  { value: 0.1, label: '0.1 USDC' },
-  { value: 0.5, label: '0.5 USDC' },
-  { value: 1, label: '1 USDC' }
+  { value: 0.01, label: '0.01 EGLD' },
+  { value: 0.05, label: '0.05 EGLD' },
+  { value: 0.1, label: '0.1 EGLD' }
 ];
 
 const spinningMessages = [
@@ -85,6 +91,7 @@ const getAmountWon = async (id: number) => {
   let retries = 0;
   const maxRetries = 15;
   const delayMs = 2000; // 2 seconds
+  let zeroResultCount = 0; // Counter for consecutive zero results
 
   while (retries < maxRetries) {
     try {
@@ -107,9 +114,30 @@ const getAmountWon = async (id: number) => {
         const isNotScratched = results.values[0].valueOf();
         const amountWon = results.values[1].toString();
         
+        console.log('Query result:', { isNotScratched, amountWon, zeroResultCount });
+        
+        // If isNotScratched is true and amount is 0, increment counter
+        if (isNotScratched && (amountWon === '' || amountWon === '0')) {
+          zeroResultCount++;
+          console.log('Zero result count:', zeroResultCount);
+          
+          // If we've seen this 4 times, return 0 and stop querying
+          if (zeroResultCount >= 4) {
+            console.log('Received 4 consecutive zero results, confirming loss');
+            return '0';
+          }
+        } else {
+          // Reset counter if we get a different result
+          zeroResultCount = 0;
+        }
+        
+        // Only return a result when isNotScratched is false (game is over)
         if (!isNotScratched) {
+          console.log('Game is over, final result:', amountWon);
           return amountWon === '' || amountWon === '0' ? '0' : amountWon;
         }
+        
+        console.log('Game still in progress, continuing to poll...');
       }
 
       retries++;
@@ -125,6 +153,7 @@ const getAmountWon = async (id: number) => {
     }
   }
 
+  console.log('Max retries reached without getting a final result');
   return '0';
 };
 
@@ -173,49 +202,41 @@ export function WheelOfFomo() {
                 console.log('Game ID (decimal):', gameIdDecimal);
                 setGameId(gameIdDecimal);
 
-                // Start querying for results
-                let amount = null;
-                for (let i = 0; i < 15; i++) {
-                  console.log(`Querying result attempt ${i + 1}/15...`);
-                  amount = await getAmountWon(gameIdDecimal);
-                  console.log(`Query result for game ${gameIdDecimal}:`, amount);
+                // Get the result
+                const amount = await getAmountWon(gameIdDecimal);
+                console.log(`Query result for game ${gameIdDecimal}:`, amount);
+                
+                if (amount !== null) {
+                  console.log('Valid amount received:', amount);
                   
-                  if (amount !== null && amount !== '0') {
-                    console.log('Valid amount received:', amount);
+                  // Calculate the multiplier based on the amount won
+                  const amountBigInt = BigInt(amount);
+                  const betAmount = BigInt(Math.floor(selectedAmount.value * 1e18));
+                  const multiplierValue = Number(amountBigInt / betAmount);
+                  console.log('Calculated multiplier:', multiplierValue);
+                  
+                  // Find the corresponding multiplier in our wheel
+                  const resultMultiplier = multipliers.find(m => m.multiplier === multiplierValue);
+                  if (resultMultiplier) {
+                    console.log('Found matching wheel multiplier:', resultMultiplier);
                     
-                    // Calculate the multiplier based on the amount won
-                    const amountBigInt = BigInt(amount);
-                    const betAmount = BigInt(Math.floor(selectedAmount.value * 1000000));
-                    const multiplierValue = Number(amountBigInt / betAmount);
-                    console.log('Calculated multiplier:', multiplierValue);
+                    // Calculate wheel position for this multiplier
+                    const sectionAngle = 360 / multipliers.length;
+                    const multiplierIndex = multipliers.indexOf(resultMultiplier);
+                    const spins = 10; // Number of full spins
+                    const targetRotation = (spins * 360) + ((multipliers.length - multiplierIndex) * sectionAngle);
                     
-                    // Find the corresponding multiplier in our wheel
-                    const resultMultiplier = multipliers.find(m => m.multiplier === multiplierValue);
-                    if (resultMultiplier) {
-                      console.log('Found matching wheel multiplier:', resultMultiplier);
-                      
-                      // Calculate wheel position for this multiplier
-                      const sectionAngle = 360 / multipliers.length;
-                      const multiplierIndex = multipliers.indexOf(resultMultiplier);
-                      const spins = 10; // Number of full spins
-                      const targetRotation = (spins * 360) + ((multipliers.length - multiplierIndex) * sectionAngle);
-                      
-                      console.log('Wheel animation details:', {
-                        sectionAngle,
-                        multiplierIndex,
-                        targetRotation
-                      });
-                      
-                      setRotation(targetRotation);
-                      setTimeout(() => {
-                        setSpinning(false);
-                        setResult(resultMultiplier);
-                      }, 20000); // Wait for animation to complete
-                    }
-                    break;
-                  }
-                  if (i < 14) {
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    console.log('Wheel animation details:', {
+                      sectionAngle,
+                      multiplierIndex,
+                      targetRotation
+                    });
+                    
+                    setRotation(targetRotation);
+                    setTimeout(() => {
+                      setSpinning(false);
+                      setResult(resultMultiplier);
+                    }, 20000); // Wait for animation to complete
                   }
                 }
               }
@@ -244,7 +265,13 @@ export function WheelOfFomo() {
 
   const getCurrentEpoch = async () => {
     try {
-      const response = await fetch('https://devnet-api.multiversx.com/stats');
+      const timestamp = Date.now();
+      const response = await fetch(`https://devnet-api.multiversx.com/stats?_=${timestamp}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       const data = await response.json();
       return data.epoch;
     } catch (error) {
@@ -271,15 +298,16 @@ export function WheelOfFomo() {
       const dataToHash = "." + cubedEpoch + "poutsa" + hexAddress;
       const hashedData = sha256(dataToHash);
 
-      // Create ESDTTransfer transaction data with devnet token ID
-      const encodedTokenId = Buffer.from(DEVNET_CONFIG.tokenId).toString('hex');
-      const rawAmount = (BigInt(Math.floor(selectedAmount.value * 1000000))).toString(16).padStart(64, '0');
-      const encodedFunction = Buffer.from('play').toString('hex');
-      const data = `ESDTTransfer@${encodedTokenId}@${rawAmount}@${encodedFunction}@${hashedData}`;
+      // Create play transaction data
+      const encodedFunction = 'play';
+      const data = `${encodedFunction}@${hashedData}`;
+      
+      // Convert EGLD amount to smallest unit (10^18)
+      const valueInSmallestUnit = BigInt(Math.floor(selectedAmount.value * 1e18)).toString();
       
       // Prepare transaction with devnet configuration
       const transaction = {
-        value: '0',
+        value: valueInSmallestUnit,
         data: data,
         receiver: DEVNET_CONFIG.contractAddress,
         gasLimit: 60000000,
@@ -316,11 +344,11 @@ export function WheelOfFomo() {
 
   const calculateWinAmount = (amount: number, multiplier: number): string => {
     if (multiplier === 0) return '0';
-    // Convert amount to USDC with 6 decimals and then to BigInt
-    const amountInSmallestUnit = Math.floor(amount * 1000000);
-    const winAmount = BigInt(amountInSmallestUnit) * BigInt(multiplier);
-    // Convert back to USDC format
-    return (Number(winAmount) / 1000000).toLocaleString(undefined, {
+    // Convert amount to EGLD with 18 decimals and then to BigInt
+    const amountInSmallestUnit = BigInt(Math.floor(amount * 1e18));
+    const winAmount = amountInSmallestUnit * BigInt(multiplier);
+    // Convert back to EGLD format
+    return (Number(winAmount) / 1e18).toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 6
     });
@@ -328,7 +356,7 @@ export function WheelOfFomo() {
 
   const getDisplayAmount = (amount: number, multiplier: number): string => {
     if (multiplier === 0) return '0';
-    return calculateWinAmount(amount, multiplier) + ' USDC';
+    return calculateWinAmount(amount, multiplier) + ' EGLD';
   };
 
   useEffect(() => {
@@ -351,21 +379,23 @@ export function WheelOfFomo() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
             {/* Left Column */}
             <div className="space-y-4 md:space-y-6 order-2 lg:order-1 w-full">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 md:mb-6">Wheel of Fomo</h2>
+              <h2 className={`text-2xl md:text-3xl font-bold text-white mb-4 md:mb-6 ${bangers.className} tracking-wider`}>
+                Wheel of Fomo
+              </h2>
               
               {/* Currency Selector */}
               <div className="space-y-2 w-full">
-                <label className="text-sm text-zinc-400">Currency</label>
+                <label className="text-sm text-zinc-400">Token</label>
                 <div className="w-full flex items-center justify-between bg-black/30 p-3 rounded-xl text-white border border-zinc-800">
                   <div className="flex items-center gap-2">
                     <Image
-                      src={`https://tools.multiversx.com/assets-cdn/tokens/USDC-350c4e/icon.svg`}
-                      alt="USDC"
+                      src="https://static.vecteezy.com/system/resources/previews/024/093/136/non_2x/multiversx-egld-glass-crypto-coin-3d-illustration-free-png.png"
+                      alt="EGLD"
                       width={24}
                       height={24}
                       className="w-6 h-6"
                     />
-                    <span>USDC</span>
+                    <span>EGLD</span>
                   </div>
                 </div>
               </div>
@@ -487,15 +517,21 @@ export function WheelOfFomo() {
                   </div>
                 </div>
 
-                {/* Arrow pointer - Adjusted to 11:15 position */}
-                <div className="absolute top-[25%] left-0 -translate-x-[calc(100%+2px)] z-20 rotate-[-45deg]">
-                  <div className="w-0 h-0 border-l-[12px] md:border-l-[15px] border-r-[12px] md:border-r-[15px] border-t-[20px] md:border-t-[25px] border-l-transparent border-r-transparent border-t-red-600" />
+                {/* Arrow pointer - Using custom image */}
+                <div className="absolute top-[15%] left-0 -translate-x-[calc(100%+2px)] z-20">
+                  <Image
+                    src="/img/lown.png"
+                    alt="Wheel pointer"
+                    width={40}
+                    height={40}
+                    className="w-20 h-20 md:w-22 md:h-22"
+                  />
                 </div>
               </div>
 
               {/* Wheel Mode Toggle - Moved here */}
               <div className="space-y-2 w-full">
-                <label className="text-sm text-zinc-400">Wheel mode</label>
+                <label className="text-sm text-zinc-400">Spin amount</label>
                 <div className="grid grid-cols-3 gap-2 bg-black/30 p-2 rounded-xl border border-zinc-800">
                   {rareOptions.map((option) => (
                     <button
@@ -537,16 +573,17 @@ export function WheelOfFomo() {
                 <div key={index} className="flex items-center gap-2 bg-black/30 px-2 md:px-4 py-2 rounded-xl border border-zinc-800">
                   <div className="w-4 md:w-6 h-4 md:h-6 rounded-full flex-shrink-0" style={{ background: multiplier.color }} />
                   <div className="flex items-center gap-1">
+                    
+                    <span className="text-white text-xs md:text-sm truncate">
+                      {getDisplayAmount(selectedAmount.value, multiplier.multiplier)}
+                    </span>
                     <Image
-                      src={`https://tools.multiversx.com/assets-cdn/tokens/USDC-350c4e/icon.svg`}
-                      alt="USDC"
+                      src="https://static.vecteezy.com/system/resources/previews/024/093/136/non_2x/multiversx-egld-glass-crypto-coin-3d-illustration-free-png.png"
+                      alt="EGLD"
                       width={16}
                       height={16}
                       className="w-4 h-4 flex-shrink-0"
                     />
-                    <span className="text-white text-xs md:text-sm truncate">
-                      {getDisplayAmount(selectedAmount.value, multiplier.multiplier)}
-                    </span>
                   </div>
                 </div>
               ))}
@@ -563,13 +600,89 @@ export function WheelOfFomo() {
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-[#1A1A1A] p-8 rounded-xl border border-[#C99733] shadow-xl w-full max-w-sm"
+              className="bg-[#1A1A1A] p-8 rounded-xl border border-[#C99733] shadow-xl w-full max-w-sm relative overflow-hidden"
               onClick={e => e.stopPropagation()}
             >
-              <div className="flex flex-col items-center text-center">
-                <h3 className="text-4xl font-bold text-[#C99733] mb-2">
-                  {result.value}
-                </h3>
+              {/* Background glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-[#C99733]/10 to-[#FFD163]/10 blur-xl" />
+              
+              {/* Content */}
+              <div className="relative z-10">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  {/* Animated arrow */}
+                  <motion.div
+                    initial={{ y: -20 }}
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 1.5,
+                      ease: "easeInOut"
+                    }}
+                    className="w-16 h-16 mb-2"
+                  >
+                    <Image
+                      src="/img/hypeyarrow.png"
+                      alt="Arrow"
+                      width={64}
+                      height={64}
+                      className={`w-full h-full ${result.multiplier === 0 ? 'rotate-180' : ''}`}
+                    />
+                  </motion.div>
+
+                  {/* Result text with animation */}
+                  <motion.h3
+                    initial={{ scale: 0.5 }}
+                    animate={{ scale: 1 }}
+                    className={`text-4xl font-bold mb-2 ${
+                      result.multiplier > 0 ? 'text-[#C99733]' : 'text-zinc-500'
+                    }`}
+                  >
+                    {result.value}
+                  </motion.h3>
+
+                  {/* Win/Loss message */}
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-lg text-zinc-400 mb-4"
+                  >
+                    {result.multiplier > 1 ? (
+                      <>
+                        <span className="block text-[#C99733] font-bold mb-1">Congratulations!</span>
+                        <span className="block text-white">
+                          You won {getDisplayAmount(selectedAmount.value, result.multiplier)}!
+                        </span>
+                      </>
+                    ) : result.multiplier === 1 ? (
+                      <>
+                        <span className="block text-[#C99733] font-bold mb-1">Money Back!</span>
+                        <span className="block text-white">
+                          You got your {getDisplayAmount(selectedAmount.value, result.multiplier)} back.
+                          <br />
+                          <span className="text-zinc-400 text-sm">At least you didn't lose anything!</span>
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="block text-zinc-500 font-bold mb-1">Better luck next time!</span>
+                        <span className="block text-zinc-400">
+                          Don't give up, fortune favors the bold!
+                        </span>
+                      </>
+                    )}
+                  </motion.p>
+
+                  {/* Play Again button */}
+                  <motion.button
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    onClick={() => setResult(null)}
+                    className="px-6 py-2 bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black rounded-xl font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    Play Again
+                  </motion.button>
+                </div>
               </div>
             </motion.div>
           </div>
