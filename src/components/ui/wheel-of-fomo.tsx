@@ -50,11 +50,11 @@ interface RareOption {
 }
 
 const multipliers: WheelMultiplier[] = [
-  { value: '20x', multiplier: 20, color: '#C58D2D', pattern: '🌟' },
-  { value: '5x', multiplier: 5, color: '#A96E25', pattern: '💫' },
-  { value: '3x', multiplier: 3, color: '#885020', pattern: '🚀' },
-  { value: '1x', multiplier: 1, color: '#714222', pattern: '⭐' },
-  { value: '0x', multiplier: 0, color: '#613822', pattern: '☄️' }
+  { value: '20x', multiplier: 20, color: '#C58D2D', pattern: '/img/20x.png' },
+  { value: '5x', multiplier: 5, color: '#A96E25', pattern: '/img/5x.png' },
+  { value: '3x', multiplier: 3, color: '#885020', pattern: '/img/3x.png' },
+  { value: '1x', multiplier: 1, color: '#714222', pattern: '/img/1x.png' },
+  { value: '0x', multiplier: 0, color: '#613822', pattern: '/img/0x.png' }
 ];
 
 const rareOptions: RareOption[] = [
@@ -501,7 +501,15 @@ export function WheelOfFomo() {
                               textAlign: 'center',
                             }}
                           >
-                            <div className="text-xl md:text-2xl mb-1">{multiplier.pattern}</div>
+                            <div className="text-xl md:text-2xl mb-1">
+                              <Image
+                                src={multiplier.pattern}
+                                alt={multiplier.value}
+                                width={40}
+                                height={40}
+                                className="w-10 h-10 md:w-12 md:h-12 mx-auto"
+                              />
+                            </div>
                             <span className="text-lg md:text-xl font-bold text-white">{multiplier.value}</span>
                           </div>
                         </div>
@@ -538,13 +546,20 @@ export function WheelOfFomo() {
                       key={option.value}
                       onClick={() => setSelectedAmount(option)}
                       className={cn(
-                        "px-1 md:px-4 py-2 rounded-xl text-white transition-all text-xs md:text-base whitespace-nowrap",
+                        "px-1 md:px-4 py-2 rounded-xl text-white transition-all text-xs md:text-base whitespace-nowrap flex items-center justify-center gap-1",
                         selectedAmount.value === option.value
                           ? "bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black"
                           : "hover:bg-zinc-800"
                       )}
                     >
-                      {option.label}
+                      {option.value}
+                      <Image
+                        src="https://static.vecteezy.com/system/resources/previews/024/093/136/non_2x/multiversx-egld-glass-crypto-coin-3d-illustration-free-png.png"
+                        alt="EGLD"
+                        width={20}
+                        height={20}
+                        className="w-5 h-5"
+                      />
                     </button>
                   ))}
                 </div>
