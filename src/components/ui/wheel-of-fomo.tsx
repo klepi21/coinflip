@@ -122,9 +122,9 @@ const getAmountWon = async (id: number) => {
           zeroResultCount++;
           console.log('Zero result count:', zeroResultCount);
           
-          // If we've seen this 4 times, return 0 and stop querying
-          if (zeroResultCount >= 4) {
-            console.log('Received 4 consecutive zero results, confirming loss');
+          // If we've seen this 2 times, return 0 and stop querying
+          if (zeroResultCount >= 2) {
+            console.log('Received 2 consecutive zero results, confirming loss');
             return '0';
           }
         } else {
