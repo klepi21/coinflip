@@ -19,6 +19,7 @@ import { sendTransactions } from "@multiversx/sdk-dapp/services";
 import { refreshAccount } from "@multiversx/sdk-dapp/utils/account";
 import { toast, Toaster } from 'sonner';
 import gameAbi from '@/config/game.abi.json';
+import { getContractForShard } from '@/config/wof-contracts';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -56,6 +57,7 @@ export default function Stats() {
   const [wofStats, setWofStats] = useState<WofPlayerStats[]>([]);
   const [isLoadingWof, setIsLoadingWof] = useState(true);
   const [depositAmount, setDepositAmount] = useState('');
+  const [selectedShard, setSelectedShard] = useState(0);
 
   const fetchScoreboard = async () => {
     try {
@@ -652,6 +654,15 @@ export default function Stats() {
                             value={depositAmount}
                             onChange={(e) => setDepositAmount(e.target.value)}
                           />
+                          <select
+                            value={selectedShard}
+                            onChange={(e) => setSelectedShard(Number(e.target.value))}
+                            className="px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-[#C99733]"
+                          >
+                            <option value={0}>Shard 0</option>
+                            <option value={1}>Shard 1</option>
+                            <option value={2}>Shard 2</option>
+                          </select>
                           <button
                             onClick={async () => {
                               try {
@@ -660,10 +671,13 @@ export default function Stats() {
                                   return;
                                 }
 
+                                // Get the contract address for the selected shard using the helper function
+                                const contractAddress = getContractForShard(selectedShard);
+
                                 const transaction = {
                                   value: (Number(depositAmount) * 10**18).toString(),
                                   data: 'addAmount',
-                                  receiver: WOF_SC_ADDRESS,
+                                  receiver: contractAddress,
                                   gasLimit: 60000000
                                 };
 
@@ -691,6 +705,9 @@ export default function Stats() {
                             Deposit
                           </button>
                         </div>
+                        <p className="mt-2 text-xs text-zinc-500">
+                          Selected contract: {getContractForShard(selectedShard)}
+                        </p>
                       </div>
                     </div>
                   </div>

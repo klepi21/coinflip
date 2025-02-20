@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ChevronDown, X, Trophy } from 'lucide-react';
 import Image from 'next/image';
 import { sha256 } from 'js-sha256';
-import { useGetNetworkConfig } from "@multiversx/sdk-dapp/hooks";
+import { useGetNetworkConfig, useGetAccountInfo } from "@multiversx/sdk-dapp/hooks";
 import { sendTransactions } from "@multiversx/sdk-dapp/services";
 import { useWallet } from '@/context/WalletContext';
 import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
@@ -21,6 +21,7 @@ import {
 import { useTrackTransactionStatus } from "@multiversx/sdk-dapp/hooks/transactions";
 import gameAbi from '@/config/game.abi.json';
 import Link from 'next/link';
+import { getContractForShard } from '@/config/wof-contracts';
 
 // Add font imports
 import { Bangers } from 'next/font/google';
@@ -77,90 +78,23 @@ const spinningMessages = [
   "Big win incoming?",
 ];
 
-const getContract = (address: string) => {
-  return new SmartContract({
-    address: new Address(address),
-    abi: AbiRegistry.create(gameAbi)
-  });
-};
+// Add new loading state messages
+const checkingMessages = [
+  "Checking blockchain...",
+  "Verifying result...",
+  "Calculating outcome...",
+  "Almost there...",
+  "Processing your spin...",
+];
 
 const getNetworkProvider = () => {
   return new ProxyNetworkProvider(DEVNET_CONFIG.apiAddress);
 };
 
-const getAmountWon = async (id: number) => {
-  let retries = 0;
-  const maxRetries = 15;
-  const delayMs = 2000; // 2 seconds
-  let zeroResultCount = 0; // Counter for consecutive zero results
-
-  while (retries < maxRetries) {
-    try {
-      const contract = getContract(DEVNET_CONFIG.contractAddress);
-      const proxy = getNetworkProvider();
-
-      const query = contract.createQuery({
-        func: new ContractFunction('getResult'),
-        args: [new U64Value(id)]
-      });
-
-      const queryResponse = await proxy.queryContract(query);
-
-      if (queryResponse?.returnCode === 'ok' && queryResponse?.returnData?.length === 2) {
-        const endpointDefinition = contract.getEndpoint('getResult');
-        const resultParser = new ResultsParser();
-        const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
-
-        // First value is boolean (not scratched), second is BigUint (amount won)
-        const isNotScratched = results.values[0].valueOf();
-        const amountWon = results.values[1].toString();
-        
-        console.log('Query result:', { isNotScratched, amountWon, zeroResultCount });
-        
-        // If isNotScratched is true and amount is 0, increment counter
-        if (isNotScratched && (amountWon === '' || amountWon === '0')) {
-          zeroResultCount++;
-          console.log('Zero result count:', zeroResultCount);
-          
-          // If we've seen this 2 times, return 0 and stop querying
-          if (zeroResultCount >= 2) {
-            console.log('Received 2 consecutive zero results, confirming loss');
-            return '0';
-          }
-        } else {
-          // Reset counter if we get a different result
-          zeroResultCount = 0;
-        }
-        
-        // Only return a result when isNotScratched is false (game is over)
-        if (!isNotScratched) {
-          console.log('Game is over, final result:', amountWon);
-          return amountWon === '' || amountWon === '0' ? '0' : amountWon;
-        }
-        
-        console.log('Game still in progress, continuing to poll...');
-      }
-
-      retries++;
-      if (retries < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-      }
-    } catch (error) {
-      console.error('Error querying result:', error);
-      retries++;
-      if (retries < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-      }
-    }
-  }
-
-  console.log('Max retries reached without getting a final result');
-  return '0';
-};
-
 export function WheelOfFomo() {
   const { address, isLoggedIn } = useWallet();
   const { network } = useGetNetworkConfig();
+  const { account } = useGetAccountInfo();
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<WheelMultiplier | null>(null);
@@ -169,6 +103,95 @@ export function WheelOfFomo() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [currentMessage, setCurrentMessage] = useState(spinningMessages[0]);
   const [totalGames, setTotalGames] = useState<number | null>(null);
+  const [checkingMessage, setCheckingMessage] = useState(checkingMessages[0]);
+  const [checkingProgress, setCheckingProgress] = useState(0);
+  const [isChecking, setIsChecking] = useState(false);
+
+  // Get the contract address based on user's shard
+  const contractAddress = useMemo(() => {
+    if (!account?.shard) return getContractForShard(0);
+    return getContractForShard(account.shard);
+  }, [account?.shard]);
+
+  // Update getContract function to use the shard-based address
+  const getContract = useCallback(() => {
+    return new SmartContract({
+      address: new Address(contractAddress),
+      abi: AbiRegistry.create(gameAbi)
+    });
+  }, [contractAddress]);
+
+  // Add message cycling effect
+  useEffect(() => {
+    if (!spinning) return;
+
+    const messages = isChecking ? checkingMessages : spinningMessages;
+    let currentIndex = 0;
+
+    const interval = setInterval(() => {
+      currentIndex = (currentIndex + 1) % messages.length;
+      if (isChecking) {
+        setCheckingMessage(messages[currentIndex]);
+      } else {
+        setCurrentMessage(messages[currentIndex]);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [spinning, isChecking]);
+
+  const getAmountWon = useCallback(async (id: number) => {
+    let retries = 0;
+    const maxRetries = 15;
+    const delayMs = 800; // Reduced delay
+    let zeroResultCount = 0;
+
+    while (retries < maxRetries) {
+      try {
+        setIsChecking(true);
+        const contract = getContract();
+        const proxy = getNetworkProvider();
+
+        const query = contract.createQuery({
+          func: new ContractFunction('getResult'),
+          args: [new U64Value(id)]
+        });
+
+        const queryResponse = await proxy.queryContract(query);
+
+        if (queryResponse?.returnCode === 'ok' && queryResponse?.returnData?.length === 2) {
+          const endpointDefinition = contract.getEndpoint('getResult');
+          const resultParser = new ResultsParser();
+          const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
+
+          const isNotScratched = results.values[0].valueOf() as boolean;
+          const amountWon = results.values[1].toString();
+          
+          if (isNotScratched && (amountWon === '' || amountWon === '0')) {
+            zeroResultCount++;
+            if (zeroResultCount >= 2) {
+              return '0';
+            }
+          } else if (!isNotScratched) {
+            return amountWon === '' || amountWon === '0' ? '0' : amountWon;
+          }
+        }
+
+        retries++;
+        if (retries < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      } catch (error) {
+        console.error('Error querying result:', error);
+        retries++;
+        if (retries < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      }
+    }
+
+    return '0';
+  }, [getContract]);
 
   const { transactions } = useTrackTransactionStatus({
     transactionId: sessionId,
@@ -181,67 +204,46 @@ export function WheelOfFomo() {
           const provider = getNetworkProvider();
           const txInfo = await provider.getTransaction(tx.hash);
           
-          console.log('Full transaction response:', txInfo);
-          console.log('Transaction hash:', tx.hash);
-          
           if (txInfo.contractResults) {
-            console.log('Contract results:', txInfo.contractResults);
             const results = Object.values(txInfo.contractResults);
-            console.log('Parsed results:', results);
             
             if (results.length > 0 && results[0].length > 0) {
-              // Get the last result which contains the game ID
               const lastResult = results[0][results[0].length - 1];
-              console.log('Last result:', lastResult);
               
               if (lastResult.data) {
                 const parts = lastResult.data.split('@');
-                console.log('Split data parts:', parts);
-                // Game ID is the last part
                 const gameId = parts[parts.length - 1];
-                console.log('Raw game ID (hex):', gameId);
                 const gameIdDecimal = parseInt(gameId, 16);
-                console.log('Game ID (decimal):', gameIdDecimal);
                 setGameId(gameIdDecimal);
 
                 // Get the result
                 const amount = await getAmountWon(gameIdDecimal);
-                console.log(`Query result for game ${gameIdDecimal}:`, amount);
                 
                 if (amount !== null) {
-                  console.log('Valid amount received:', amount);
-                  
-                  // Calculate the multiplier based on the amount won
                   const amountBigInt = BigInt(amount);
                   const betAmount = BigInt(Math.floor(selectedAmount.value * 1e18));
                   const multiplierValue = Number(amountBigInt / betAmount);
-                  console.log('Calculated multiplier:', multiplierValue);
                   
                   // Find the corresponding multiplier in our wheel
                   const resultMultiplier = multipliers.find(m => m.multiplier === multiplierValue);
                   if (resultMultiplier) {
-                    console.log('Found matching wheel multiplier:', resultMultiplier);
-                    
                     // Calculate wheel position for this multiplier
                     const sectionAngle = 360 / multipliers.length;
                     const multiplierIndex = multipliers.indexOf(resultMultiplier);
-                    const spins = 10; // Number of full spins
+                    const spins = 10;
                     const targetRotation = (spins * 360) + ((multipliers.length - multiplierIndex) * sectionAngle);
                     
-                    console.log('Wheel animation details:', {
-                      sectionAngle,
-                      multiplierIndex,
-                      targetRotation
-                    });
-                    
-                    // Show result immediately and start wheel animation
-                    setResult(resultMultiplier);
+                    // Set result and start final wheel animation
                     setRotation(targetRotation);
                     
-                    // Stop spinning state after animation completes
+                    // Show result immediately
+                    setResult(resultMultiplier);
+                    
+                    // Only stop spinning after wheel animation completes
                     setTimeout(() => {
                       setSpinning(false);
-                    }, 20000);
+                      setIsChecking(false);
+                    }, 10000); // Match wheel animation duration
                   }
                 }
               }
@@ -251,11 +253,13 @@ export function WheelOfFomo() {
       } catch (error) {
         console.error('Error processing transaction result:', error);
         setSpinning(false);
+        setIsChecking(false);
       }
     },
     onFail: (transactionId: string | null, errorMessage?: string) => {
       console.error('Transaction failed:', errorMessage);
       setSpinning(false);
+      setIsChecking(false);
       setRotation(0);
     }
   });
@@ -285,50 +289,41 @@ export function WheelOfFomo() {
     }
   };
 
+  // Update spinWheel to use the new contract address
   const spinWheel = async () => {
     if (spinning || !isLoggedIn || !address) return;
     
     try {
-      // Get current epoch
       const currentEpoch = await getCurrentEpoch();
       console.log('Current epoch:', currentEpoch);
       
-      // Convert bech32 address to hex using devnet provider
       const provider = new ProxyNetworkProvider(DEVNET_CONFIG.apiAddress);
       const addressObj = new Address(address);
       const hexAddress = "0x" + addressObj.hex();
       
-      // Generate hash data with cubed epoch converted to hex
       const cubedEpoch = Math.pow(currentEpoch, 3);
-      
-      // Use environment variable for private string
       const privateString = process.env.NEXT_PUBLIC_PRIVATE_STRING;
       const dataToHash = "." + cubedEpoch + privateString + hexAddress;
       const hashedData = sha256(dataToHash);
 
-      // Create play transaction data
       const encodedFunction = 'play';
       const data = `${encodedFunction}@${hashedData}`;
       
-      // Convert EGLD amount to smallest unit (10^18)
       const valueInSmallestUnit = BigInt(Math.floor(selectedAmount.value * 1e18)).toString();
       
-      // Prepare transaction with devnet configuration
       const transaction = {
         value: valueInSmallestUnit,
         data: data,
-        receiver: DEVNET_CONFIG.contractAddress,
+        receiver: contractAddress, // Use shard-based contract address
         gasLimit: 60000000,
         chainID: DEVNET_CONFIG.chainId,
         version: 1
       };
 
-      // Start spinning animation before sending transaction
       setSpinning(true);
       setResult(null);
-      setRotation(prev => prev + (360 * 10)); // Start with 10 rotations
+      setRotation(prev => prev + (360 * 10));
 
-      // Send transaction
       const { sessionId: newSessionId } = await sendTransactions({
         transactions: [transaction],
         transactionsDisplayInfo: {
@@ -367,23 +362,11 @@ export function WheelOfFomo() {
     return calculateWinAmount(amount, multiplier) + ' EGLD';
   };
 
-  useEffect(() => {
-    if (spinning) {
-      let messageIndex = 0;
-      const interval = setInterval(() => {
-        messageIndex = (messageIndex + 1) % spinningMessages.length;
-        setCurrentMessage(spinningMessages[messageIndex]);
-      }, 3000); // Change message every 3 seconds
-
-      return () => clearInterval(interval);
-    }
-  }, [spinning]);
-
   // Add function to fetch total games
   const fetchTotalGames = async () => {
     try {
       const provider = new ProxyNetworkProvider(DEVNET_CONFIG.apiAddress);
-      const contract = getContract(DEVNET_CONFIG.contractAddress);
+      const contract = getContract();
 
       const query = contract.createQuery({
         func: new ContractFunction('getId'),
@@ -409,6 +392,14 @@ export function WheelOfFomo() {
     const interval = setInterval(fetchTotalGames, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
+
+  // Log user's shard when component mounts or account changes
+  useEffect(() => {
+    if (account?.shard !== undefined) {
+      console.log('User Shard:', account.shard);
+      console.log('Using contract address:', contractAddress);
+    }
+  }, [account?.shard, contractAddress]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black p-4 md:p-8 pt-48 overflow-x-hidden">
@@ -644,13 +635,22 @@ export function WheelOfFomo() {
                 onClick={spinWheel}
                 disabled={spinning || !isLoggedIn}
                 className={cn(
-                  "w-full py-3 md:py-4 text-lg md:text-xl font-semibold rounded-xl transition-all",
+                  "w-full py-3 md:py-4 text-lg md:text-xl font-semibold rounded-xl transition-all relative overflow-hidden",
                   "bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
                   "hover:opacity-90"
                 )}
               >
-                {!isLoggedIn ? 'Connect Wallet to Spin' : spinning ? 'Spinning...' : 'Spin Now'}
+                {!isLoggedIn ? (
+                  'Connect Wallet to Spin'
+                ) : spinning ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="animate-spin">🎡</span>
+                    <span>{isChecking ? checkingMessage : currentMessage}</span>
+                  </div>
+                ) : (
+                  'Spin Now'
+                )}
               </button>
             </div>
           </div>
@@ -704,10 +704,8 @@ export function WheelOfFomo() {
 
         {/* Result Display */}
         {result && (
-          <div 
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => {
-              // Only allow closing if not spinning
               if (!spinning) {
                 setResult(null);
               }
@@ -719,22 +717,9 @@ export function WheelOfFomo() {
               className="bg-[#1A1A1A] p-8 rounded-xl border border-[#C99733] shadow-xl w-full max-w-sm relative overflow-hidden"
               onClick={e => e.stopPropagation()}
             >
-              {/* Background glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-[#C99733]/10 to-[#FFD163]/10 blur-xl" />
-              
               {/* Content */}
               <div className="relative z-10">
                 <div className="flex flex-col items-center text-center space-y-4">
-                  {spinning && (
-                    <motion.div 
-                      className="absolute top-0 left-0 right-0 bg-[#C99733] text-black text-sm py-1 text-center font-medium"
-                      initial={{ y: -20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                    >
-                      Watch the wheel complete its spin!
-                    </motion.div>
-                  )}
-
                   {/* Animated arrow */}
                   <motion.div
                     initial={{ y: -20 }}
