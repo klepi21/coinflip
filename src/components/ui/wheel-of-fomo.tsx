@@ -31,10 +31,10 @@ const bangers = Bangers({
 
 // Add devnet configuration
 const DEVNET_CONFIG = {
-  apiAddress: 'https://devnet-api.multiversx.com',
-  chainId: 'D',
-  shortId: 'devnet',
-  contractAddress: 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx'
+  apiAddress: 'https://api.multiversx.com',
+  chainId: '1',
+  shortId: 'mainnet',
+  contractAddress: 'erd1qqqqqqqqqqqqqpgqrmqqsq5aa9rnmaecfcepyuy9cdsfzh07fhwsjz80m6'
 };
 
 interface WheelMultiplier {
@@ -58,7 +58,7 @@ const multipliers: WheelMultiplier[] = [
 ];
 
 const rareOptions: RareOption[] = [
-  { value: 0.01, label: '0.01 EGLD' },
+  { value: 0.001, label: '0.001 EGLD' },
   { value: 0.05, label: '0.05 EGLD' },
   { value: 0.1, label: '0.1 EGLD' }
 ];
@@ -167,6 +167,7 @@ export function WheelOfFomo() {
   const [gameId, setGameId] = useState<number | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [currentMessage, setCurrentMessage] = useState(spinningMessages[0]);
+  const [totalGames, setTotalGames] = useState<number | null>(null);
 
   const { transactions } = useTrackTransactionStatus({
     transactionId: sessionId,
@@ -266,7 +267,7 @@ export function WheelOfFomo() {
   const getCurrentEpoch = async () => {
     try {
       const timestamp = Date.now();
-      const response = await fetch(`https://devnet-api.multiversx.com/stats?_=${timestamp}`, {
+      const response = await fetch(`https://api.multiversx.com/stats?_=${timestamp}`, {
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
@@ -295,7 +296,10 @@ export function WheelOfFomo() {
       
       // Generate hash data with cubed epoch converted to hex
       const cubedEpoch = Math.pow(currentEpoch, 3);
-      const dataToHash = "." + cubedEpoch + "poutsa" + hexAddress;
+      
+      // Use environment variable for private string
+      const privateString = process.env.NEXT_PUBLIC_PRIVATE_STRING;
+      const dataToHash = "." + cubedEpoch + privateString + hexAddress;
       const hashedData = sha256(dataToHash);
 
       // Create play transaction data
@@ -371,6 +375,37 @@ export function WheelOfFomo() {
     }
   }, [spinning]);
 
+  // Add function to fetch total games
+  const fetchTotalGames = async () => {
+    try {
+      const provider = new ProxyNetworkProvider(DEVNET_CONFIG.apiAddress);
+      const contract = getContract(DEVNET_CONFIG.contractAddress);
+
+      const query = contract.createQuery({
+        func: new ContractFunction('getId'),
+      });
+
+      const queryResponse = await provider.queryContract(query);
+      
+      if (queryResponse?.returnData?.[0]) {
+        const endpointDefinition = contract.getEndpoint('getId');
+        const resultParser = new ResultsParser();
+        const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
+        const total = Number(results.values[0].valueOf().toString());
+        setTotalGames(total);
+      }
+    } catch (error) {
+      console.error('Error fetching total games:', error);
+    }
+  };
+
+  // Call fetchTotalGames on component mount and set up interval
+  useEffect(() => {
+    fetchTotalGames();
+    const interval = setInterval(fetchTotalGames, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black p-4 md:p-8 pt-48 overflow-x-hidden">
       <div className="w-full max-w-5xl bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl p-4 md:p-8 relative border border-zinc-800 shadow-xl">
@@ -402,8 +437,11 @@ export function WheelOfFomo() {
 
               {/* Odds Table */}
               <div className="bg-black/30 p-4 rounded-xl border border-zinc-800">
-                <div className="mb-3">
-                  <span className="text-sm text-zinc-400">Winning Odds</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-400 flex items-center gap-2">
+                    <span className="text-lg">📊</span> Winning Odds
+                  </span>
+                  <span className="text-sm text-zinc-400">Multiplier</span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -466,6 +504,23 @@ export function WheelOfFomo() {
                     </motion.p>
                   </motion.div>
                 )}
+              </div>
+
+              {/* Total Games Box */}
+              <div className="bg-black/30 p-4 rounded-xl border border-zinc-800 mt-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-400 flex items-center gap-2">
+                    <span className="text-lg">🎡</span> Total Wheel Spins
+                  </span>
+                  <motion.span 
+                    key={totalGames}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="text-xl font-bold bg-gradient-to-r from-[#C99733] to-[#FFD163] text-transparent bg-clip-text"
+                  >
+                    {totalGames?.toLocaleString() || '...'}
+                  </motion.span>
+                </div>
               </div>
             </div>
 

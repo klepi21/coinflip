@@ -25,7 +25,7 @@ const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28n
 const ADMIN_ADDRESSES = ['erd1u5p4njlv9rxvzvmhsxjypa69t2dran33x9ttpx0ghft7tt35wpfsxgynw4', 'erd1vvms6vgu0r6he4p20jp7z99wcrwwuk06rwey670kmszg4c7yfhws43xpxp','erd12xqam5lxx6xeteaewx25xarqd3ypleetkv35w40nuqchsxqar9zqkslg66'];
 
 // Add WoF constants
-const WOF_SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
+const WOF_SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqrmqqsq5aa9rnmaecfcepyuy9cdsfzh07fhwsjz80m6';
 
 interface PlayerScore {
   address: string;
@@ -55,6 +55,7 @@ export default function Stats() {
   const [scoreboard, setScoreboard] = useState<PlayerScore[]>([]);
   const [wofStats, setWofStats] = useState<WofPlayerStats[]>([]);
   const [isLoadingWof, setIsLoadingWof] = useState(true);
+  const [depositAmount, setDepositAmount] = useState('');
 
   const fetchScoreboard = async () => {
     try {
@@ -634,6 +635,66 @@ export default function Stats() {
               <div className="mt-16">
                 <h2 className="text-2xl font-bold text-white mb-6">Wheel of Fomo Stats</h2>
                 <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl overflow-hidden">
+                  {/* Add Deposit Section */}
+                  <div className="p-6 border-b border-zinc-800">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-zinc-400 mb-2">
+                          Deposit EGLD to Wheel of Fomo
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            placeholder="Amount in EGLD"
+                            className="flex-1 px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-[#C99733]"
+                            value={depositAmount}
+                            onChange={(e) => setDepositAmount(e.target.value)}
+                          />
+                          <button
+                            onClick={async () => {
+                              try {
+                                if (!depositAmount || Number(depositAmount) <= 0) {
+                                  toast.error('Please enter a valid amount');
+                                  return;
+                                }
+
+                                const transaction = {
+                                  value: (Number(depositAmount) * 10**18).toString(),
+                                  data: 'addAmount',
+                                  receiver: WOF_SC_ADDRESS,
+                                  gasLimit: 60000000
+                                };
+
+                                const { sessionId } = await sendTransactions({
+                                  transactions: [transaction],
+                                  transactionsDisplayInfo: {
+                                    processingMessage: 'Processing deposit...',
+                                    errorMessage: 'An error occurred during deposit',
+                                    successMessage: 'Successfully deposited EGLD!'
+                                  }
+                                });
+
+                                if (sessionId) {
+                                  await refreshAccount();
+                                  setDepositAmount('');
+                                  toast.success('Deposit successful!');
+                                }
+                              } catch (error) {
+                                console.error('Error depositing:', error);
+                                toast.error('Failed to deposit EGLD');
+                              }
+                            }}
+                            className="px-6 py-2 rounded-xl bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
+                          >
+                            Deposit
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {isLoadingWof ? (
                     <div className="p-8 text-center">
                       <div className="animate-spin w-6 h-6 border-2 border-[#C99733] border-t-transparent rounded-full mx-auto mb-2"></div>
