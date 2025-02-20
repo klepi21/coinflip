@@ -23,6 +23,8 @@ import { useTrackTransactionStatus } from "@multiversx/sdk-dapp/hooks/transactio
 import gameAbi from '@/config/game.abi.json';
 import Link from 'next/link';
 import { getContractForShard } from '@/config/wof-contracts';
+import { TokenPayment } from "@multiversx/sdk-core";
+import { toast } from 'react-hot-toast';
 
 // Add font imports
 import { Bangers } from 'next/font/google';
@@ -111,6 +113,8 @@ export function WheelOfFomo() {
   const [currentStep, setCurrentStep] = useState('signing');
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const spinStartTimeRef = useRef<number | null>(null);
+  const [gameResult, setGameResult] = useState<'win' | 'lose'>('lose');
+  const [winAmount, setWinAmount] = useState<string>('0');
 
   // Get the contract address based on user's shard
   const contractAddress = useMemo(() => {
@@ -368,6 +372,63 @@ export function WheelOfFomo() {
 
       if (newSessionId) {
         setSessionId(newSessionId);
+        
+        // Start checking for game ID with 13-second timeout
+        let gameIdFound = false;
+        const startTime = Date.now();
+        
+        while (Date.now() - startTime < 13000) {
+          try {
+            if (transactions && transactions.length > 0) {
+              const tx = transactions[0];
+              const provider = getNetworkProvider();
+              const txInfo = await provider.getTransaction(tx.hash);
+              
+              if (txInfo.contractResults) {
+                const results = Object.values(txInfo.contractResults);
+                
+                if (results.length > 0 && results[0].length > 0) {
+                  const lastResult = results[0][results[0].length - 1];
+                  
+                  if (lastResult.data) {
+                    const parts = lastResult.data.split('@');
+                    const gameId = parts[parts.length - 1];
+                    const gameIdDecimal = parseInt(gameId, 16);
+                    setGameId(gameIdDecimal);
+                    gameIdFound = true;
+                    break;
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error checking game ID:', error);
+          }
+          
+          // Wait before next attempt
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
+        // If no game ID after 13 seconds, show loss
+        if (!gameIdFound) {
+          console.log('No game ID found within 13 seconds - showing loss result');
+          const resultMultiplier = multipliers.find(m => m.multiplier === 0);
+          if (resultMultiplier) {
+            const sectionAngle = 360 / multipliers.length;
+            const multiplierIndex = multipliers.indexOf(resultMultiplier);
+            const spins = 10;
+            const targetRotation = (spins * 360) + ((multipliers.length - multiplierIndex) * sectionAngle);
+            
+            setRotation(targetRotation);
+            setResult(resultMultiplier);
+            
+            setTimeout(() => {
+              setSpinning(false);
+              setIsChecking(false);
+            }, 10000);
+          }
+          return;
+        }
       }
     } catch (error) {
       console.error('Error during spin:', error);
