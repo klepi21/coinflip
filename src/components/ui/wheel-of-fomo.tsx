@@ -435,75 +435,101 @@ export function WheelOfFomo() {
                 </div>
               </div>
 
-              {/* Odds Table */}
-              <div className="bg-black/30 p-4 rounded-xl border border-zinc-800">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-zinc-400 flex items-center gap-2">
-                    <span className="text-lg">📊</span> Winning Odds
-                  </span>
-                  <span className="text-sm text-zinc-400">Multiplier</span>
+              {/* Winning Odds Table */}
+              <div className="mt-8 bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl overflow-hidden">
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    Winning Odds
+                    <span className="text-[#C99733] text-sm">(Pick your multiplier)</span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {multipliers.map((multiplier, index) => (
+                      <motion.div
+                        key={multiplier.value}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        whileHover={{ scale: 1.02 }}
+                        className={`relative overflow-hidden rounded-xl border border-zinc-800 transition-all duration-300 hover:border-[#C99733]/50 group`}
+                        style={{ background: `${multiplier.color}15` }}
+                      >
+                        {/* Glow Effect */}
+                        <div 
+                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                          style={{
+                            background: `radial-gradient(circle at center, ${multiplier.color}20 0%, transparent 70%)`
+                          }}
+                        />
+                        
+                        <div className="relative p-4 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="relative">
+                              <Image
+                                src={multiplier.pattern}
+                                alt={multiplier.value}
+                                width={48}
+                                height={48}
+                                className="rounded-lg"
+                              />
+                              <motion.div
+                                animate={{
+                                  scale: [1, 1.2, 1],
+                                  rotate: [0, 5, -5, 0]
+                                }}
+                                transition={{
+                                  duration: 2,
+                                  repeat: Infinity,
+                                  repeatType: "reverse"
+                                }}
+                                className="absolute -top-1 -right-1 bg-[#C99733] text-black text-xs px-1.5 rounded-full font-bold"
+                              >
+                                {multiplier.value}
+                              </motion.div>
+                            </div>
+                            <div>
+                              <div className="text-lg font-bold text-white group-hover:text-[#C99733] transition-colors">
+                                {multiplier.value} Multiplier
+                              </div>
+                              <div className="text-sm text-zinc-400">
+                                Win up to {Number(selectedAmount.value * multiplier.multiplier).toFixed(2)} EGLD
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Animated Arrow */}
+                          <motion.div
+                            animate={{ x: [0, 5, 0] }}
+                            transition={{
+                              duration: 1,
+                              repeat: Infinity,
+                              repeatType: "reverse"
+                            }}
+                            className="text-[#C99733] opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </motion.div>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="h-1 w-full bg-zinc-800/50">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: '100%' }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              repeatType: "reverse"
+                            }}
+                            className="h-full"
+                            style={{ background: `linear-gradient(to right, ${multiplier.color}50, ${multiplier.color})` }}
+                          />
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-zinc-400 border-b border-zinc-800">
-                        <th className="pb-2 text-left font-medium">Multiplier</th>
-                        <th className="pb-2 text-right font-medium">Odds</th>
-                        <th className="pb-2 text-right font-medium">Return</th>
-                        <th className="pb-2 text-right font-medium">1 in...</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-white">
-                      <tr className="border-b border-zinc-800/50">
-                        <td className="py-2">20x</td>
-                        <td className="py-2 text-right">0.20%</td>
-                        <td className="py-2 text-right">4.00%</td>
-                        <td className="py-2 text-right">500</td>
-                      </tr>
-                      <tr className="border-b border-zinc-800/50">
-                        <td className="py-2">5x</td>
-                        <td className="py-2 text-right">3.00%</td>
-                        <td className="py-2 text-right">15.00%</td>
-                        <td className="py-2 text-right">33.33333333</td>
-                      </tr>
-                      <tr className="border-b border-zinc-800/50">
-                        <td className="py-2">3x</td>
-                        <td className="py-2 text-right">10.00%</td>
-                        <td className="py-2 text-right">30.00%</td>
-                        <td className="py-2 text-right">10</td>
-                      </tr>
-                      <tr className="border-b border-zinc-800/50">
-                        <td className="py-2">1x</td>
-                        <td className="py-2 text-right">36.80%</td>
-                        <td className="py-2 text-right">36.80%</td>
-                        <td className="py-2 text-right">2.717391304</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2">0x</td>
-                        <td className="py-2 text-right">50.00%</td>
-                        <td className="py-2 text-right">0.00%</td>
-                        <td className="py-2 text-right">2</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                {spinning && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="mt-4 pt-4 border-t border-zinc-800"
-                  >
-                    <motion.p
-                      key={currentMessage}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="text-center text-[#C99733] font-medium"
-                    >
-                      {currentMessage}
-                    </motion.p>
-                  </motion.div>
-                )}
               </div>
 
               {/* Total Games Box */}
