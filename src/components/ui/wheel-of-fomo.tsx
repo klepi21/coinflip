@@ -91,8 +91,8 @@ const getNetworkProvider = () => {
 const getAmountWon = async (id: number) => {
   let retries = 0;
   const maxRetries = 15;
-  const delayMs = 1000; // Reduced from 2000 to 1000ms
-  let zeroResultCount = 0;
+  const delayMs = 2000; // 2 seconds
+  let zeroResultCount = 0; // Counter for consecutive zero results
 
   while (retries < maxRetries) {
     try {
@@ -111,6 +111,7 @@ const getAmountWon = async (id: number) => {
         const resultParser = new ResultsParser();
         const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
 
+        // First value is boolean (not scratched), second is BigUint (amount won)
         const isNotScratched = results.values[0].valueOf();
         const amountWon = results.values[1].toString();
         
@@ -121,15 +122,17 @@ const getAmountWon = async (id: number) => {
           zeroResultCount++;
           console.log('Zero result count:', zeroResultCount);
           
-          // Reduced from 4 to 2 consecutive zero results for faster loss detection
-          if (zeroResultCount >= 2) {
-            console.log('Received 2 consecutive zero results, confirming loss');
+          // If we've seen this 4 times, return 0 and stop querying
+          if (zeroResultCount >= 4) {
+            console.log('Received 4 consecutive zero results, confirming loss');
             return '0';
           }
         } else {
+          // Reset counter if we get a different result
           zeroResultCount = 0;
         }
         
+        // Only return a result when isNotScratched is false (game is over)
         if (!isNotScratched) {
           console.log('Game is over, final result:', amountWon);
           return amountWon === '' || amountWon === '0' ? '0' : amountWon;
@@ -222,7 +225,7 @@ export function WheelOfFomo() {
                     // Calculate wheel position for this multiplier
                     const sectionAngle = 360 / multipliers.length;
                     const multiplierIndex = multipliers.indexOf(resultMultiplier);
-                    const spins = 25; // Increased from 10 to 25 spins
+                    const spins = 10; // Number of full spins
                     const targetRotation = (spins * 360) + ((multipliers.length - multiplierIndex) * sectionAngle);
                     
                     console.log('Wheel animation details:', {
@@ -238,7 +241,7 @@ export function WheelOfFomo() {
                     // Stop spinning state after animation completes
                     setTimeout(() => {
                       setSpinning(false);
-                    }, 30000);
+                    }, 20000);
                   }
                 }
               }
@@ -548,7 +551,7 @@ export function WheelOfFomo() {
                   <motion.div
                     className="absolute w-full h-full"
                     animate={{ rotate: rotation }}
-                    transition={{ duration: 30, ease: [0.2, 0.6, 0.3, 1] }}
+                    transition={{ duration: 20, ease: [0.2, 0.6, 0.3, 1] }}
                     style={{ transformOrigin: "center center" }}
                   >
                     {multipliers.map((multiplier, index) => {
