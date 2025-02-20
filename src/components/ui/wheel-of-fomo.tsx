@@ -16,7 +16,8 @@ import {
   SmartContract, 
   ResultsParser, 
   ContractFunction, 
-  U64Value 
+  U64Value,
+  BigUIntValue
 } from "@multiversx/sdk-core";
 import { useTrackTransactionStatus } from "@multiversx/sdk-dapp/hooks/transactions";
 import gameAbi from '@/config/game.abi.json';
@@ -106,6 +107,10 @@ export function WheelOfFomo() {
   const [checkingMessage, setCheckingMessage] = useState(checkingMessages[0]);
   const [checkingProgress, setCheckingProgress] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [currentStep, setCurrentStep] = useState('signing');
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const spinStartTimeRef = useRef<number | null>(null);
 
   // Get the contract address based on user's shard
   const contractAddress = useMemo(() => {
@@ -140,39 +145,50 @@ export function WheelOfFomo() {
     return () => clearInterval(interval);
   }, [spinning, isChecking]);
 
-  const getAmountWon = useCallback(async (id: number) => {
+  const getAmountWon = async (gameId: number): Promise<string> => {
     let retries = 0;
     const maxRetries = 15;
-    const delayMs = 800; // Reduced delay
-    let zeroResultCount = 0;
+    const delayMs = 800;
+    const maxWaitTime = 13000; // 13 seconds in milliseconds
+    const startTime = Date.now();
 
     while (retries < maxRetries) {
       try {
-        setIsChecking(true);
-        const contract = getContract();
-        const proxy = getNetworkProvider();
+        // Check if we've exceeded the max wait time
+        if (Date.now() - startTime > maxWaitTime) {
+          return '0';
+        }
+
+        const provider = getNetworkProvider();
+        const contract = new SmartContract({
+          address: new Address(contractAddress),
+          abi: AbiRegistry.create(gameAbi)
+        });
 
         const query = contract.createQuery({
           func: new ContractFunction('getResult'),
-          args: [new U64Value(id)]
+          args: [new U64Value(gameId)]
         });
 
-        const queryResponse = await proxy.queryContract(query);
+        const queryResponse = await provider.queryContract(query);
+
+        // Check for specific 0x pattern in returnData first
+        if (queryResponse?.returnData?.length === 2 && 
+            queryResponse.returnData[0] === 'AQ==' && 
+            queryResponse.returnData[1] === '') {
+          return '0';
+        }
 
         if (queryResponse?.returnCode === 'ok' && queryResponse?.returnData?.length === 2) {
           const endpointDefinition = contract.getEndpoint('getResult');
           const resultParser = new ResultsParser();
           const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
-
+          
           const isNotScratched = results.values[0].valueOf() as boolean;
           const amountWon = results.values[1].toString();
-          
-          if (isNotScratched && (amountWon === '' || amountWon === '0')) {
-            zeroResultCount++;
-            if (zeroResultCount >= 2) {
-              return '0';
-            }
-          } else if (!isNotScratched) {
+
+          // If result is ready (not scratched is false), return immediately
+          if (!isNotScratched) {
             return amountWon === '' || amountWon === '0' ? '0' : amountWon;
           }
         }
@@ -182,7 +198,7 @@ export function WheelOfFomo() {
           await new Promise(resolve => setTimeout(resolve, delayMs));
         }
       } catch (error) {
-        console.error('Error querying result:', error);
+        console.error(`Error in attempt ${retries + 1}:`, error);
         retries++;
         if (retries < maxRetries) {
           await new Promise(resolve => setTimeout(resolve, delayMs));
@@ -191,7 +207,7 @@ export function WheelOfFomo() {
     }
 
     return '0';
-  }, [getContract]);
+  };
 
   const { transactions } = useTrackTransactionStatus({
     transactionId: sessionId,
@@ -216,7 +232,28 @@ export function WheelOfFomo() {
                 const gameIdDecimal = parseInt(gameId, 16);
                 setGameId(gameIdDecimal);
 
-                // Get the result
+                // Check if we've exceeded 13 seconds since signing
+                if (spinStartTimeRef.current && (Date.now() - spinStartTimeRef.current) > 13000) {
+                  // If more than 13 seconds have passed, immediately show 0x result
+                  const resultMultiplier = multipliers.find(m => m.multiplier === 0);
+                  if (resultMultiplier) {
+                    const sectionAngle = 360 / multipliers.length;
+                    const multiplierIndex = multipliers.indexOf(resultMultiplier);
+                    const spins = 10;
+                    const targetRotation = (spins * 360) + ((multipliers.length - multiplierIndex) * sectionAngle);
+                    
+                    setRotation(targetRotation);
+                    setResult(resultMultiplier);
+                    
+                    setTimeout(() => {
+                      setSpinning(false);
+                      setIsChecking(false);
+                    }, 10000);
+                    return;
+                  }
+                }
+
+                // Only proceed with getAmountWon if we haven't exceeded 13 seconds
                 const amount = await getAmountWon(gameIdDecimal);
                 
                 if (amount !== null) {
@@ -224,26 +261,20 @@ export function WheelOfFomo() {
                   const betAmount = BigInt(Math.floor(selectedAmount.value * 1e18));
                   const multiplierValue = Number(amountBigInt / betAmount);
                   
-                  // Find the corresponding multiplier in our wheel
                   const resultMultiplier = multipliers.find(m => m.multiplier === multiplierValue);
                   if (resultMultiplier) {
-                    // Calculate wheel position for this multiplier
                     const sectionAngle = 360 / multipliers.length;
                     const multiplierIndex = multipliers.indexOf(resultMultiplier);
                     const spins = 10;
                     const targetRotation = (spins * 360) + ((multipliers.length - multiplierIndex) * sectionAngle);
                     
-                    // Set result and start final wheel animation
                     setRotation(targetRotation);
-                    
-                    // Show result immediately
                     setResult(resultMultiplier);
                     
-                    // Only stop spinning after wheel animation completes
                     setTimeout(() => {
                       setSpinning(false);
                       setIsChecking(false);
-                    }, 10000); // Match wheel animation duration
+                    }, 10000);
                   }
                 }
               }
@@ -254,6 +285,7 @@ export function WheelOfFomo() {
         console.error('Error processing transaction result:', error);
         setSpinning(false);
         setIsChecking(false);
+        setRotation(0);
       }
     },
     onFail: (transactionId: string | null, errorMessage?: string) => {
@@ -294,8 +326,12 @@ export function WheelOfFomo() {
     if (spinning || !isLoggedIn || !address) return;
     
     try {
+      spinStartTimeRef.current = Date.now(); // Start timing at sign
+      setSpinning(true);
+      setResult(null);
+      setRotation(prev => prev + (360 * 10));
+
       const currentEpoch = await getCurrentEpoch();
-      console.log('Current epoch:', currentEpoch);
       
       const provider = new ProxyNetworkProvider(DEVNET_CONFIG.apiAddress);
       const addressObj = new Address(address);
@@ -314,15 +350,11 @@ export function WheelOfFomo() {
       const transaction = {
         value: valueInSmallestUnit,
         data: data,
-        receiver: contractAddress, // Use shard-based contract address
+        receiver: contractAddress,
         gasLimit: 60000000,
         chainID: DEVNET_CONFIG.chainId,
         version: 1
       };
-
-      setSpinning(true);
-      setResult(null);
-      setRotation(prev => prev + (360 * 10));
 
       const { sessionId: newSessionId } = await sendTransactions({
         transactions: [transaction],
@@ -335,13 +367,13 @@ export function WheelOfFomo() {
       });
 
       if (newSessionId) {
-        console.log('Transaction sent with sessionId:', newSessionId);
         setSessionId(newSessionId);
       }
     } catch (error) {
       console.error('Error during spin:', error);
       setSpinning(false);
       setRotation(0);
+      spinStartTimeRef.current = null; // Clean up on error
     }
   };
 
