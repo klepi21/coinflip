@@ -20,6 +20,7 @@ import {
 } from "@multiversx/sdk-core";
 import { useTrackTransactionStatus } from "@multiversx/sdk-dapp/hooks/transactions";
 import gameAbi from '@/config/game.abi.json';
+import Link from 'next/link';
 
 // Add font imports
 import { Bangers } from 'next/font/google';
@@ -90,8 +91,8 @@ const getNetworkProvider = () => {
 const getAmountWon = async (id: number) => {
   let retries = 0;
   const maxRetries = 15;
-  const delayMs = 2000; // 2 seconds
-  let zeroResultCount = 0; // Counter for consecutive zero results
+  const delayMs = 1000; // Reduced from 2000 to 1000ms
+  let zeroResultCount = 0;
 
   while (retries < maxRetries) {
     try {
@@ -110,7 +111,6 @@ const getAmountWon = async (id: number) => {
         const resultParser = new ResultsParser();
         const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
 
-        // First value is boolean (not scratched), second is BigUint (amount won)
         const isNotScratched = results.values[0].valueOf();
         const amountWon = results.values[1].toString();
         
@@ -121,17 +121,15 @@ const getAmountWon = async (id: number) => {
           zeroResultCount++;
           console.log('Zero result count:', zeroResultCount);
           
-          // If we've seen this 4 times, return 0 and stop querying
-          if (zeroResultCount >= 4) {
-            console.log('Received 4 consecutive zero results, confirming loss');
+          // Reduced from 4 to 2 consecutive zero results for faster loss detection
+          if (zeroResultCount >= 2) {
+            console.log('Received 2 consecutive zero results, confirming loss');
             return '0';
           }
         } else {
-          // Reset counter if we get a different result
           zeroResultCount = 0;
         }
         
-        // Only return a result when isNotScratched is false (game is over)
         if (!isNotScratched) {
           console.log('Game is over, final result:', amountWon);
           return amountWon === '' || amountWon === '0' ? '0' : amountWon;
@@ -224,7 +222,7 @@ export function WheelOfFomo() {
                     // Calculate wheel position for this multiplier
                     const sectionAngle = 360 / multipliers.length;
                     const multiplierIndex = multipliers.indexOf(resultMultiplier);
-                    const spins = 10; // Number of full spins
+                    const spins = 25; // Increased from 10 to 25 spins
                     const targetRotation = (spins * 360) + ((multipliers.length - multiplierIndex) * sectionAngle);
                     
                     console.log('Wheel animation details:', {
@@ -233,11 +231,14 @@ export function WheelOfFomo() {
                       targetRotation
                     });
                     
+                    // Show result immediately and start wheel animation
+                    setResult(resultMultiplier);
                     setRotation(targetRotation);
+                    
+                    // Stop spinning state after animation completes
                     setTimeout(() => {
                       setSpinning(false);
-                      setResult(resultMultiplier);
-                    }, 20000); // Wait for animation to complete
+                    }, 30000);
                   }
                 }
               }
@@ -436,99 +437,89 @@ export function WheelOfFomo() {
               </div>
 
               {/* Winning Odds Table */}
-              <div className="mt-8 bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl overflow-hidden">
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    Winning Odds
-                    <span className="text-[#C99733] text-sm">(Pick your multiplier)</span>
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {multipliers.map((multiplier, index) => (
-                      <motion.div
-                        key={multiplier.value}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        whileHover={{ scale: 1.02 }}
-                        className={`relative overflow-hidden rounded-xl border border-zinc-800 transition-all duration-300 hover:border-[#C99733]/50 group`}
-                        style={{ background: `${multiplier.color}15` }}
-                      >
-                        {/* Glow Effect */}
-                        <div 
-                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                          style={{
-                            background: `radial-gradient(circle at center, ${multiplier.color}20 0%, transparent 70%)`
-                          }}
-                        />
-                        
-                        <div className="relative p-4 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="relative">
-                              <Image
-                                src={multiplier.pattern}
-                                alt={multiplier.value}
-                                width={48}
-                                height={48}
-                                className="rounded-lg"
-                              />
-                              <motion.div
-                                animate={{
-                                  scale: [1, 1.2, 1],
-                                  rotate: [0, 5, -5, 0]
-                                }}
-                                transition={{
-                                  duration: 2,
-                                  repeat: Infinity,
-                                  repeatType: "reverse"
-                                }}
-                                className="absolute -top-1 -right-1 bg-[#C99733] text-black text-xs px-1.5 rounded-full font-bold"
+              <div className="bg-black/30 p-4 rounded-xl border border-zinc-800">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-lg">📊</span>
+                  <span className="text-sm text-zinc-400">Winning Odds</span>
+                </div>
+                <div className="overflow-hidden">
+                  <motion.table 
+                    className="w-full border-collapse"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <thead>
+                      <tr className="border-b border-zinc-800">
+                        <th className="py-2 px-4 text-left text-sm text-zinc-400">Multiplier</th>
+                        <th className="py-2 px-4 text-right text-sm text-zinc-400">Win Potential</th>
+                        <th className="py-2 px-4 text-right text-sm text-zinc-400">Odds</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { mult: '20x', color: '#FFD700', odds: '0.20%', icon: '🌟', potential: selectedAmount.value * 20 },
+                        { mult: '5x', color: '#C0C0C0', odds: '3.00%', icon: '⭐', potential: selectedAmount.value * 5 },
+                        { mult: '3x', color: '#CD7F32', odds: '10.00%', icon: '✨', potential: selectedAmount.value * 3 },
+                        { mult: 'Money back', color: '#4CAF50', odds: '36.80%', icon: '💫', potential: selectedAmount.value * 1 },
+                      ].map((row, index) => (
+                        <motion.tr
+                          key={row.mult}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="border-b border-zinc-800/50 hover:bg-white/5 transition-colors"
+                        >
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg" role="img" aria-label="multiplier icon">
+                                {row.icon}
+                              </span>
+                              <motion.span
+                                className="font-bold"
+                                style={{ color: row.color }}
+                                whileHover={{ scale: 1.05 }}
                               >
-                                {multiplier.value}
-                              </motion.div>
+                                {row.mult}
+                              </motion.span>
                             </div>
-                            <div>
-                              <div className="text-lg font-bold text-white group-hover:text-[#C99733] transition-colors">
-                                {multiplier.value} Multiplier
-                              </div>
-                              <div className="text-sm text-zinc-400">
-                                Win up to {Number(selectedAmount.value * multiplier.multiplier).toFixed(2)} EGLD
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Animated Arrow */}
-                          <motion.div
-                            animate={{ x: [0, 5, 0] }}
-                            transition={{
-                              duration: 1,
-                              repeat: Infinity,
-                              repeatType: "reverse"
-                            }}
-                            className="text-[#C99733] opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </motion.div>
-                        </div>
-
-                        {/* Progress Bar */}
-                        <div className="h-1 w-full bg-zinc-800/50">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: '100%' }}
-                            transition={{
-                              duration: 2,
-                              repeat: Infinity,
-                              repeatType: "reverse"
-                            }}
-                            className="h-full"
-                            style={{ background: `linear-gradient(to right, ${multiplier.color}50, ${multiplier.color})` }}
-                          />
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <motion.div
+                              whileHover={{ scale: 1.05 }}
+                              className="inline-flex items-center gap-1 justify-end"
+                            >
+                              <span className="text-[#FFD163]">
+                                {row.potential.toFixed(3)}
+                              </span>
+                              <img
+                                src="https://static.vecteezy.com/system/resources/previews/024/093/136/non_2x/multiversx-egld-glass-crypto-coin-3d-illustration-free-png.png"
+                                alt="EGLD"
+                                className="w-4 h-4"
+                              />
+                            </motion.div>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <motion.div
+                              className="inline-block"
+                              whileHover={{ scale: 1.05 }}
+                            >
+                              <span 
+                                className={cn(
+                                  "px-2 py-1 rounded-full text-xs",
+                                  row.mult === '0x' 
+                                    ? 'bg-red-500/20 text-red-400'
+                                    : 'bg-[#FFD163]/20 text-[#FFD163]'
+                                )}
+                              >
+                                {row.odds}
+                              </span>
+                            </motion.div>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </tbody>
+                  </motion.table>
                 </div>
               </div>
 
@@ -557,7 +548,7 @@ export function WheelOfFomo() {
                   <motion.div
                     className="absolute w-full h-full"
                     animate={{ rotate: rotation }}
-                    transition={{ duration: 20, ease: [0.2, 0.6, 0.3, 1] }}
+                    transition={{ duration: 30, ease: [0.2, 0.6, 0.3, 1] }}
                     style={{ transformOrigin: "center center" }}
                   >
                     {multipliers.map((multiplier, index) => {
@@ -661,28 +652,49 @@ export function WheelOfFomo() {
             </div>
           </div>
 
-          {/* Bottom section - Tiers */}
+          {/* Bottom section - PvP Call to Action */}
           <div className="border-t border-[#C99733]/20 pt-4 md:pt-6 w-full">
-            <h3 className="text-lg font-semibold text-white mb-4 text-center">Possible Winnings</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
-              {multipliers.map((multiplier, index) => (
-                <div key={index} className="flex items-center gap-2 bg-black/30 px-2 md:px-4 py-2 rounded-xl border border-zinc-800">
-                  <div className="w-4 md:w-6 h-4 md:h-6 rounded-full flex-shrink-0" style={{ background: multiplier.color }} />
-                  <div className="flex items-center gap-1">
-                    
-                    <span className="text-white text-xs md:text-sm truncate">
-                      {getDisplayAmount(selectedAmount.value, multiplier.multiplier)}
-                    </span>
-                    <Image
-                      src="https://static.vecteezy.com/system/resources/previews/024/093/136/non_2x/multiversx-egld-glass-crypto-coin-3d-illustration-free-png.png"
-                      alt="EGLD"
-                      width={16}
-                      height={16}
-                      className="w-4 h-4 flex-shrink-0"
-                    />
+            <div className="flex flex-col gap-6">
+              {/* Title stays centered above */}
+              <h3 className="text-xl md:text-2xl font-bold text-white text-center">
+                Bored of FOMO?{' '}
+                <span className="bg-gradient-to-r from-[#C99733] to-[#FFD163] text-transparent bg-clip-text">
+                  Try PvP Mode!
+                </span>
+              </h3>
+              
+              {/* Video and text in a row */}
+              <div className="flex flex-col md:flex-row gap-6 items-center">
+                {/* Video Container - Left side */}
+                <div className="relative w-full md:w-1/2 aspect-video rounded-xl overflow-hidden border border-zinc-800">
+                  <video
+                    src="/img/vsvideo.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 text-center">
+                    <Link 
+                      href="/"
+                      className="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black rounded-xl font-semibold hover:opacity-90 transition-opacity"
+                    >
+                      Fight Now
+                      <Trophy size={18} />
+                    </Link>
                   </div>
                 </div>
-              ))}
+                
+                {/* Text Content - Right side */}
+                <div className="w-full md:w-1/2 flex flex-col justify-center">
+                  <p className="text-zinc-400 text-center md:text-left text-lg">
+                    Challenge other players in epic 1v1 battles! 
+                    Choose your bet, pick your side, and prove your worth in the arena.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -691,7 +703,12 @@ export function WheelOfFomo() {
         {result && (
           <div 
             className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-            onClick={() => setResult(null)}
+            onClick={() => {
+              // Only allow closing if not spinning
+              if (!spinning) {
+                setResult(null);
+              }
+            }}
           >
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
@@ -705,6 +722,16 @@ export function WheelOfFomo() {
               {/* Content */}
               <div className="relative z-10">
                 <div className="flex flex-col items-center text-center space-y-4">
+                  {spinning && (
+                    <motion.div 
+                      className="absolute top-0 left-0 right-0 bg-[#C99733] text-black text-sm py-1 text-center font-medium"
+                      initial={{ y: -20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                    >
+                      Watch the wheel complete its spin!
+                    </motion.div>
+                  )}
+
                   {/* Animated arrow */}
                   <motion.div
                     initial={{ y: -20 }}
@@ -768,16 +795,18 @@ export function WheelOfFomo() {
                     )}
                   </motion.p>
 
-                  {/* Play Again button */}
-                  <motion.button
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    onClick={() => setResult(null)}
-                    className="px-6 py-2 bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black rounded-xl font-semibold hover:opacity-90 transition-opacity"
-                  >
-                    Play Again
-                  </motion.button>
+                  {/* Play Again button - Only show when not spinning */}
+                  {!spinning && (
+                    <motion.button
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      onClick={() => setResult(null)}
+                      className="px-6 py-2 bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black rounded-xl font-semibold hover:opacity-90 transition-opacity"
+                    >
+                      Play Again
+                    </motion.button>
+                  )}
                 </div>
               </div>
             </motion.div>
