@@ -805,9 +805,9 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                                 ? TOKEN_IMAGES[RARE_IDENTIFIER] 
                                 : TOKEN_IMAGES[BOD_IDENTIFIER]}
                             alt={game.token}
-                            width={16}
-                            height={16}
-                            className="w-4 h-4 rounded-full"
+                            width={32}
+                            height={32}
+                            className="w-8 h-8 rounded-full"
                           />
                         </div>
                       </div>
@@ -885,12 +885,12 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           {`${game.creator.slice(0, 3)}...${game.creator.slice(-4)}`}
                         </span>
                         <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 rounded-full overflow-hidden">
+                          <div className="w-6 h-6 rounded-full overflow-hidden">
                             <Image
                               src={TOKEN_IMAGES[game.token] || TOKEN_IMAGES[BOD_IDENTIFIER]}
                               alt={game.token.split('-')[0]}
-                              width={20}
-                              height={20}
+                              width={40}
+                              height={40}
                               className="w-full h-full object-cover"
                             />
                           </div>
@@ -917,12 +917,12 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             : 'Play to win'}
                         </span>
                         <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 rounded-full overflow-hidden">
+                          <div className="w-6 h-6 rounded-full overflow-hidden">
                             <Image
                               src={TOKEN_IMAGES[game.token] || TOKEN_IMAGES[BOD_IDENTIFIER]}
                               alt={game.token.split('-')[0]}
-                              width={20}
-                              height={20}
+                              width={40}
+                              height={40}
                               className="w-full h-full object-cover"
                             />
                           </div>
