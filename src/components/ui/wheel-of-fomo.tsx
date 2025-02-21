@@ -285,16 +285,27 @@ export function WheelOfFomo() {
     
     try {
       const currentEpoch = await getCurrentEpoch();
-      
-      const provider = new ProxyNetworkProvider(DEVNET_CONFIG.apiAddress);
       const addressObj = new Address(address);
       const hexAddress = "0x" + addressObj.hex();
       
-      const cubedEpoch = Math.pow(currentEpoch, 3);
-      const privateString = process.env.NEXT_PUBLIC_PRIVATE_STRING;
-      const dataToHash = "." + cubedEpoch + privateString + hexAddress;
-      const hashedData = sha256(dataToHash);
+      // Get hash from API instead of calculating client-side
+      const response = await fetch('/api/wof', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          epoch: currentEpoch,
+          address: hexAddress
+        })
+      });
 
+      if (!response.ok) {
+        throw new Error('Failed to get game hash');
+      }
+
+      const { hashedData } = await response.json();
+      
       const encodedFunction = 'play';
       const data = `${encodedFunction}@${hashedData}`;
       
@@ -311,8 +322,7 @@ export function WheelOfFomo() {
 
       setSpinning(true);
       setResult(null);
-      // Initial spin animation
-      setRotation(prev => prev + (360 * 9)); // Reduced initial spins for quicker response
+      setRotation(prev => prev + (360 * 9));
 
       const { sessionId: newSessionId } = await sendTransactions({
         transactions: [transaction],
