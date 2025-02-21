@@ -69,12 +69,12 @@ export default function Home() {
   }, [network.apiAddress]);
 
   return (
-    <main className="relative flex flex-col bg-black min-h-[100vh] px-6 pt-20">
+    <main className="relative flex flex-col bg-black min-h-[100vh] px-6">
       <RetroGrid />
       
       <div className="w-full md:container mx-auto flex-1 mb-auto relative z-10">
         {/* Title Section */}
-        <div className="flex flex-col items-center py-4 md:py-12 mb-16">
+        <div className="flex flex-col items-center py-4 md:py-12 mb-8">
           
           <div className="flex items-center gap-6 justify-center">
           

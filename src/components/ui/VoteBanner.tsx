@@ -91,7 +91,7 @@ export function VoteBanner() {
   if ((!isFighterVisible && !isTokenVisible) || (fighterTimeLeft.isExpired && tokenTimeLeft.isExpired)) return null
 
   return (
-    <div className="relative z-20 mt-[60px] -mb-10 md:-mb-20">
+    <div className="relative z-20 mt-[60px]">
       <div className="container max-w-3xl mx-auto px-4">
         <div className="flex flex-col space-y-4">
           {/* Fighter Vote Banner */}
