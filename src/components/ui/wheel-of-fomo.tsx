@@ -429,9 +429,16 @@ export function WheelOfFomo() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
             {/* Left Column */}
             <div className="space-y-4 md:space-y-6 order-2 lg:order-1 w-full">
-              <h2 className={`text-2xl md:text-3xl font-bold text-white mb-4 md:mb-6 ${bangers.className} tracking-wider`}>
-                Wheel of Fomo
-              </h2>
+              <div className="mb-4 md:mb-6">
+                <Image
+                  src="/img/WheelOfFOMO.png"
+                  alt="Wheel of FOMO"
+                  width={100}
+                  height={33}
+                  className="w-100 h-auto"
+                  priority
+                />
+              </div>
               
               {/* Currency Selector */}
               <div className="space-y-2 w-full">
