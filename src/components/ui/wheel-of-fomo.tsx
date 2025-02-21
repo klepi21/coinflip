@@ -804,17 +804,15 @@ export function WheelOfFomo() {
                   </motion.p>
 
                   {/* Play Again button - Only show when not spinning */}
-                  {!spinning && (
-                    <motion.button
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                      onClick={() => setResult(null)}
-                      className="px-6 py-2 bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black rounded-xl font-semibold hover:opacity-90 transition-opacity"
-                    >
-                      Play Again
-                    </motion.button>
-                  )}
+                  <motion.button
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    onClick={() => setResult(null)}
+                    className="px-6 py-2 bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black rounded-xl font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    Play Again
+                  </motion.button>
                 </div>
               </div>
             </motion.div>
