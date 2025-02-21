@@ -564,20 +564,20 @@ export function WheelOfFomo() {
                             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
                             style={{
                               transform: `skew(${-skewAngle}deg) rotate(${-rotation - 60}deg)`,
-                              width: '100px',
+                              width: '80px',
                               textAlign: 'center',
                             }}
                           >
-                            <div className="text-xl md:text-2xl mb-1">
+                            <div className="text-base md:text-2xl mb-1">
                               <Image
                                 src={multiplier.pattern}
                                 alt={multiplier.value}
                                 width={40}
                                 height={40}
-                                className="w-10 h-10 md:w-12 md:h-12 mx-auto"
+                                className="w-8 h-8 md:w-12 md:h-12 mx-auto"
                               />
                             </div>
-                            <span className="text-lg md:text-xl font-bold text-white">{multiplier.value}</span>
+                            <span className="text-sm md:text-xl font-bold text-white">{multiplier.value}</span>
                           </div>
                         </div>
                       );
@@ -586,9 +586,9 @@ export function WheelOfFomo() {
                 </div>
 
                 {/* Center decoration */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 md:w-16 h-12 md:h-16 rounded-full bg-[#C99733] shadow-lg flex items-center justify-center z-10">
-                  <div className="w-9 md:w-12 h-9 md:h-12 rounded-full bg-[#1A1A1A] flex items-center justify-center">
-                    <div className="w-6 md:w-8 h-6 md:h-8 rounded-full bg-[#C99733]"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 md:w-16 h-10 md:h-16 rounded-full bg-[#C99733] shadow-lg flex items-center justify-center z-10">
+                  <div className="w-7 md:w-12 h-7 md:h-12 rounded-full bg-[#1A1A1A] flex items-center justify-center">
+                    <div className="w-4 md:w-8 h-4 md:h-8 rounded-full bg-[#C99733]"></div>
                   </div>
                 </div>
 
@@ -599,7 +599,7 @@ export function WheelOfFomo() {
                     alt="Wheel pointer"
                     width={40}
                     height={40}
-                    className="w-20 h-20 md:w-22 md:h-22"
+                    className="w-10 h-10 md:w-20 md:h-20"
                   />
                 </div>
               </div>
