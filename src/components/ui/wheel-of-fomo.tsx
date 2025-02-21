@@ -24,7 +24,6 @@ import gameAbi from '@/config/game.abi.json';
 import Link from 'next/link';
 import { getContractForShard } from '@/config/wof-contracts';
 import { TokenPayment } from "@multiversx/sdk-core";
-import { toast } from 'react-hot-toast';
 
 // Add font imports
 import { Bangers } from 'next/font/google';
