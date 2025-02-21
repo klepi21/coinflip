@@ -23,7 +23,6 @@ import { useTrackTransactionStatus } from "@multiversx/sdk-dapp/hooks/transactio
 import gameAbi from '@/config/game.abi.json';
 import Link from 'next/link';
 import { getContractForShard } from '@/config/wof-contracts';
-import { TokenPayment } from "@multiversx/sdk-core";
 
 // Add font imports
 import { Bangers } from 'next/font/google';
@@ -108,12 +107,6 @@ export function WheelOfFomo() {
   const [checkingMessage, setCheckingMessage] = useState(checkingMessages[0]);
   const [checkingProgress, setCheckingProgress] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [currentStep, setCurrentStep] = useState('signing');
-  const [statusModalOpen, setStatusModalOpen] = useState(false);
-  const spinStartTimeRef = useRef<number | null>(null);
-  const [gameResult, setGameResult] = useState<'win' | 'lose'>('lose');
-  const [winAmount, setWinAmount] = useState<string>('0');
 
   // Get the contract address based on user's shard
   const contractAddress = useMemo(() => {
@@ -152,16 +145,11 @@ export function WheelOfFomo() {
     let retries = 0;
     const maxRetries = 15;
     const delayMs = 800;
-    const maxWaitTime = 13000; // 13 seconds in milliseconds
-    const startTime = Date.now();
 
     while (retries < maxRetries) {
       try {
-        // Check if we've exceeded the max wait time
-        if (Date.now() - startTime > maxWaitTime) {
-          return '0';
-        }
-
+        console.log(`[Attempt ${retries + 1}] Starting query for game ID: ${gameId}`);
+        
         const provider = getNetworkProvider();
         const contract = new SmartContract({
           address: new Address(contractAddress),
@@ -174,11 +162,13 @@ export function WheelOfFomo() {
         });
 
         const queryResponse = await provider.queryContract(query);
+        console.log(`[Attempt ${retries + 1}] Raw Query Response:`, queryResponse);
 
         // Check for specific 0x pattern in returnData first
         if (queryResponse?.returnData?.length === 2 && 
             queryResponse.returnData[0] === 'AQ==' && 
             queryResponse.returnData[1] === '') {
+          console.log(`[Attempt ${retries + 1}] Detected 0x pattern immediately`);
           return '0';
         }
 
@@ -190,18 +180,27 @@ export function WheelOfFomo() {
           const isNotScratched = results.values[0].valueOf() as boolean;
           const amountWon = results.values[1].toString();
 
+          console.log(`[Attempt ${retries + 1}] Parsed Results:`, {
+            isNotScratched,
+            amountWon,
+            rawValues: results.values.map(v => v.toString()),
+            returnData: queryResponse.returnData
+          });
+
           // If result is ready (not scratched is false), return immediately
           if (!isNotScratched) {
+            console.log(`[Attempt ${retries + 1}] Result is ready! Not scratched is false. Amount:`, amountWon);
             return amountWon === '' || amountWon === '0' ? '0' : amountWon;
           }
         }
 
         retries++;
         if (retries < maxRetries) {
+          console.log(`[Attempt ${retries}] Waiting ${delayMs}ms before next attempt...`);
           await new Promise(resolve => setTimeout(resolve, delayMs));
         }
       } catch (error) {
-        console.error(`Error in attempt ${retries + 1}:`, error);
+        console.error(`[Attempt ${retries + 1}] Error:`, error);
         retries++;
         if (retries < maxRetries) {
           await new Promise(resolve => setTimeout(resolve, delayMs));
@@ -209,6 +208,7 @@ export function WheelOfFomo() {
       }
     }
 
+    console.log(`[Final] Max retries (${maxRetries}) reached without finding result`);
     return '0';
   };
 
@@ -235,28 +235,7 @@ export function WheelOfFomo() {
                 const gameIdDecimal = parseInt(gameId, 16);
                 setGameId(gameIdDecimal);
 
-                // Check if we've exceeded 13 seconds since signing
-                if (spinStartTimeRef.current && (Date.now() - spinStartTimeRef.current) > 13000) {
-                  // If more than 13 seconds have passed, immediately show 0x result
-                  const resultMultiplier = multipliers.find(m => m.multiplier === 0);
-                  if (resultMultiplier) {
-                    const sectionAngle = 360 / multipliers.length;
-                    const multiplierIndex = multipliers.indexOf(resultMultiplier);
-                    const spins = 10;
-                    const targetRotation = (spins * 360) + ((multipliers.length - multiplierIndex) * sectionAngle);
-                    
-                    setRotation(targetRotation);
-                    setResult(resultMultiplier);
-                    
-                    setTimeout(() => {
-                      setSpinning(false);
-                      setIsChecking(false);
-                    }, 10000);
-                    return;
-                  }
-                }
-
-                // Only proceed with getAmountWon if we haven't exceeded 13 seconds
+                // Get the result
                 const amount = await getAmountWon(gameIdDecimal);
                 
                 if (amount !== null) {
@@ -264,20 +243,26 @@ export function WheelOfFomo() {
                   const betAmount = BigInt(Math.floor(selectedAmount.value * 1e18));
                   const multiplierValue = Number(amountBigInt / betAmount);
                   
+                  // Find the corresponding multiplier in our wheel
                   const resultMultiplier = multipliers.find(m => m.multiplier === multiplierValue);
                   if (resultMultiplier) {
+                    // Calculate wheel position for this multiplier
                     const sectionAngle = 360 / multipliers.length;
                     const multiplierIndex = multipliers.indexOf(resultMultiplier);
                     const spins = 10;
                     const targetRotation = (spins * 360) + ((multipliers.length - multiplierIndex) * sectionAngle);
                     
+                    // Set result and start final wheel animation
                     setRotation(targetRotation);
+                    
+                    // Show result immediately
                     setResult(resultMultiplier);
                     
+                    // Only stop spinning after wheel animation completes
                     setTimeout(() => {
                       setSpinning(false);
                       setIsChecking(false);
-                    }, 10000);
+                    }, 10000); // Match wheel animation duration
                   }
                 }
               }
@@ -329,12 +314,8 @@ export function WheelOfFomo() {
     if (spinning || !isLoggedIn || !address) return;
     
     try {
-      spinStartTimeRef.current = Date.now(); // Start timing at sign
-      setSpinning(true);
-      setResult(null);
-      setRotation(prev => prev + (360 * 10));
-
       const currentEpoch = await getCurrentEpoch();
+      console.log('Current epoch:', currentEpoch);
       
       const provider = new ProxyNetworkProvider(DEVNET_CONFIG.apiAddress);
       const addressObj = new Address(address);
@@ -353,11 +334,15 @@ export function WheelOfFomo() {
       const transaction = {
         value: valueInSmallestUnit,
         data: data,
-        receiver: contractAddress,
+        receiver: contractAddress, // Use shard-based contract address
         gasLimit: 60000000,
         chainID: DEVNET_CONFIG.chainId,
         version: 1
       };
+
+      setSpinning(true);
+      setResult(null);
+      setRotation(prev => prev + (360 * 10));
 
       const { sessionId: newSessionId } = await sendTransactions({
         transactions: [transaction],
@@ -370,70 +355,13 @@ export function WheelOfFomo() {
       });
 
       if (newSessionId) {
+        console.log('Transaction sent with sessionId:', newSessionId);
         setSessionId(newSessionId);
-        
-        // Start checking for game ID with 13-second timeout
-        let gameIdFound = false;
-        const startTime = Date.now();
-        
-        while (Date.now() - startTime < 13000) {
-          try {
-            if (transactions && transactions.length > 0) {
-              const tx = transactions[0];
-              const provider = getNetworkProvider();
-              const txInfo = await provider.getTransaction(tx.hash);
-              
-              if (txInfo.contractResults) {
-                const results = Object.values(txInfo.contractResults);
-                
-                if (results.length > 0 && results[0].length > 0) {
-                  const lastResult = results[0][results[0].length - 1];
-                  
-                  if (lastResult.data) {
-                    const parts = lastResult.data.split('@');
-                    const gameId = parts[parts.length - 1];
-                    const gameIdDecimal = parseInt(gameId, 16);
-                    setGameId(gameIdDecimal);
-                    gameIdFound = true;
-                    break;
-                  }
-                }
-              }
-            }
-          } catch (error) {
-            console.error('Error checking game ID:', error);
-          }
-          
-          // Wait before next attempt
-          await new Promise(resolve => setTimeout(resolve, 800));
-        }
-
-        // If no game ID after 13 seconds, show loss
-        if (!gameIdFound) {
-          console.log('No game ID found within 13 seconds - showing loss result');
-          const resultMultiplier = multipliers.find(m => m.multiplier === 0);
-          if (resultMultiplier) {
-            const sectionAngle = 360 / multipliers.length;
-            const multiplierIndex = multipliers.indexOf(resultMultiplier);
-            const spins = 10;
-            const targetRotation = (spins * 360) + ((multipliers.length - multiplierIndex) * sectionAngle);
-            
-            setRotation(targetRotation);
-            setResult(resultMultiplier);
-            
-            setTimeout(() => {
-              setSpinning(false);
-              setIsChecking(false);
-            }, 10000);
-          }
-          return;
-        }
       }
     } catch (error) {
       console.error('Error during spin:', error);
       setSpinning(false);
       setRotation(0);
-      spinStartTimeRef.current = null; // Clean up on error
     }
   };
 
