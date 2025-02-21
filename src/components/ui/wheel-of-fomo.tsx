@@ -61,7 +61,7 @@ const multipliers: WheelMultiplier[] = [
 ];
 
 const rareOptions: RareOption[] = [
-  { value: 0.001, label: '0.001 EGLD' },
+  { value: 0.02, label: '0.02 EGLD' },
   { value: 0.05, label: '0.05 EGLD' },
   { value: 0.1, label: '0.1 EGLD' }
 ];
