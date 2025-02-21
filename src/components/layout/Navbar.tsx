@@ -26,7 +26,7 @@ export function Navbar() {
     { name: 'Fight', url: '/', icon: Coins },
     { name: 'Wheel of Fomo', url: '/wof', icon: Vote },
     { name: 'Vote Fighter', url: '/vote', icon: Vote },
-    { name: 'Vote Token', url: '/votetoken', icon: Vote },
+    { name: 'Vote Token', url: '/votetoken', icon: Vote , badge: 'SOON'},
     { name: 'Faucet', url: '/faucet', icon: Coins },
     { 
       name: 'Stats', 

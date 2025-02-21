@@ -22,7 +22,7 @@ import {
 import { useTrackTransactionStatus } from "@multiversx/sdk-dapp/hooks/transactions";
 import gameAbi from '@/config/game.abi.json';
 import Link from 'next/link';
-import { getContractForShard } from '@/config/wof-contracts';
+import { getContractForShard, WOF_CONTRACTS } from '@/config/wof-contracts';
 
 // Add font imports
 import { Bangers } from 'next/font/google';
@@ -355,21 +355,69 @@ export function WheelOfFomo() {
   const fetchTotalGames = async () => {
     try {
       const provider = new ProxyNetworkProvider(DEVNET_CONFIG.apiAddress);
-      const contract = getContract();
+      let totalGamesAllShards = 0;
 
-      const query = contract.createQuery({
+      // Query shard 0
+      const contract0 = new SmartContract({
+        address: new Address(WOF_CONTRACTS.SHARD_0),
+        abi: AbiRegistry.create(gameAbi)
+      });
+
+      const query0 = contract0.createQuery({
         func: new ContractFunction('getId'),
       });
 
-      const queryResponse = await provider.queryContract(query);
-      
-      if (queryResponse?.returnData?.[0]) {
-        const endpointDefinition = contract.getEndpoint('getId');
+      const response0 = await provider.queryContract(query0);
+      if (response0?.returnData?.[0]) {
+        const endpointDefinition = contract0.getEndpoint('getId');
         const resultParser = new ResultsParser();
-        const results = resultParser.parseQueryResponse(queryResponse, endpointDefinition);
-        const total = Number(results.values[0].valueOf().toString());
-        setTotalGames(total);
+        const results = resultParser.parseQueryResponse(response0, endpointDefinition);
+        totalGamesAllShards += Number(results.values[0].valueOf().toString());
       }
+
+      // Add 1 second delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Query shard 1
+      const contract1 = new SmartContract({
+        address: new Address(WOF_CONTRACTS.SHARD_1),
+        abi: AbiRegistry.create(gameAbi)
+      });
+
+      const query1 = contract1.createQuery({
+        func: new ContractFunction('getId'),
+      });
+
+      const response1 = await provider.queryContract(query1);
+      if (response1?.returnData?.[0]) {
+        const endpointDefinition = contract1.getEndpoint('getId');
+        const resultParser = new ResultsParser();
+        const results = resultParser.parseQueryResponse(response1, endpointDefinition);
+        totalGamesAllShards += Number(results.values[0].valueOf().toString());
+      }
+
+      // Add 1 second delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Query shard 2
+      const contract2 = new SmartContract({
+        address: new Address(WOF_CONTRACTS.SHARD_2),
+        abi: AbiRegistry.create(gameAbi)
+      });
+
+      const query2 = contract2.createQuery({
+        func: new ContractFunction('getId'),
+      });
+
+      const response2 = await provider.queryContract(query2);
+      if (response2?.returnData?.[0]) {
+        const endpointDefinition = contract2.getEndpoint('getId');
+        const resultParser = new ResultsParser();
+        const results = resultParser.parseQueryResponse(response2, endpointDefinition);
+        totalGamesAllShards += Number(results.values[0].valueOf().toString());
+      }
+
+      setTotalGames(totalGamesAllShards);
     } catch (error) {
       // Error handling without console.error
     }
