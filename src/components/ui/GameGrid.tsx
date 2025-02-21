@@ -435,13 +435,15 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   };
 
   const canJoinGame = (gameAmount: string, tokenIdentifier: string): boolean => {
-    if (!connectedAddress || isLoadingRare || isLoadingBod || isLoadingOne || isLoadingBate) return false;
+    if (!connectedAddress || isLoadingRare || isLoadingBod || isLoadingOne || isLoadingBate || isLoadingBober || isLoadingTom) return false;
     
     try {
       const currentBalance = tokenIdentifier === RARE_IDENTIFIER ? rareBalance :
                             tokenIdentifier === BOD_IDENTIFIER ? bodBalance :
                             tokenIdentifier === ONE_IDENTIFIER ? oneBalance :
                             tokenIdentifier === BATEMAN_IDENTIFIER ? bateBalance :
+                            tokenIdentifier === BOBER_IDENTIFIER ? boberBalance :
+                            tokenIdentifier === TOM_IDENTIFIER ? tomBalance :
                             Number(account.balance) / Math.pow(10, 18);
       
       // Convert amounts to numbers for comparison
