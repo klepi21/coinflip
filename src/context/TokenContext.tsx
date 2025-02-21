@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useWallet } from './WalletContext';
+import { usePathname } from 'next/navigation';
 
 interface TokenBalances {
   [key: string]: number;
@@ -18,9 +19,11 @@ export function TokenProvider({ children }: { children: ReactNode }) {
   const [balances, setBalances] = useState<TokenBalances>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const { address } = useWallet();
+  const pathname = usePathname();
 
-  const fetchBalances = async () => {
+  const fetchBalances = async (forceDelay = false) => {
     if (!address) {
       setBalances({});
       setIsLoading(false);
@@ -29,8 +32,17 @@ export function TokenProvider({ children }: { children: ReactNode }) {
 
     try {
       setIsLoading(true);
-      // Add 500ms delay before fetching balances
-      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Calculate time since last fetch
+      const now = Date.now();
+      const timeSinceLastFetch = now - lastFetchTime;
+
+      // If force delay or less than 2 seconds since last fetch, add delay
+      if (forceDelay || timeSinceLastFetch < 2000) {
+        // Add 2 second delay for page changes, 500ms for regular updates
+        const delayTime = forceDelay ? 2000 : 500;
+        await new Promise(resolve => setTimeout(resolve, delayTime));
+      }
       
       const response = await fetch(`https://api.multiversx.com/accounts/${address}/tokens?size=500`);
       const tokens = await response.json();
@@ -42,6 +54,7 @@ export function TokenProvider({ children }: { children: ReactNode }) {
       
       setBalances(newBalances);
       setError(null);
+      setLastFetchTime(Date.now());
     } catch (error) {
       console.error('Error fetching token balances:', error);
       setError(error instanceof Error ? error : new Error('Failed to fetch balances'));
@@ -50,15 +63,30 @@ export function TokenProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Effect for handling page changes
   useEffect(() => {
-    fetchBalances();
-    // Set up refresh interval (optional)
-    const interval = setInterval(fetchBalances, 60000); // Refresh every minute
+    if (address) {
+      fetchBalances(true); // Force delay on page change
+    }
+  }, [pathname, address]);
+
+  // Effect for regular balance updates
+  useEffect(() => {
+    if (!address) return;
+
+    // Initial fetch without forced delay
+    fetchBalances(false);
+
+    // Set up refresh interval
+    const interval = setInterval(() => {
+      fetchBalances(false);
+    }, 60000); // Refresh every minute
+
     return () => clearInterval(interval);
   }, [address]);
 
   return (
-    <TokenContext.Provider value={{ balances, isLoading, error, refreshBalances: fetchBalances }}>
+    <TokenContext.Provider value={{ balances, isLoading, error, refreshBalances: () => fetchBalances(false) }}>
       {children}
     </TokenContext.Provider>
   );

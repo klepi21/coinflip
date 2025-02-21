@@ -38,6 +38,13 @@ interface WofPlayerStats {
   address: string;
   totalPlayed: string;
   totalWon: string;
+  shard: number;
+}
+
+interface Earner {
+  address: string;
+  amount: string;
+  shard: number;
 }
 
 export default function Stats() {
@@ -58,6 +65,12 @@ export default function Stats() {
   const [isLoadingWof, setIsLoadingWof] = useState(true);
   const [depositAmount, setDepositAmount] = useState('');
   const [selectedShard, setSelectedShard] = useState(0);
+  const [wofStatsByShard, setWofStatsByShard] = useState<{[key: number]: WofPlayerStats[]}>({});
+  const [earnersByShard, setEarnersByShard] = useState<{[key: number]: Earner[]}>({});
+  const [isLoadingEarners, setIsLoadingEarners] = useState(true);
+  const [claimingStates, setClaimingStates] = useState<{[key: string]: boolean}>({});
+  const [activeGameTab, setActiveGameTab] = useState<'fudout' | 'wof'>('fudout');
+  const [activeShardTab, setActiveShardTab] = useState(0);
 
   const fetchScoreboard = async () => {
     try {
@@ -101,48 +114,224 @@ export default function Stats() {
     }
   };
 
-  const fetchWofStats = async () => {
+  const handleDeposit = async () => {
     try {
-      setIsLoadingWof(true);
+      if (!depositAmount) {
+        toast.error('Please enter a deposit amount');
+        return;
+      }
+
+      const valueInSmallestUnit = BigInt(Math.floor(Number(depositAmount) * 1e18)).toString();
+      const contractAddress = getContractForShard(selectedShard);
+      
+      const transaction = {
+        value: valueInSmallestUnit,
+        data: 'deposit',
+        receiver: contractAddress,
+        gasLimit: 10000000,
+      };
+
+      const { sessionId } = await sendTransactions({
+        transactions: [transaction],
+        transactionsDisplayInfo: {
+          processingMessage: 'Processing deposit...',
+          errorMessage: 'An error occurred during deposit',
+          successMessage: 'Deposit successful!'
+        }
+      });
+
+      if (sessionId) {
+        await refreshAccount();
+        toast.success(`Deposit successful to Shard ${selectedShard}`);
+        setDepositAmount(''); // Clear input
+      }
+    } catch (error) {
+      console.error('Error depositing:', error);
+      toast.error('Failed to deposit');
+    }
+  };
+
+  const fetchWofStatsForShard = async (shard: number) => {
+    try {
       const provider = new ProxyNetworkProvider(network.apiAddress);
       const contract = new SmartContract({
-        address: new Address(WOF_SC_ADDRESS),
+        address: new Address(getContractForShard(shard)),
         abi: AbiRegistry.create(gameAbi)
       });
 
       const query = contract.createQuery({
-        func: new ContractFunction("getPlayersReport"),
+        func: new ContractFunction("getPlayers"),
+        args: [BytesValue.fromUTF8('.')]
       });
 
       const queryResponse = await provider.queryContract(query);
-      const endpointDefinition = contract.getEndpoint("getPlayersReport");
+      const endpointDefinition = contract.getEndpoint("getPlayers");
       const { values } = new ResultsParser().parseQueryResponse(queryResponse, endpointDefinition);
       
       if (values?.[0]) {
         const stats = values[0].valueOf().map((stat: any) => ({
           address: stat.address.toString(),
           totalPlayed: stat.total_played.toString(),
-          totalWon: stat.total_won.toString()
+          totalWon: stat.total_won.toString(),
+          shard
         }));
-
-        // Sort by total played
-        stats.sort((a: WofPlayerStats, b: WofPlayerStats) => 
-          Number(BigInt(b.totalPlayed)) - Number(BigInt(a.totalPlayed))
-        );
-
-        setWofStats(stats);
+        return stats;
       }
+      return [];
     } catch (error) {
-      console.error('Error fetching WoF stats:', error);
+      return [];
+    }
+  };
+
+  const fetchAllWofStats = async () => {
+    try {
+      setIsLoadingWof(true);
+      const allStats: {[key: number]: WofPlayerStats[]} = {};
+      
+      // Fetch stats for each shard with delay
+      for (let shard = 0; shard <= 2; shard++) {
+        const stats = await fetchWofStatsForShard(shard);
+        allStats[shard] = stats;
+        
+        // Add 1 second delay between queries
+        if (shard < 2) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      setWofStatsByShard(allStats);
+
+      // Combine and sort all stats
+      const combinedStats = Object.values(allStats).flat();
+      combinedStats.sort((a, b) => 
+        Number(BigInt(b.totalPlayed)) - Number(BigInt(a.totalPlayed))
+      );
+
+      setWofStats(combinedStats);
+    } catch (error) {
+      console.error('Error fetching all WoF stats:', error);
     } finally {
       setIsLoadingWof(false);
+    }
+  };
+
+  const fetchEarnersForShard = async (shard: number) => {
+    try {
+      const provider = new ProxyNetworkProvider(network.apiAddress);
+      const contract = new SmartContract({
+        address: new Address(getContractForShard(shard)),
+        abi: AbiRegistry.create(gameAbi)
+      });
+
+      const query = contract.createQuery({
+        func: new ContractFunction("getEarners"),
+        args: [BytesValue.fromUTF8('.')]
+      });
+
+      const queryResponse = await provider.queryContract(query);
+      const endpointDefinition = contract.getEndpoint("getEarners");
+      const { values } = new ResultsParser().parseQueryResponse(queryResponse, endpointDefinition);
+      
+      if (values?.[0]) {
+        const rawEarners = values[0].valueOf();
+        if (!Array.isArray(rawEarners)) {
+          console.log(`[Shard ${shard}] Unexpected response format:`, rawEarners);
+          return [];
+        }
+
+        const earners: Earner[] = rawEarners
+          .map((earner: any): Earner | null => {
+            try {
+              const address = earner?.[0]?.toString() || '';
+              const amount = earner?.[2]?.toString() || '0';
+
+              if (!address) return null;
+
+              return {
+                address,
+                amount,
+                shard
+              };
+            } catch (error) {
+              console.error(`Error processing earner data:`, error, earner);
+              return null;
+            }
+          })
+          .filter((earner): earner is Earner => earner !== null);
+
+        return earners;
+      }
+      return [];
+    } catch (error) {
+      console.error(`Error fetching earners for shard ${shard}:`, error);
+      return [];
+    }
+  };
+
+  const fetchAllEarners = async () => {
+    try {
+      setIsLoadingEarners(true);
+      const allEarners: {[key: number]: Earner[]} = {};
+      
+      for (let shard = 0; shard <= 2; shard++) {
+        const earners = await fetchEarnersForShard(shard);
+        allEarners[shard] = earners;
+        
+        if (shard < 2) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      setEarnersByShard(allEarners);
+    } catch (error) {
+      console.error('Error fetching all earners:', error);
+    } finally {
+      setIsLoadingEarners(false);
+    }
+  };
+
+  const handleClaim = async (shard: number) => {
+    try {
+      const claimKey = `claim-${shard}`;
+      setClaimingStates(prev => ({ ...prev, [claimKey]: true }));
+
+      const transaction = {
+        value: '0',
+        data: 'claim',
+        receiver: getContractForShard(shard),
+        gasLimit: 10000000,
+      };
+
+      const { sessionId } = await sendTransactions({
+        transactions: [transaction],
+        transactionsDisplayInfo: {
+          processingMessage: `Claiming from Shard ${shard}...`,
+          errorMessage: 'An error occurred during claiming',
+          successMessage: `Successfully claimed from Shard ${shard}!`
+        }
+      });
+
+      if (sessionId) {
+        await refreshAccount();
+        toast.success(`Claim from Shard ${shard} initiated successfully`);
+        // Refresh earners after successful claim
+        await new Promise(resolve => setTimeout(resolve, 6000));
+        await fetchAllEarners();
+      }
+    } catch (error) {
+      console.error('Error claiming:', error);
+      toast.error(`Failed to claim from Shard ${shard}`);
+    } finally {
+      const claimKey = `claim-${shard}`;
+      setClaimingStates(prev => ({ ...prev, [claimKey]: false }));
     }
   };
 
   useEffect(() => {
     if (ADMIN_ADDRESSES.includes(address)) {
       fetchScoreboard();
-      fetchWofStats();
+      fetchAllWofStats();
+      fetchAllEarners();
     }
   }, [network.apiAddress, address]);
 
@@ -517,213 +706,192 @@ export default function Stats() {
                 </div>
               </div>
 
+              {/* Game Statistics Section */}
               <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl p-6 space-y-6">
                 <div className="space-y-2">
                   <h2 className="text-2xl font-bold text-white">Game Statistics</h2>
                   <p className="text-zinc-400">Player performance overview</p>
                 </div>
 
-                {/* Summary Cards */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-zinc-800/50 rounded-xl p-4">
-                    <h3 className="text-sm font-medium text-zinc-400">Total Games Played</h3>
-                    <p className="text-2xl font-bold text-[#C99733]">{totalWins }</p>
-                  </div>
-                  <div className="bg-zinc-800/50 rounded-xl p-4">
-                    <h3 className="text-sm font-medium text-zinc-400">Total Players</h3>
-                    <p className="text-2xl font-bold text-[#C99733]">{scores.length}</p>
-                  </div>
+                {/* Game Type Tabs */}
+                <div className="flex gap-4 border-b border-zinc-800">
+                  <button
+                    onClick={() => setActiveGameTab('fudout')}
+                    className={`px-4 py-2 font-medium transition-colors ${
+                      activeGameTab === 'fudout'
+                        ? 'text-[#C99733] border-b-2 border-[#C99733]'
+                        : 'text-zinc-400 hover:text-zinc-300'
+                    }`}
+                  >
+                    FUD Out
+                  </button>
+                  <button
+                    onClick={() => setActiveGameTab('wof')}
+                    className={`px-4 py-2 font-medium transition-colors ${
+                      activeGameTab === 'wof'
+                        ? 'text-[#C99733] border-b-2 border-[#C99733]'
+                        : 'text-zinc-400 hover:text-zinc-300'
+                    }`}
+                  >
+                    Wheel of FOMO
+                  </button>
                 </div>
 
-                {/* Search and Sort Controls */}
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      placeholder="Search by ERD address..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-[#C99733]"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setSortBy('winRate')}
-                      className={`px-4 py-2 rounded-xl ${
-                        sortBy === 'winRate'
-                          ? 'bg-[#C99733] text-black'
-                          : 'bg-zinc-800/50 text-white'
-                      }`}
-                    >
-                      Sort by Win Rate
-                    </button>
-                    <button
-                      onClick={() => setSortBy('totalGames')}
-                      className={`px-4 py-2 rounded-xl ${
-                        sortBy === 'totalGames'
-                          ? 'bg-[#C99733] text-black'
-                          : 'bg-zinc-800/50 text-white'
-                      }`}
-                    >
-                      Sort by Games
-                    </button>
-                  </div>
-                </div>
-
-                {/* Scoreboard Table */}
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-zinc-800">
-                        <th className="text-left py-3 px-4 text-zinc-400 font-medium">Player</th>
-                        <th className="text-center py-3 px-4 text-zinc-400 font-medium">Total Games</th>
-                        <th className="text-center py-3 px-4 text-zinc-400 font-medium">Win Rate</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedScores.map((score) => {
-                        const totalGames = score.wins + score.losses;
-                        const winRate = totalGames > 0
-                          ? ((score.wins / totalGames) * 100).toFixed(1)
-                          : '0.0';
-
-                        return (
-                          <tr key={score.address} className="border-b border-zinc-800/50">
-                            <td className="py-3 px-4 text-white font-medium">
-                              <span className="text-sm">{score.address.slice(0, 8)}...{score.address.slice(-4)}</span>
-                            </td>
-                            <td className="py-3 px-4 text-center text-[#C99733]">{totalGames}</td>
-                            <td className="py-3 px-4 text-center text-white">{winRate}%</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex justify-center gap-2 mt-4">
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={currentPage === 1}
-                      className={`px-4 py-2 rounded-xl ${
-                        currentPage === 1
-                          ? 'bg-zinc-800/50 text-zinc-500'
-                          : 'bg-zinc-800/50 text-white hover:bg-[#C99733] hover:text-black'
-                      }`}
-                    >
-                      Previous
-                    </button>
-                    <span className="px-4 py-2 text-zinc-400">
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                      disabled={currentPage === totalPages}
-                      className={`px-4 py-2 rounded-xl ${
-                        currentPage === totalPages
-                          ? 'bg-zinc-800/50 text-zinc-500'
-                          : 'bg-zinc-800/50 text-white hover:bg-[#C99733] hover:text-black'
-                      }`}
-                    >
-                      Next
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Wheel of Fomo Stats */}
-              <div className="mt-16">
-                <h2 className="text-2xl font-bold text-white mb-6">Wheel of Fomo Stats</h2>
-                <div className="bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl overflow-hidden">
-                  {/* Add Deposit Section */}
-                  <div className="p-6 border-b border-zinc-800">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <label className="block text-sm font-medium text-zinc-400 mb-2">
-                          Deposit EGLD to Wheel of Fomo
-                        </label>
-                        <div className="flex gap-2">
-                          <input
-                            type="number"
-                            step="0.1"
-                            min="0"
-                            placeholder="Amount in EGLD"
-                            className="flex-1 px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-[#C99733]"
-                            value={depositAmount}
-                            onChange={(e) => setDepositAmount(e.target.value)}
-                          />
-                          <select
-                            value={selectedShard}
-                            onChange={(e) => setSelectedShard(Number(e.target.value))}
-                            className="px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-[#C99733]"
-                          >
-                            <option value={0}>Shard 0</option>
-                            <option value={1}>Shard 1</option>
-                            <option value={2}>Shard 2</option>
-                          </select>
-                          <button
-                            onClick={async () => {
-                              try {
-                                if (!depositAmount || Number(depositAmount) <= 0) {
-                                  toast.error('Please enter a valid amount');
-                                  return;
-                                }
-
-                                // Get the contract address for the selected shard using the helper function
-                                const contractAddress = getContractForShard(selectedShard);
-
-                                const transaction = {
-                                  value: (Number(depositAmount) * 10**18).toString(),
-                                  data: 'addAmount',
-                                  receiver: contractAddress,
-                                  gasLimit: 60000000
-                                };
-
-                                const { sessionId } = await sendTransactions({
-                                  transactions: [transaction],
-                                  transactionsDisplayInfo: {
-                                    processingMessage: 'Processing deposit...',
-                                    errorMessage: 'An error occurred during deposit',
-                                    successMessage: 'Successfully deposited EGLD!'
-                                  }
-                                });
-
-                                if (sessionId) {
-                                  await refreshAccount();
-                                  setDepositAmount('');
-                                  toast.success('Deposit successful!');
-                                }
-                              } catch (error) {
-                                console.error('Error depositing:', error);
-                                toast.error('Failed to deposit EGLD');
-                              }
-                            }}
-                            className="px-6 py-2 rounded-xl bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
-                          >
-                            Deposit
-                          </button>
-                        </div>
-                        <p className="mt-2 text-xs text-zinc-500">
-                          Selected contract: {getContractForShard(selectedShard)}
-                        </p>
+                {/* FUD Out Stats */}
+                {activeGameTab === 'fudout' && (
+                  <div className="space-y-6">
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-zinc-800/50 rounded-xl p-4">
+                        <h3 className="text-sm font-medium text-zinc-400">Total Games Played</h3>
+                        <p className="text-2xl font-bold text-[#C99733]">{totalWins}</p>
+                      </div>
+                      <div className="bg-zinc-800/50 rounded-xl p-4">
+                        <h3 className="text-sm font-medium text-zinc-400">Total Players</h3>
+                        <p className="text-2xl font-bold text-[#C99733]">{scores.length}</p>
                       </div>
                     </div>
-                  </div>
 
-                  {isLoadingWof ? (
-                    <div className="p-8 text-center">
-                      <div className="animate-spin w-6 h-6 border-2 border-[#C99733] border-t-transparent rounded-full mx-auto mb-2"></div>
-                      <p className="text-zinc-400">Loading stats...</p>
+                    {/* Search and Sort Controls */}
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          placeholder="Search by ERD address..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-[#C99733]"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setSortBy('winRate')}
+                          className={`px-4 py-2 rounded-xl ${
+                            sortBy === 'winRate'
+                              ? 'bg-[#C99733] text-black'
+                              : 'bg-zinc-800/50 text-white'
+                          }`}
+                        >
+                          Sort by Win Rate
+                        </button>
+                        <button
+                          onClick={() => setSortBy('totalGames')}
+                          className={`px-4 py-2 rounded-xl ${
+                            sortBy === 'totalGames'
+                              ? 'bg-[#C99733] text-black'
+                              : 'bg-zinc-800/50 text-white'
+                          }`}
+                        >
+                          Sort by Games
+                        </button>
+                      </div>
                     </div>
-                  ) : wofStats.length > 0 ? (
+
+                    {/* Scoreboard Table */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-zinc-800">
+                            <th className="text-left py-3 px-4 text-zinc-400 font-medium">Player</th>
+                            <th className="text-center py-3 px-4 text-zinc-400 font-medium">Total Games</th>
+                            <th className="text-center py-3 px-4 text-zinc-400 font-medium">Win Rate</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginatedScores.map((score) => {
+                            const totalGames = score.wins + score.losses;
+                            const winRate = totalGames > 0
+                              ? ((score.wins / totalGames) * 100).toFixed(1)
+                              : '0.0';
+
+                            return (
+                              <tr key={score.address} className="border-b border-zinc-800/50">
+                                <td className="py-3 px-4 text-white font-medium">
+                                  <span className="text-sm">{score.address.slice(0, 8)}...{score.address.slice(-4)}</span>
+                                </td>
+                                <td className="py-3 px-4 text-center text-[#C99733]">{totalGames}</td>
+                                <td className="py-3 px-4 text-center text-white">{winRate}%</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex justify-center gap-2 mt-4">
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                          disabled={currentPage === 1}
+                          className={`px-4 py-2 rounded-xl ${
+                            currentPage === 1
+                              ? 'bg-zinc-800/50 text-zinc-500'
+                              : 'bg-zinc-800/50 text-white hover:bg-[#C99733] hover:text-black'
+                          }`}
+                        >
+                          Previous
+                        </button>
+                        <span className="px-4 py-2 text-zinc-400">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                          disabled={currentPage === totalPages}
+                          className={`px-4 py-2 rounded-xl ${
+                            currentPage === totalPages
+                              ? 'bg-zinc-800/50 text-zinc-500'
+                              : 'bg-zinc-800/50 text-white hover:bg-[#C99733] hover:text-black'
+                          }`}
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Wheel of FOMO Stats */}
+                {activeGameTab === 'wof' && (
+                  <div className="space-y-6">
+                    {/* Deposit Section */}
+                    <div className="bg-zinc-800/50 rounded-xl p-4 space-y-4">
+                      <h3 className="text-lg font-semibold text-white">Deposit to Contract</h3>
+                      <div className="flex gap-4">
+                        <select
+                          value={selectedShard}
+                          onChange={(e) => setSelectedShard(Number(e.target.value))}
+                          className="px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700 text-white focus:outline-none focus:border-[#C99733]"
+                        >
+                          <option value={0}>Shard 0</option>
+                          <option value={1}>Shard 1</option>
+                          <option value={2}>Shard 2</option>
+                        </select>
+                        <input
+                          type="number"
+                          placeholder="Amount in EGLD"
+                          value={depositAmount}
+                          onChange={(e) => setDepositAmount(e.target.value)}
+                          className="flex-1 px-4 py-2 bg-zinc-800/50 rounded-xl border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-[#C99733]"
+                        />
+                        <button
+                          onClick={handleDeposit}
+                          className="px-6 py-2 rounded-xl bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
+                        >
+                          Deposit
+                        </button>
+                      </div>
+                      <p className="text-sm text-zinc-500">Selected contract: {getContractForShard(selectedShard)}</p>
+                    </div>
+
+                    {/* Stats Table */}
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
                           <tr className="border-b border-zinc-800">
                             <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-400">Rank</th>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-400">Player</th>
+                            <th className="px-6 py-4 text-center text-sm font-semibold text-zinc-400">Shard</th>
                             <th className="px-6 py-4 text-right text-sm font-semibold text-zinc-400">Total Played</th>
                             <th className="px-6 py-4 text-right text-sm font-semibold text-zinc-400">Total Won (EGLD)</th>
                             <th className="px-6 py-4 text-right text-sm font-semibold text-zinc-400">Win Rate</th>
@@ -737,7 +905,7 @@ export default function Stats() {
 
                             return (
                               <tr 
-                                key={player.address} 
+                                key={`${player.address}-${player.shard}`} 
                                 className="border-b border-zinc-800/50 hover:bg-white/5 transition-colors"
                               >
                                 <td className="px-6 py-4 text-sm text-zinc-400">#{index + 1}</td>
@@ -748,6 +916,7 @@ export default function Stats() {
                                     </span>
                                   </div>
                                 </td>
+                                <td className="px-6 py-4 text-center text-[#C99733]">{player.shard}</td>
                                 <td className="px-6 py-4 text-right text-white">{totalPlayed.toFixed(2)}</td>
                                 <td className="px-6 py-4 text-right text-white">{totalWon.toFixed(2)}</td>
                                 <td className="px-6 py-4 text-right">
@@ -763,11 +932,77 @@ export default function Stats() {
                         </tbody>
                       </table>
                     </div>
-                  ) : (
-                    <div className="p-8 text-center text-zinc-400">
-                      No stats available
-                    </div>
-                  )}
+                  </div>
+                )}
+              </div>
+
+              {/* Earners Section with Tabs */}
+              <div className="mt-8 bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl border border-zinc-800 shadow-xl p-6 space-y-6">
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold text-white">Unclaimed Rewards</h2>
+                  <p className="text-zinc-400">Players with pending rewards across shards</p>
+                </div>
+
+                {/* Shard Tabs */}
+                <div className="flex gap-4 border-b border-zinc-800">
+                  {[0, 1, 2].map((shard) => (
+                    <button
+                      key={shard}
+                      onClick={() => setActiveShardTab(shard)}
+                      className={`px-4 py-2 font-medium transition-colors ${
+                        activeShardTab === shard
+                          ? 'text-[#C99733] border-b-2 border-[#C99733]'
+                          : 'text-zinc-400 hover:text-zinc-300'
+                      }`}
+                    >
+                      Shard {shard}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Earners Table for Active Shard */}
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-zinc-800">
+                        <th className="py-2 px-4 text-left text-sm text-zinc-400">Address</th>
+                        <th className="py-2 px-4 text-right text-sm text-zinc-400">Amount</th>
+                        <th className="py-2 px-4 text-right text-sm text-zinc-400">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {earnersByShard[activeShardTab]?.map((earner, index) => (
+                        <tr key={index} className="border-b border-zinc-800/50">
+                          <td className="py-2 px-4 text-sm text-white font-mono">
+                            {earner.address.slice(0, 10)}...{earner.address.slice(-8)}
+                          </td>
+                          <td className="py-2 px-4 text-right text-sm text-white">
+                            {(Number(earner.amount) / (10 ** 18)).toFixed(4)} EGLD
+                          </td>
+                          <td className="py-2 px-4 text-right">
+                            <button
+                              onClick={() => handleClaim(activeShardTab)}
+                              disabled={claimingStates[activeShardTab] || !address}
+                              className={`px-4 py-1 rounded-lg text-sm font-medium transition-all ${
+                                claimingStates[activeShardTab] || !address
+                                  ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                                  : 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black hover:opacity-90'
+                              }`}
+                            >
+                              {claimingStates[activeShardTab] ? 'Claiming...' : 'Claim'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {(!earnersByShard[activeShardTab] || earnersByShard[activeShardTab].length === 0) && (
+                        <tr>
+                          <td colSpan={3} className="py-4 text-center text-sm text-zinc-500">
+                            No unclaimed rewards found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </motion.div>

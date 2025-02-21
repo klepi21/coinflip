@@ -148,29 +148,15 @@ export function WheelOfFomo() {
 
     while (retries < maxRetries) {
       try {
-        console.log(`[Attempt ${retries + 1}] Starting query for game ID: ${gameId}`);
-        
-        const provider = getNetworkProvider();
-        const contract = new SmartContract({
-          address: new Address(contractAddress),
-          abi: AbiRegistry.create(gameAbi)
-        });
+        const provider = new ProxyNetworkProvider(DEVNET_CONFIG.apiAddress);
+        const contract = getContract();
 
         const query = contract.createQuery({
-          func: new ContractFunction('getResult'),
+          func: new ContractFunction("getResult"),
           args: [new U64Value(gameId)]
         });
 
         const queryResponse = await provider.queryContract(query);
-        console.log(`[Attempt ${retries + 1}] Raw Query Response:`, queryResponse);
-
-        // Check for specific 0x pattern in returnData first
-        if (queryResponse?.returnData?.length === 2 && 
-            queryResponse.returnData[0] === 'AQ==' && 
-            queryResponse.returnData[1] === '') {
-          console.log(`[Attempt ${retries + 1}] Detected 0x pattern immediately`);
-          return '0';
-        }
 
         if (queryResponse?.returnCode === 'ok' && queryResponse?.returnData?.length === 2) {
           const endpointDefinition = contract.getEndpoint('getResult');
@@ -180,27 +166,17 @@ export function WheelOfFomo() {
           const isNotScratched = results.values[0].valueOf() as boolean;
           const amountWon = results.values[1].toString();
 
-          console.log(`[Attempt ${retries + 1}] Parsed Results:`, {
-            isNotScratched,
-            amountWon,
-            rawValues: results.values.map(v => v.toString()),
-            returnData: queryResponse.returnData
-          });
-
-          // If result is ready (not scratched is false), return immediately
-          if (!isNotScratched) {
-            console.log(`[Attempt ${retries + 1}] Result is ready! Not scratched is false. Amount:`, amountWon);
-            return amountWon === '' || amountWon === '0' ? '0' : amountWon;
+          // If result is ready (isNotScratched is true and we have an amount), return immediately
+          if (isNotScratched && amountWon) {
+            return amountWon === '' ? '0' : amountWon;
           }
         }
 
         retries++;
         if (retries < maxRetries) {
-          console.log(`[Attempt ${retries}] Waiting ${delayMs}ms before next attempt...`);
           await new Promise(resolve => setTimeout(resolve, delayMs));
         }
       } catch (error) {
-        console.error(`[Attempt ${retries + 1}] Error:`, error);
         retries++;
         if (retries < maxRetries) {
           await new Promise(resolve => setTimeout(resolve, delayMs));
@@ -208,7 +184,6 @@ export function WheelOfFomo() {
       }
     }
 
-    console.log(`[Final] Max retries (${maxRetries}) reached without finding result`);
     return '0';
   };
 
@@ -249,20 +224,18 @@ export function WheelOfFomo() {
                     // Calculate wheel position for this multiplier
                     const sectionAngle = 360 / multipliers.length;
                     const multiplierIndex = multipliers.indexOf(resultMultiplier);
-                    const spins = 10;
+                    const spins = 8; // Reduced spins for quicker final positioning
                     const targetRotation = (spins * 360) + ((multipliers.length - multiplierIndex) * sectionAngle);
                     
-                    // Set result and start final wheel animation
+                    // Set final rotation and result
                     setRotation(targetRotation);
-                    
-                    // Show result immediately
                     setResult(resultMultiplier);
                     
-                    // Only stop spinning after wheel animation completes
+                    // Stop spinning after animation completes
                     setTimeout(() => {
                       setSpinning(false);
                       setIsChecking(false);
-                    }, 10000); // Match wheel animation duration
+                    }, 3000); // Match the new animation duration
                   }
                 }
               }
@@ -270,14 +243,12 @@ export function WheelOfFomo() {
           }
         }
       } catch (error) {
-        console.error('Error processing transaction result:', error);
         setSpinning(false);
         setIsChecking(false);
         setRotation(0);
       }
     },
     onFail: (transactionId: string | null, errorMessage?: string) => {
-      console.error('Transaction failed:', errorMessage);
       setSpinning(false);
       setIsChecking(false);
       setRotation(0);
@@ -304,7 +275,6 @@ export function WheelOfFomo() {
       const data = await response.json();
       return data.epoch;
     } catch (error) {
-      console.error('Error fetching epoch:', error);
       return 0;
     }
   };
@@ -315,7 +285,6 @@ export function WheelOfFomo() {
     
     try {
       const currentEpoch = await getCurrentEpoch();
-      console.log('Current epoch:', currentEpoch);
       
       const provider = new ProxyNetworkProvider(DEVNET_CONFIG.apiAddress);
       const addressObj = new Address(address);
@@ -334,7 +303,7 @@ export function WheelOfFomo() {
       const transaction = {
         value: valueInSmallestUnit,
         data: data,
-        receiver: contractAddress, // Use shard-based contract address
+        receiver: contractAddress,
         gasLimit: 60000000,
         chainID: DEVNET_CONFIG.chainId,
         version: 1
@@ -342,7 +311,8 @@ export function WheelOfFomo() {
 
       setSpinning(true);
       setResult(null);
-      setRotation(prev => prev + (360 * 10));
+      // Initial spin animation
+      setRotation(prev => prev + (360 * 9)); // Reduced initial spins for quicker response
 
       const { sessionId: newSessionId } = await sendTransactions({
         transactions: [transaction],
@@ -355,11 +325,10 @@ export function WheelOfFomo() {
       });
 
       if (newSessionId) {
-        console.log('Transaction sent with sessionId:', newSessionId);
         setSessionId(newSessionId);
+        setIsChecking(true);
       }
     } catch (error) {
-      console.error('Error during spin:', error);
       setSpinning(false);
       setRotation(0);
     }
@@ -402,7 +371,7 @@ export function WheelOfFomo() {
         setTotalGames(total);
       }
     } catch (error) {
-      console.error('Error fetching total games:', error);
+      // Error handling without console.error
     }
   };
 
@@ -416,8 +385,7 @@ export function WheelOfFomo() {
   // Log user's shard when component mounts or account changes
   useEffect(() => {
     if (account?.shard !== undefined) {
-      console.log('User Shard:', account.shard);
-      console.log('Using contract address:', contractAddress);
+      // Remove console logs, but keep the effect for future reference
     }
   }, [account?.shard, contractAddress]);
 
@@ -569,7 +537,13 @@ export function WheelOfFomo() {
                   <motion.div
                     className="absolute w-full h-full"
                     animate={{ rotate: rotation }}
-                    transition={{ duration: 20, ease: [0.2, 0.6, 0.3, 1] }}
+                    transition={{ 
+                      duration: spinning ? 5 : 3, // Faster initial spin, slower final positioning
+                      ease: spinning ? "linear" : [0.2, 0.6, 0.3, 1],
+                      type: spinning ? "tween" : "spring",
+                      stiffness: spinning ? undefined : 50,
+                      damping: spinning ? undefined : 15
+                    }}
                     style={{ transformOrigin: "center center" }}
                   >
                     {multipliers.map((multiplier, index) => {

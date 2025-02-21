@@ -21,7 +21,7 @@
         "inputs": [
             {
                 "name": "token",
-                "type": "TokenIdentifier"
+                "type": "EgldOrEsdtTokenIdentifier"
             },
             {
                 "name": "max_amount",
@@ -33,6 +33,14 @@
             },
             {
                 "name": "earner1",
+                "type": "Address"
+            },
+            {
+                "name": "earner2",
+                "type": "Address"
+            },
+            {
+                "name": "earner3",
                 "type": "Address"
             }
         ],
@@ -49,7 +57,18 @@
             "inputs": [
                 {
                     "name": "token",
-                    "type": "TokenIdentifier"
+                    "type": "EgldOrEsdtTokenIdentifier"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setMinAmount",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "amount",
+                    "type": "BigUint"
                 }
             ],
             "outputs": []
@@ -88,6 +107,7 @@
         },
         {
             "name": "setOdds",
+            "onlyOwner": true,
             "mutability": "mutable",
             "inputs": [
                 {
@@ -101,7 +121,12 @@
         {
             "name": "getOdds",
             "mutability": "readonly",
-            "inputs": [],
+            "inputs": [
+                {
+                    "name": "k",
+                    "type": "bytes"
+                }
+            ],
             "outputs": [
                 {
                     "type": "variadic<Odds>",
@@ -136,20 +161,36 @@
             "outputs": []
         },
         {
+            "name": "claim",
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
             "name": "getEarners",
             "mutability": "readonly",
-            "inputs": [],
+            "inputs": [
+                {
+                    "name": "k",
+                    "type": "bytes"
+                }
+            ],
             "outputs": [
                 {
-                    "type": "variadic<multi<Address,u64>>",
+                    "type": "variadic<multi<Address,u64,BigUint>>",
                     "multi_result": true
                 }
             ]
         },
         {
-            "name": "getPlayersReport",
+            "name": "getPlayers",
             "mutability": "readonly",
-            "inputs": [],
+            "inputs": [
+                {
+                    "name": "k",
+                    "type": "bytes"
+                }
+            ],
             "outputs": [
                 {
                     "type": "variadic<PlayerStats>",
@@ -222,11 +263,6 @@
             "mutability": "readonly",
             "inputs": [
                 {
-                    "name": "opt_only_unscratched",
-                    "type": "optional<bool>",
-                    "multi_arg": true
-                },
-                {
                     "name": "opt_max_results",
                     "type": "optional<u64>",
                     "multi_arg": true
@@ -260,21 +296,6 @@
                 },
                 {
                     "type": "BigUint"
-                }
-            ]
-        },
-        {
-            "name": "getK",
-            "mutability": "readonly",
-            "inputs": [
-                {
-                    "name": "address",
-                    "type": "Address"
-                }
-            ],
-            "outputs": [
-                {
-                    "type": "bytes"
                 }
             ]
         },

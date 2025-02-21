@@ -18,10 +18,10 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { name: 'Fight', url: '/', icon: Coins },
-  { name: 'Vote Fighter', url: '/vote', icon: Vote },
+  { name: 'Wheel of Fomo', url: '/wof', icon: Vote },
   { name: 'Vote Token', url: '/votetoken', icon: Vote },
+  { name: 'Vote Fighter', url: '/vote', icon: Vote },
   { name: 'Faucet', url: '/faucet', icon: Coins },
-  // { name: 'WoF', url: '/wof', icon: Vote },
   { 
     name: 'Stats', 
     url: '/stats', 
@@ -121,6 +121,14 @@ export function TubelightNav() {
   const activeItems = navItems.filter(item => !item.disabled).length;
   const itemWidth = `${100 / activeItems}%`;
 
+  // Calculate the position index for the active item
+  const getActiveIndex = () => {
+    const activeItem = navItems
+      .filter(item => !item.disabled)
+      .findIndex(item => item.url === pathname);
+    return activeItem >= 0 ? activeItem : 0;
+  };
+
   return (
     <nav className="relative flex items-center justify-center gap-4 h-10 bg-black/50 rounded-full border border-zinc-800 px-1 min-w-[600px]">
       <div className="absolute inset-x-0 h-8 top-1/2 -translate-y-1/2 mx-1">
@@ -128,11 +136,7 @@ export function TubelightNav() {
           className={`absolute h-full bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full transition-all duration-300`}
           style={{
             width: itemWidth,
-            left: pathname === '/' ? '0' : 
-                  pathname === '/vote' ? itemWidth :
-                  pathname === '/votetoken' ? `calc(${itemWidth} * 2)` :
-                  pathname === '/faucet' ? `calc(${itemWidth} * 3)` :
-                  pathname === '/stats' ? `calc(${itemWidth} * 4)` : '0'
+            left: `calc(${itemWidth} * ${getActiveIndex()})`
           }}
         />
       </div>
@@ -144,21 +148,11 @@ export function TubelightNav() {
           className={`relative z-10 px-4 py-2 text-sm font-medium transition-colors text-center whitespace-nowrap ${
             pathname === item.url 
               ? 'text-black' 
-              : item.disabled 
-                ? 'text-zinc-500 cursor-not-allowed' 
-                : 'text-white hover:text-zinc-300'
+              : 'text-white hover:text-zinc-300'
           }`}
           style={{ width: itemWidth }}
-          onClick={(e) => item.disabled && e.preventDefault()}
         >
           {item.name}
-          {item.badge && (
-            <div className="absolute -top-1 -right-1">
-              <div className="bg-[#C99733] text-black text-[10px] px-1 rounded-full">
-                {item.badge}
-              </div>
-            </div>
-          )}
         </Link>
       ))}
     </nav>
