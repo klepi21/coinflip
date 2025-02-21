@@ -35,9 +35,9 @@ const LUCIAN_IDENTIFIER = 'LUCIAN-e61415';
 const RARE_IDENTIFIER = 'RARE-99e8b0';
 const BOD_IDENTIFIER = 'BOD-204877';
 const BOBER_IDENTIFIER = 'BOBER-9eb764';
-const ONE_IDENTIFIER = 'ONE-f9954f';
 const TOM_IDENTIFIER = 'TOM-48414f';
 const BATEMAN_IDENTIFIER = 'BATEMAN-f6fd19';
+const VILLER_IDENTIFIER = 'VILLER-cab1fb';
 
 // Token configuration
 const TOKEN_DECIMALS = 18;
@@ -47,9 +47,9 @@ const TOKEN_IMAGES: Record<string, string> = {
   [RARE_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${RARE_IDENTIFIER}/icon.svg`,
   [BOD_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${BOD_IDENTIFIER}/icon.svg`,
   [BOBER_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${BOBER_IDENTIFIER}/icon.svg`,
-  [ONE_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${ONE_IDENTIFIER}/icon.svg`,
   [TOM_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${TOM_IDENTIFIER}/icon.svg`,
   [BATEMAN_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${BATEMAN_IDENTIFIER}/icon.svg`,
+  [VILLER_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${VILLER_IDENTIFIER}/icon.svg`,
   'EGLD': 'https://s2.coinmarketcap.com/static/img/coins/200x200/6892.png'
 };
 
@@ -89,7 +89,7 @@ type PopupState = {
 };
 
 type FilterType = 'all' | 'highest' | 'lowest' | 'yours';
-type TokenFilter = 'all' | 'EGLD' | 'RARE-99e8b0' | 'BOD-204877' | 'BOBER-9eb764' | 'ONE-f9954f' | 'TOM-48414f' | 'BATEMAN-f6fd19';
+type TokenFilter = 'all' | 'EGLD' | 'RARE-99e8b0' | 'BOD-204877' | 'BOBER-9eb764' | 'TOM-48414f' | 'BATEMAN-f6fd19' | 'VILLER-cab1fb';
 
 type GridView = '2x2' | '3x3';
 
@@ -118,10 +118,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const { balance: mincuBalance, isLoading: isLoadingBalance } = useTokenBalance(connectedAddress || '', MINCU_IDENTIFIER);
   const { balance: rareBalance, isLoading: isLoadingRare } = useTokenBalance(connectedAddress || '', RARE_IDENTIFIER);
   const { balance: bodBalance, isLoading: isLoadingBod } = useTokenBalance(connectedAddress || '', BOD_IDENTIFIER);
-  const { balance: oneBalance, isLoading: isLoadingOne } = useTokenBalance(connectedAddress || '', ONE_IDENTIFIER);
   const { balance: boberBalance, isLoading: isLoadingBober } = useTokenBalance(connectedAddress || '', BOBER_IDENTIFIER);
   const { balance: tomBalance, isLoading: isLoadingTom } = useTokenBalance(connectedAddress || '', TOM_IDENTIFIER);
   const { balance: bateBalance, isLoading: isLoadingBate } = useTokenBalance(connectedAddress || '', BATEMAN_IDENTIFIER);
+  const { balance: villerBalance, isLoading: isLoadingViller } = useTokenBalance(connectedAddress || '', VILLER_IDENTIFIER);
 
   const [previousGames, setPreviousGames] = useState<Game[]>([]);
   const [disappearingGames, setDisappearingGames] = useState<Game[]>([]);
@@ -435,15 +435,15 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   };
 
   const canJoinGame = (gameAmount: string, tokenIdentifier: string): boolean => {
-    if (!connectedAddress || isLoadingRare || isLoadingBod || isLoadingOne || isLoadingBate || isLoadingBober || isLoadingTom) return false;
+    if (!connectedAddress || isLoadingRare || isLoadingBod || isLoadingBate || isLoadingBober || isLoadingTom || isLoadingViller) return false;
     
     try {
       const currentBalance = tokenIdentifier === RARE_IDENTIFIER ? rareBalance :
                             tokenIdentifier === BOD_IDENTIFIER ? bodBalance :
-                            tokenIdentifier === ONE_IDENTIFIER ? oneBalance :
                             tokenIdentifier === BATEMAN_IDENTIFIER ? bateBalance :
                             tokenIdentifier === BOBER_IDENTIFIER ? boberBalance :
                             tokenIdentifier === TOM_IDENTIFIER ? tomBalance :
+                            tokenIdentifier === VILLER_IDENTIFIER ? villerBalance :
                             Number(account.balance) / Math.pow(10, 18);
       
       // Convert amounts to numbers for comparison
