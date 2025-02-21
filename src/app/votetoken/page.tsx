@@ -63,10 +63,10 @@ interface VoteOption {
 
 export default function VoteTokenPage() {
   const [votes, setVotes] = useState<VoteOption[]>([
-    { name: 'DRX', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/DRX-b7f337/icon.svg', option: 1 },
+    { name: 'BONEZ', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/BONEZ-ff9a73/icon.svg', option: 1 },
     { name: 'ROAR', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/ROAR-e5185d/icon.svg', option: 2 },
-    { name: 'VILLER', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/VILLER-cab1fb/icon.svg', option: 3 },
-    { name: 'GLONK', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/GLONK-9961fb/icon.svg', option: 4 }
+    { name: 'BLAZZORD', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/BLAZZORD-6fb184/icon.svg', option: 3 },
+    { name: 'NUTS', votes: 0, image: 'https://tools.multiversx.com/assets-cdn/tokens/NUTS-8ad81a/icon.svg', option: 4 }
   ]);
   const [selectedOption, setSelectedOption] = useState<VoteOption | null>(null);
   const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'ONE'>('RARE');

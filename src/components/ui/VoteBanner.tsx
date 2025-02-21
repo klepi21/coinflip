@@ -7,7 +7,7 @@ import { Vote, X } from "lucide-react"
 import Link from "next/link"
 
 // Define the vote end dates (in UTC)
-const fighterVoteEndDate = new Date(Date.UTC(2025, 1, 14, 23, 59, 59)) // February 14, 2025, 23:59:59 UTC
+const fighterVoteEndDate = new Date(Date.UTC(2025, 1, 24, 18, 0, 0)) // February 24, 2025, 18:00:00 UTC
 const tokenVoteEndDate = new Date(Date.UTC(2025, 1, 21, 18, 0, 0)) // February 21, 2025, 18:00:00 UTC
 
 interface TimeLeft {
@@ -94,8 +94,8 @@ export function VoteBanner() {
     <div className="relative z-20 mt-[60px] -mb-10 md:-mb-20">
       <div className="container max-w-3xl mx-auto px-4">
         <div className="flex flex-col space-y-4">
-          {/* Fighter Vote Banner - Temporarily Hidden */}
-          {/* {isFighterVisible && !fighterTimeLeft.isExpired && (
+          {/* Fighter Vote Banner */}
+          {isFighterVisible && !fighterTimeLeft.isExpired && (
             <Banner variant="muted" className="w-full bg-[#1A1A1A] border border-zinc-800 rounded-xl">
               <div className="flex w-full gap-2 md:items-center">
                 <div className="flex grow gap-3 md:items-center">
@@ -137,7 +137,7 @@ export function VoteBanner() {
                 </Button>
               </div>
             </Banner>
-          )} */}
+          )}
 
           {/* Token Vote Banner */}
           {isTokenVisible && !tokenTimeLeft.isExpired && (
@@ -154,7 +154,7 @@ export function VoteBanner() {
                     <div className="space-y-0.5">
                       <p className="text-sm font-medium text-white">Vote for next token!</p>
                       <p className="text-sm text-zinc-400">
-                        Choose between DRX, ROAR, VILLER, and GLONK.
+                        Choose between BONEZ, ROAR, BLAZZORD, and NUTS.
                       </p>
                     </div>
                     <div className="flex gap-3 max-md:flex-wrap">
