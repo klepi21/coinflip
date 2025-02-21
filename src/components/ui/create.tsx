@@ -331,10 +331,10 @@ export default function Create() {
   return (
     <>
       {/* Mobile/Tablet Create Button - Show on all devices except large screens */}
-      <div className="lg:hidden fixed bottom-24 right-4 z-[90]">
+      <div className="lg:hidden fixed bottom-4 right-4 z-[100]">
         <button
           onClick={() => isLoggedIn ? setShowCreateModal(true) : setShowWalletModal(true)}
-          className="w-14 h-14 rounded-full bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black flex items-center justify-center shadow-lg border-4 border-black hover:scale-105 transition-transform"
+          className="w-16 h-16 rounded-full bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black flex items-center justify-center shadow-xl border-4 border-black hover:scale-105 transition-transform"
         >
           <span className="text-3xl font-bold">+</span>
         </button>
@@ -343,20 +343,21 @@ export default function Create() {
       {/* Mobile/Tablet Create Form Modal */}
       {showCreateModal && (
         <div 
-          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[200] lg:hidden"
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[200] lg:hidden overflow-hidden"
           onClick={() => setShowCreateModal(false)}
         >
           <div 
-            className="w-full h-full flex items-start justify-center overflow-y-auto"
+            className="w-full h-full flex items-center justify-center overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div 
-              className="w-full max-w-sm mx-4 my-16 bg-[#1A1A1A] rounded-2xl border border-zinc-800 shadow-xl"
+              className="w-full max-w-sm mx-4 my-8 bg-[#1A1A1A] rounded-2xl border border-zinc-800 shadow-2xl"
             >
-              <div className="sticky top-0 z-[201] flex justify-end p-4 bg-[#1A1A1A] border-b border-zinc-800">
+              <div className="sticky top-0 z-[201] flex justify-between items-center p-4 bg-[#1A1A1A] border-b border-zinc-800">
+                <h3 className="text-lg font-bold text-white">Create Battle</h3>
                 <button 
                   onClick={() => setShowCreateModal(false)}
-                  className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-white hover:bg-zinc-700"
+                  className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-white hover:bg-zinc-700 transition-colors"
                 >
                   ×
                 </button>

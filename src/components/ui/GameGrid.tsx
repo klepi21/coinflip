@@ -667,10 +667,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
 
       {/* Games Grid with Dynamic Layout */}
       <div className="min-h-[200px] flex flex-col">
-        <div className={`grid gap-6 grid-rows-2 md:grid-rows-3 ${
+        <div className={`grid gap-4 md:gap-6 ${
           gridView === '2x2' 
-            ? 'grid-cols-1 lg:grid-cols-2' 
-            : 'grid-cols-1 lg:grid-cols-3'
+            ? 'grid-cols-1 sm:grid-cols-2' 
+            : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
         }`}>
           {isInitialLoading ? (
             // Show placeholder cards during initial load
@@ -718,10 +718,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                 <div key={`disappearing-${game.id}`} className="relative pb-6">
                   <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg min-h-[140px] animate-fadeOut">
                     {/* Keep the original game card content for smooth transition */}
-                    <div className="flex relative min-h-[140px] opacity-30">
+                    <div className="flex relative min-h-[140px] sm:min-h-[180px] opacity-30">
                       {/* Left Player (Creator) */}
-                      <div className="flex-1 p-4 flex flex-col items-center justify-center">
-                        <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
+                      <div className="flex-1 p-2 sm:p-4 flex flex-col items-center justify-center">
+                        <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full overflow-hidden mb-2 bg-zinc-800">
                           <Image
                             src={TOKEN_IMAGES[game.token] || TOKEN_IMAGES[BOD_IDENTIFIER]}
                             alt={game.token.split('-')[0]}
@@ -761,8 +761,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
        
 
                       {/* Right Player (Rival) */}
-                      <div className="flex-1 p-4 flex flex-col items-center justify-center">
-                        <div className="w-12 h-12 rounded-full overflow-hidden mb-2 bg-zinc-800">
+                      <div className="flex-1 p-2 sm:p-4 flex flex-col items-center justify-center">
+                        <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full overflow-hidden mb-2 bg-zinc-800">
                           <Image
                             src={game.token === 'EGLD' 
                               ? TOKEN_IMAGES['EGLD'] 
@@ -849,16 +849,16 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       </button>
                     </div>
 
-                    <div className="flex relative min-h-[180px]" style={{
+                    <div className="flex relative min-h-[140px] sm:min-h-[180px]" style={{
                       backgroundImage: "url('/img/fightback.jpg')",
-                      backgroundSize: 'contain',
+                      backgroundSize: 'cover',
                       backgroundRepeat: 'no-repeat',
                       backgroundPosition: 'center',
                       backgroundColor: '#D5D5D5',
                     }}>
                       {/* Left Player (Creator) */}
-                      <div className="flex-1 p-1 flex flex-col items-center justify-center">
-                        <div className="w-24 h-24">
+                      <div className="flex-1 p-2 sm:p-4 flex flex-col items-center justify-center">
+                        <div className="w-16 h-16 sm:w-24 sm:h-24">
                           <Image
                             src={game.side === 0 ? '/img/grm.png?v=3' : '/img/sasu.png?v=3'}
                             alt={game.side === 0 ? "GRM" : "SASU"}
@@ -887,8 +887,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       </div>
 
                       {/* Right Player (Rival) */}
-                      <div className="flex-1 p-1 flex flex-col items-center justify-center ml-8  ">
-                        <div className="w-24 h-24">
+                      <div className="flex-1 p-2 sm:p-4 flex flex-col items-center justify-center ml-8  ">
+                        <div className="w-16 h-16 sm:w-24 sm:h-24">
                           <Image
                             src={game.side === 0 ? '/img/sasu.png?v=3' : '/img/grm.png?v=3'}
                             alt={game.side === 0 ? "SASU" : "GRM"}
