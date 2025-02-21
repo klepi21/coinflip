@@ -42,6 +42,17 @@ const VILLER_IDENTIFIER = 'VILLER-cab1fb';
 // Token configuration
 const TOKEN_DECIMALS = 18;
 
+// Add token decimals mapping
+const TOKEN_DECIMALS_MAP: Record<string, number> = {
+  'EGLD': 18,
+  [RARE_IDENTIFIER]: 18,
+  [BOD_IDENTIFIER]: 18,
+  [BOBER_IDENTIFIER]: 18,
+  [TOM_IDENTIFIER]: 18,
+  [BATEMAN_IDENTIFIER]: 18,
+  [VILLER_IDENTIFIER]: 10,
+};
+
 // Token data with images
 const TOKEN_IMAGES: Record<string, string> = {
   [RARE_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${RARE_IDENTIFIER}/icon.svg`,
@@ -67,9 +78,10 @@ const SIDES = {
 
 const formatTokenAmount = (amount: string, token: string): string => {
   try {
-    // Convert the amount to a number and divide by 10^18 (TOKEN_DECIMALS)
     const BigNumber = require('bignumber.js');
-    const value = new BigNumber(amount).dividedBy(new BigNumber(10).pow(TOKEN_DECIMALS));
+    // Get token-specific decimals or default to 18
+    const decimals = TOKEN_DECIMALS_MAP[token] || 18;
+    const value = new BigNumber(amount).dividedBy(new BigNumber(10).pow(decimals));
     
     // For EGLD show 2 decimal places, for other tokens show whole number
     return token === 'EGLD' ? value.toFixed(2) : Math.floor(value).toString();
@@ -446,8 +458,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             tokenIdentifier === VILLER_IDENTIFIER ? villerBalance :
                             Number(account.balance) / Math.pow(10, 18);
       
-      // Convert amounts to numbers for comparison
-      const requiredAmount = Number(gameAmount) / (10 ** TOKEN_DECIMALS);
+      // Get token-specific decimals
+      const decimals = TOKEN_DECIMALS_MAP[tokenIdentifier] || 18;
+      // Convert amounts to numbers for comparison using correct decimals
+      const requiredAmount = Number(gameAmount) / (10 ** decimals);
       
       return currentBalance >= requiredAmount;
     } catch (error) {
