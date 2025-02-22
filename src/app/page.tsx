@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { FudGauge } from '@/components/ui/fud-gauge';
 import { VoteBanner } from '@/components/ui/VoteBanner';
+import { WofAnnouncement } from '@/components/ui/WofAnnouncement';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -75,7 +76,7 @@ export default function Home() {
       <div className="w-full md:container mx-auto flex-1 mb-auto relative z-10">
         {/* Title Section */}
         <div className="flex flex-col items-center py-4 md:py-12 mb-8">
-          
+          <WofAnnouncement />
           <div className="flex items-center gap-6 justify-center">
           
 
