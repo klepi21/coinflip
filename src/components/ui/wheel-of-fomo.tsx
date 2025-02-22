@@ -447,6 +447,13 @@ export function WheelOfFomo() {
     }
   }, [account?.shard, contractAddress]);
 
+  // Add function to check if user has sufficient balance
+  const hasSufficientBalance = () => {
+    if (!account?.balance) return false;
+    const balanceInEgld = Number(account.balance) / Math.pow(10, 18);
+    return balanceInEgld >= selectedAmount.value;
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black p-4 md:p-8 pt-48 overflow-x-hidden">
       <div className="w-full max-w-5xl bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl p-4 md:p-8 relative border border-zinc-800 shadow-xl">
@@ -692,7 +699,7 @@ export function WheelOfFomo() {
 
               <button
                 onClick={spinWheel}
-                disabled={spinning || !isLoggedIn}
+                disabled={spinning || !isLoggedIn || !hasSufficientBalance()}
                 className={cn(
                   "w-full py-3 md:py-4 text-lg md:text-xl font-semibold rounded-xl transition-all relative overflow-hidden",
                   "bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black",
@@ -702,6 +709,13 @@ export function WheelOfFomo() {
               >
                 {!isLoggedIn ? (
                   'Connect Wallet to Spin'
+                ) : !hasSufficientBalance() ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <span>Insufficient EGLD Balance</span>
+                    <span className="text-sm">
+                      (Need {selectedAmount.value} EGLD)
+                    </span>
+                  </div>
                 ) : spinning ? (
                   <div className="flex items-center justify-center gap-2">
                     <span className="animate-spin">🎡</span>
