@@ -573,28 +573,43 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
           >
             All
           </button>
-          {Object.entries(TOKEN_IMAGES).map(([token, image]) => (
-            <button
-              key={token}
-              onClick={() => setTokenFilter(token as TokenFilter)}
-              className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all ${
-                tokenFilter === token 
-                  ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] p-1' 
-                  : 'hover:bg-zinc-800'
-              }`}
-              title={token === 'EGLD' ? 'EGLD' : token.split('-')[0]}
-            >
-              <div className="w-6 h-6 rounded-full overflow-hidden">
-                <Image
-                  src={image}
-                  alt={token}
-                  width={24}
-                  height={24}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </button>
-          ))}
+          {Object.entries(TOKEN_IMAGES)
+            // Sort tokens by number of active games (descending)
+            .map(([token, image]) => ({
+              token,
+              image,
+              count: games.filter(game => game.token === token).length
+            }))
+            .sort((a, b) => b.count - a.count)
+            .map(({ token, image, count }) => (
+              <button
+                key={token}
+                onClick={() => setTokenFilter(token as TokenFilter)}
+                className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all relative ${
+                  tokenFilter === token 
+                    ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] p-1' 
+                    : count > 0 
+                      ? 'hover:bg-zinc-800' 
+                      : 'opacity-40 hover:opacity-60'
+                }`}
+                title={`${token === 'EGLD' ? 'EGLD' : token.split('-')[0]} (${count} active)`}
+              >
+                <div className={`w-6 h-6 rounded-full overflow-hidden ${count === 0 ? 'grayscale' : ''}`}>
+                  <Image
+                    src={image}
+                    alt={token}
+                    width={24}
+                    height={24}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {count > 0 && (
+                  <div className="absolute -top-2 -right-2 bg-[#C99733] text-black text-[10px] px-1.5 rounded-full min-w-[18px] text-center">
+                    {count}
+                  </div>
+                )}
+              </button>
+            ))}
         </div>
         
         {/* Filter and View Controls */}
