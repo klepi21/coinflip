@@ -30,13 +30,6 @@ const navItems: NavItem[] = [
   { name: 'Vote Token', url: '/votetoken', icon: Vote },
   { name: 'Faucet', url: '/faucet', icon: Coins },
   { name: 'Wheel of Fomo', url: '/wof', icon: Vote },
-  { 
-    name: 'Stats', 
-    url: '/stats', 
-    icon: Vote, 
-    disabled: true,
-    badge: 'SOON'
-  }
 ];
 
 export function NavBar({ items, className, activeTextColor = 'text-black' }: NavBarProps) {
