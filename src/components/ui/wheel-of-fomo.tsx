@@ -455,7 +455,7 @@ export function WheelOfFomo() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black p-4 md:p-8 pt-48 overflow-x-hidden">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black p-4 md:p-8  overflow-x-hidden">
       <div className="w-full max-w-5xl bg-[#1A1A1A]/80 backdrop-blur-sm rounded-3xl p-4 md:p-8 relative border border-zinc-800 shadow-xl">
         <div className="flex flex-col gap-6 md:gap-8">
           {/* Top section - Currency and Mode Selection */}
