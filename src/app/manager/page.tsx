@@ -56,7 +56,7 @@ export default function Stats() {
   const [sortBy, setSortBy] = useState<'winRate' | 'totalGames'>('winRate');
   const { network } = useGetNetworkConfig();
   const { address } = useGetAccountInfo();
-  const itemsPerPage = 10;
+  const ITEMS_PER_PAGE = 10;
   const [newToken, setNewToken] = useState('');
   const [minimumAmountToken, setMinimumAmountToken] = useState('');
   const [minimumAmount, setMinimumAmount] = useState('');
@@ -354,10 +354,10 @@ export default function Stats() {
     );
 
   // Calculate pagination
-  const totalPages = Math.ceil(filteredAndSortedScores.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredAndSortedScores.length / ITEMS_PER_PAGE);
   const paginatedScores = filteredAndSortedScores.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
   );
 
   const handleEndVoting = async () => {
@@ -898,39 +898,71 @@ export default function Stats() {
                           </tr>
                         </thead>
                         <tbody>
-                          {wofStats.map((player, index) => {
-                            const totalPlayed = Number(BigInt(player.totalPlayed)) / 1e18;
-                            const totalWon = Number(BigInt(player.totalWon)) / 1e18;
-                            const winRate = totalPlayed > 0 ? (totalWon / totalPlayed) * 100 : 0;
+                          {wofStats
+                            .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                            .map((player, index) => {
+                              const totalPlayed = Number(BigInt(player.totalPlayed)) / 1e18;
+                              const totalWon = Number(BigInt(player.totalWon)) / 1e18;
+                              const winRate = totalPlayed > 0 ? (totalWon / totalPlayed) * 100 : 0;
+                              const absoluteIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
 
-                            return (
-                              <tr 
-                                key={`${player.address}-${player.shard}`} 
-                                className="border-b border-zinc-800/50 hover:bg-white/5 transition-colors"
-                              >
-                                <td className="px-6 py-4 text-sm text-zinc-400">#{index + 1}</td>
-                                <td className="px-6 py-4">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-white font-medium">
-                                      {player.address.substring(0, 6)}...{player.address.substring(player.address.length - 4)}
+                              return (
+                                <tr 
+                                  key={`${player.address}-${player.shard}`} 
+                                  className="border-b border-zinc-800/50 hover:bg-white/5 transition-colors"
+                                >
+                                  <td className="px-6 py-4 text-sm text-zinc-400">#{absoluteIndex + 1}</td>
+                                  <td className="px-6 py-4">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-white font-medium">
+                                        {player.address.substring(0, 6)}...{player.address.substring(player.address.length - 4)}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 text-center text-[#C99733]">{player.shard}</td>
+                                  <td className="px-6 py-4 text-right text-white">{totalPlayed.toFixed(2)}</td>
+                                  <td className="px-6 py-4 text-right text-white">{totalWon.toFixed(2)}</td>
+                                  <td className="px-6 py-4 text-right">
+                                    <span className={`text-sm font-medium ${
+                                      winRate > 100 ? 'text-green-500' : 'text-white'
+                                    }`}>
+                                      {winRate.toFixed(1)}%
                                     </span>
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 text-center text-[#C99733]">{player.shard}</td>
-                                <td className="px-6 py-4 text-right text-white">{totalPlayed.toFixed(2)}</td>
-                                <td className="px-6 py-4 text-right text-white">{totalWon.toFixed(2)}</td>
-                                <td className="px-6 py-4 text-right">
-                                  <span className={`text-sm font-medium ${
-                                    winRate >= 50 ? 'text-green-500' : 'text-red-500'
-                                  }`}>
-                                    {winRate.toFixed(1)}%
-                                  </span>
-                                </td>
-                              </tr>
-                            );
-                          })}
+                                  </td>
+                                </tr>
+                              );
+                            })}
                         </tbody>
                       </table>
+                    </div>
+
+                    {/* Pagination */}
+                    <div className="flex items-center justify-between mt-4">
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        className={`px-4 py-2 rounded-xl ${
+                          currentPage === 1
+                            ? 'bg-zinc-800/50 text-zinc-500'
+                            : 'bg-zinc-800/50 text-white hover:bg-[#C99733] hover:text-black'
+                        }`}
+                      >
+                        Previous
+                      </button>
+                      <span className="text-zinc-400">
+                        Page {currentPage} of {Math.ceil(wofStats.length / ITEMS_PER_PAGE)}
+                      </span>
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(Math.ceil(wofStats.length / ITEMS_PER_PAGE), prev + 1))}
+                        disabled={currentPage === Math.ceil(wofStats.length / ITEMS_PER_PAGE)}
+                        className={`px-4 py-2 rounded-xl ${
+                          currentPage === Math.ceil(wofStats.length / ITEMS_PER_PAGE)
+                            ? 'bg-zinc-800/50 text-zinc-500'
+                            : 'bg-zinc-800/50 text-white hover:bg-[#C99733] hover:text-black'
+                        }`}
+                      >
+                        Next
+                      </button>
                     </div>
                   </div>
                 )}
