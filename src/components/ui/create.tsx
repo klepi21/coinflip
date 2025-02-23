@@ -331,7 +331,7 @@ export default function Create() {
   return (
     <>
       {/* Mobile/Tablet Create Button - Show on all devices except large screens */}
-      <div className="lg:hidden fixed bottom-4 right-4 z-[100]">
+      <div className="lg:hidden fixed bottom-20 right-4 z-40">
         <button
           onClick={() => isLoggedIn ? setShowCreateModal(true) : setShowWalletModal(true)}
           className="w-16 h-16 rounded-full bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black flex items-center justify-center shadow-xl border-4 border-black hover:scale-105 transition-transform"
@@ -343,17 +343,17 @@ export default function Create() {
       {/* Mobile/Tablet Create Form Modal */}
       {showCreateModal && (
         <div 
-          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[200] lg:hidden overflow-hidden"
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[9999] lg:hidden overflow-y-auto"
           onClick={() => setShowCreateModal(false)}
         >
           <div 
-            className="w-full h-full flex items-center justify-center overflow-y-auto"
+            className="min-h-screen pb-24 pt-16 px-4 flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
             <div 
-              className="w-full max-w-sm mx-4 my-8 bg-[#1A1A1A] rounded-2xl border border-zinc-800 shadow-2xl"
+              className="w-full max-w-sm bg-[#1A1A1A] rounded-2xl border border-zinc-800 shadow-2xl relative"
             >
-              <div className="sticky top-0 z-[201] flex justify-between items-center p-4 bg-[#1A1A1A] border-b border-zinc-800">
+              <div className="sticky top-0 z-[9999] flex justify-between items-center p-4 bg-[#1A1A1A] border-b border-zinc-800 rounded-t-2xl">
                 <h3 className="text-lg font-bold text-white">Create Battle</h3>
                 <button 
                   onClick={() => setShowCreateModal(false)}
@@ -362,7 +362,7 @@ export default function Create() {
                   ×
                 </button>
               </div>
-              <div className="px-4 pb-8 overflow-y-auto">
+              <div className="p-4 overflow-y-auto">
                 {/* Mobile Form Content */}
                 <div className="space-y-6">
                   {/* Updated Side-by-Side Animation */}
