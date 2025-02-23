@@ -557,7 +557,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
             <span className="font-bold">{games.length}</span> ACTIVE
           </div>
           <div className="bg-[#1A1A1A] rounded-full px-3 lg:px-6 py-1.5 lg:py-2 text-white">
-            <span className="font-bold">{totalGames - games.length}</span> PLAYED
+            <span className="font-bold">{totalGames - games.length}</span> CREATED
           </div>
         </div>
         
