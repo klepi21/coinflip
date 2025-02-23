@@ -181,7 +181,7 @@ export default function RootLayout({
                   {/* Content */}
                   <div className="relative z-10">
                     <Navbar />
-                    {pathname !== '/wof' && <VoteBanner />}
+                    {pathname !== '/wof' && pathname !== '/fuderboard' && <VoteBanner />}
                     <main className="pt-0">
                       {children}
                     </main>

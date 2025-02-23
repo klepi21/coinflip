@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, LayoutGrid, Grid2X2, Grid3X3, Twitter, Copy, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, LayoutGrid, Grid2X2, Grid3X3, Twitter, Copy, Check, Vote } from "lucide-react";
 import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
 import { 
   AbiRegistry, 
