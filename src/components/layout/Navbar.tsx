@@ -28,7 +28,7 @@ export function Navbar() {
     { title: 'Vote Token', icon: '🎁', type: undefined, url: '/votetoken' },
     { title: 'Faucet', icon: '🚰', type: undefined, url: '/faucet' },
     { type: 'separator' as const },
-    { title: 'Fuderboard', icon: '📊', type: undefined, url: '/fuderboard' }
+    { title: 'FUDerboard', icon: '📊', type: undefined, url: '/fuderboard' }
   ];
 
   const handleTabChange = (index: number | null) => {
