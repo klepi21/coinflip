@@ -279,6 +279,12 @@ export function WheelOfFomo() {
     }
   };
 
+  // Add deobfuscation function
+  function deobfuscateHash(obfuscatedHash: string, timestamp: number): string {
+    const noise = sha256(timestamp.toString());
+    return obfuscatedHash.split('').filter((_, i) => i % 2 === 0).join('');
+  }
+
   // Update spinWheel to use the new contract address
   const spinWheel = async () => {
     if (spinning || !isLoggedIn || !address) return;
@@ -287,8 +293,9 @@ export function WheelOfFomo() {
       const currentEpoch = await getCurrentEpoch();
       const addressObj = new Address(address);
       const hexAddress = "0x" + addressObj.hex();
+      const timestamp = Date.now();
       
-      // Get hash from API instead of calculating client-side
+      // Get hash from API with timestamp
       const response = await fetch('/api/wof', {
         method: 'POST',
         headers: {
@@ -296,7 +303,8 @@ export function WheelOfFomo() {
         },
         body: JSON.stringify({
           epoch: currentEpoch,
-          address: hexAddress
+          address: hexAddress,
+          timestamp
         })
       });
 
@@ -304,7 +312,10 @@ export function WheelOfFomo() {
         throw new Error('Failed to get game hash');
       }
 
-      const { hashedData } = await response.json();
+      const { data: obfuscatedHash, t } = await response.json();
+      
+      // Deobfuscate the hash
+      const hashedData = deobfuscateHash(obfuscatedHash, t);
       
       const encodedFunction = 'play';
       const data = `${encodedFunction}@${hashedData}`;
