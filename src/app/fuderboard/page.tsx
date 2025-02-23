@@ -21,6 +21,13 @@ import { useWallet } from '@/context/WalletContext';
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
 const ITEMS_PER_PAGE = 5;
 
+const FUD_NAMES = [
+  'MasterFudder', 'FudKing', 'SweetFud', 'FudMaster', 'CryptoFudder',
+  'FudLord', 'FudWarrior', 'FudHero', 'FudLegend', 'FudChampion',
+  'EliteFudder', 'FudPro', 'FudNinja', 'FudWizard', 'FudBeast',
+  'FudExpert', 'FudGuru', 'FudMachine', 'FudVeteran', 'FudElite'
+];
+
 interface PlayerScore {
   address: string;
   wins: number;
@@ -95,6 +102,24 @@ const getRankIcon = (index: number) => {
   }
 };
 
+const generateFudName = (address: string): string => {
+  try {
+    // Use a more robust way to get a number from the address
+    const cleanAddress = address.replace('erd', '').replace(/[^a-fA-F0-9]/g, '');
+    const lastFourChars = cleanAddress.slice(-4);
+    const num = parseInt(lastFourChars, 16) || 0; // Fallback to 0 if parsing fails
+    
+    // Ensure we stay within array bounds
+    const nameIndex = num % FUD_NAMES.length;
+    const numberSuffix = (num % 99) + 1;
+    
+    return `${FUD_NAMES[nameIndex]}${numberSuffix}`;
+  } catch (error) {
+    // Fallback name if anything goes wrong
+    return 'FudMaster1';
+  }
+};
+
 // Player Status Component
 function PlayerStatus({ scores, address }: { scores: PlayerScore[], address: string }) {
   const playerScore = scores.find(score => 
@@ -107,6 +132,14 @@ function PlayerStatus({ scores, address }: { scores: PlayerScore[], address: str
   const winRate = totalGames > 0 
     ? (playerScore.wins / totalGames) * 100 
     : 0;
+  
+  const playerRank = scores
+    .map(score => ({
+      ...score,
+      totalGames: score.wins + score.losses
+    }))
+    .sort((a, b) => b.totalGames - a.totalGames)
+    .findIndex(score => score.address.toLowerCase() === address.toLowerCase()) + 1;
   
   const level = getFUDLevel(totalGames);
   const Icon = level.icon;
@@ -134,13 +167,16 @@ function PlayerStatus({ scores, address }: { scores: PlayerScore[], address: str
                 <span className="px-2 py-1 rounded-full text-xs bg-white/10 text-white">
                   {level.title}
                 </span>
+                <span className="px-2 py-1 rounded-full text-xs bg-[#FFD163]/20 text-[#FFD163]">
+                  Rank #{playerRank}
+                </span>
               </div>
               <p className="text-sm text-zinc-400 mt-1">{level.description}</p>
             </div>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-3 gap-4 mt-4">
             <div className="bg-black/20 rounded-xl p-4">
               <div className="text-sm text-zinc-400">Your Battles</div>
               <div className="text-xl font-bold text-white">{totalGames}</div>
@@ -148,6 +184,10 @@ function PlayerStatus({ scores, address }: { scores: PlayerScore[], address: str
             <div className="bg-black/20 rounded-xl p-4">
               <div className="text-sm text-zinc-400">Win Rate</div>
               <div className="text-xl font-bold text-white">{winRate.toFixed(1)}%</div>
+            </div>
+            <div className="bg-black/20 rounded-xl p-4">
+              <div className="text-sm text-zinc-400">FUD Name</div>
+              <div className="text-xl font-bold text-[#FFD163]">{generateFudName(address)}</div>
             </div>
           </div>
 
@@ -188,9 +228,7 @@ export default function FUDerboard() {
   const [scores, setScores] = useState<PlayerScore[]>([]);
   const [totalWins, setTotalWins] = useState(0);
   const [totalLosses, setTotalLosses] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState<'winRate' | 'totalGames'>('totalGames');
   const [isLoading, setIsLoading] = useState(true);
   const { network } = useGetNetworkConfig();
 
@@ -242,23 +280,17 @@ export default function FUDerboard() {
     fetchScoreboard();
   }, [network.apiAddress]);
 
-  // Filter and sort scores
+  // Update filtering and sorting (remove search filter)
   const filteredAndSortedScores = scores
-    .filter(score => 
-      searchQuery ? score.address.toLowerCase().includes(searchQuery.toLowerCase()) : true
-    )
     .map(score => ({
       ...score,
       totalGames: score.wins + score.losses,
       winRate: score.wins + score.losses > 0
         ? (score.wins / (score.wins + score.losses)) * 100
-        : 0
+        : 0,
+      fudName: generateFudName(score.address)
     }))
-    .sort((a, b) => 
-      sortBy === 'winRate' 
-        ? b.winRate - a.winRate
-        : b.totalGames - a.totalGames
-    );
+    .sort((a, b) => b.totalGames - a.totalGames);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredAndSortedScores.length / ITEMS_PER_PAGE);
@@ -340,51 +372,13 @@ export default function FUDerboard() {
               </motion.div>
             </div>
 
-            {/* Search and Sort */}
-            <motion.div 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="flex flex-col sm:flex-row gap-4 mb-6"
-            >
-              <input
-                type="text"
-                placeholder="Search by ERD address..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-black/20 border border-zinc-800 rounded-xl px-4 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-[#FFD163] transition-colors"
-              />
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => setSortBy('totalGames')}
-                  className={`px-4 py-2 rounded-xl font-medium transition-all transform hover:scale-105 ${
-                    sortBy === 'totalGames' 
-                      ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black shadow-lg' 
-                      : 'bg-black/20 text-white hover:bg-black/30'
-                  }`}
-                >
-                  Sort by Games
-                </button>
-                <button 
-                  onClick={() => setSortBy('winRate')}
-                  className={`px-4 py-2 rounded-xl font-medium transition-all transform hover:scale-105 ${
-                    sortBy === 'winRate' 
-                      ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black shadow-lg' 
-                      : 'bg-black/20 text-white hover:bg-black/30'
-                  }`}
-                >
-                  Sort by Win Rate
-                </button>
-              </div>
-            </motion.div>
-
             {/* Table */}
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-zinc-800">
                     <th className="text-left py-4 px-4 text-zinc-400 font-medium">Rank</th>
-                    <th className="text-left py-4 px-4 text-zinc-400 font-medium">Player</th>
+                    <th className="text-left py-4 px-4 text-zinc-400 font-medium">FUDder</th>
                     <th className="text-left py-4 px-4 text-zinc-400 font-medium">Total Games</th>
                     <th className="text-left py-4 px-4 text-zinc-400 font-medium">Win Rate</th>
                   </tr>
@@ -426,7 +420,7 @@ export default function FUDerboard() {
                               #{absoluteIndex + 1}
                             </div>
                           </td>
-                          <td className="py-4 px-4 text-[#FFD163]">{formatAddress(score.address)}</td>
+                          <td className="py-4 px-4 text-[#FFD163]">{score.fudName}</td>
                           <td className="py-4 px-4 text-white">{score.totalGames}</td>
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-2">
