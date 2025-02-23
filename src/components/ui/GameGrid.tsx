@@ -1,7 +1,7 @@
 'use client';
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, ChevronDown, LayoutGrid, Grid2X2, Grid3X3, Twitter, Copy, Check, Vote } from "lucide-react";
 import { ProxyNetworkProvider } from "@multiversx/sdk-network-providers";
 import { 
@@ -109,6 +109,43 @@ type Props = {
   onActiveGamesChange?: (count: number) => void;
 };
 
+// Add after other constants
+const HEROTAG_CACHE: { [key: string]: string } = {};
+const FAILED_HEROTAGS: Set<string> = new Set();
+
+// Add the herotag fetching function
+const fetchHerotag = async (address: string): Promise<string | null> => {
+  try {
+    // Check cache first
+    if (HEROTAG_CACHE[address]) return HEROTAG_CACHE[address];
+    // Check if we already failed to fetch this herotag
+    if (FAILED_HEROTAGS.has(address)) return null;
+
+    const response = await fetch(`https://api.multiversx.com/accounts/${address}`);
+    
+    if (!response.ok) {
+      FAILED_HEROTAGS.add(address);
+      return null;
+    }
+
+    const data = await response.json();
+    const herotag = data?.username;
+    
+    if (herotag) {
+      // Remove .elrond suffix if present
+      const cleanHerotag = herotag.replace(/\.elrond$/, '');
+      HEROTAG_CACHE[address] = cleanHerotag;
+      return cleanHerotag;
+    }
+
+    FAILED_HEROTAGS.add(address);
+    return null;
+  } catch (error) {
+    FAILED_HEROTAGS.add(address);
+    return null;
+  }
+};
+
 export default function GameGrid({ onActiveGamesChange }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState<FilterType>('all');
@@ -145,6 +182,10 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   const [copiedGameId, setCopiedGameId] = useState<number | null>(null);
+
+  const [heroTags, setHeroTags] = useState<{ [key: string]: string }>({});
+  const fetchQueue = useRef<string[]>([]);
+  const isFetchingRef = useRef(false);
 
   const handleCopyLink = (gameId: number) => {
     const url = `${window.location.origin}/game?id=${gameId}`;
@@ -534,6 +575,59 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
+  // Add the processQueue function
+  const processQueue = async () => {
+    if (isFetchingRef.current || fetchQueue.current.length === 0) return;
+
+    isFetchingRef.current = true;
+    const address = fetchQueue.current.shift();
+
+    if (address) {
+      try {
+        const herotag = await fetchHerotag(address);
+        if (herotag) {
+          setHeroTags(prev => ({ ...prev, [address]: herotag }));
+        }
+      } catch (error) {
+        console.error('Error fetching herotag:', error);
+      }
+      
+      // Increased delay between requests to 2 seconds
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+
+    isFetchingRef.current = false;
+    // Continue processing the queue if there are more items
+    if (fetchQueue.current.length > 0) {
+      processQueue();
+    }
+  };
+
+  // Update the useEffect for queue processing
+  useEffect(() => {
+    const addToQueue = (address: string) => {
+      if (
+        !HEROTAG_CACHE[address] && 
+        !FAILED_HEROTAGS.has(address) && 
+        !fetchQueue.current.includes(address) &&
+        address
+      ) {
+        fetchQueue.current.push(address);
+      }
+    };
+
+    games.forEach(game => {
+      addToQueue(game.creator);
+      if (game.rival) {
+        addToQueue(game.rival);
+      }
+    });
+
+    if (!isFetchingRef.current && fetchQueue.current.length > 0) {
+      processQueue();
+    }
+  }, [games]);
+
   return (
     <div className="space-y-6">
       <Toaster 
@@ -897,7 +991,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                           />
                         </div>
                         <span className="text-black text-xs font-medium mb-1 truncate w-full text-center">
-                          {`${game.creator.slice(0, 3)}...${game.creator.slice(-4)}`}
+                          {heroTags[game.creator] || `${game.creator.slice(0, 3)}...${game.creator.slice(-4)}`}
                         </span>
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full overflow-hidden">
@@ -928,7 +1022,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </div>
                         <span className="text-black text-xs font-medium mb-1 truncate w-full text-center">
                           {game.rival 
-                            ? (`${game.rival.slice(0, 5)}...${game.rival.slice(-4)}`)
+                            ? (heroTags[game.rival] || `${game.rival.slice(0, 5)}...${game.rival.slice(-4)}`)
                             : 'Play to win'}
                         </span>
                         <div className="flex items-center gap-2">
