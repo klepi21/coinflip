@@ -94,7 +94,7 @@ export default function Home() {
               <div className="flex flex-col items-center">
                 <h3 className="text-lg font-bold text-white mb-2">MultiversX FUD/FOMO Index</h3>
                 <p className="text-sm text-zinc-400 mb-6">Sentiment Analysis: Market Metrics & Social Signals</p>
-                <FudGauge value={70} size={280} />
+                <FudGauge value={40} size={280} />
               </div>
             </div>
           </div>
