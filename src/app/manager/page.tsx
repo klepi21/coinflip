@@ -564,6 +564,41 @@ export default function Stats() {
     }
   };
 
+  // Add CSV export function
+  const handleExportCSV = () => {
+    // Create CSV header
+    const csvHeader = ['Address', 'Total Games', 'Wins', 'Losses', 'Win Rate'];
+    
+    // Transform data to CSV format
+    const csvData = scores.map(score => {
+      const totalGames = score.wins + score.losses;
+      const winRate = totalGames > 0 ? ((score.wins / totalGames) * 100).toFixed(1) : '0.0';
+      return [
+        score.address,
+        totalGames.toString(),
+        score.wins.toString(),
+        score.losses.toString(),
+        `${winRate}%`
+      ];
+    });
+
+    // Combine header and data
+    const csvContent = [csvHeader, ...csvData]
+      .map(row => row.join(','))
+      .join('\n');
+
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'fudout_statistics.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <main className="relative h-screen overflow-hidden bg-black">
       <RetroGrid />
@@ -764,6 +799,12 @@ export default function Stats() {
                         />
                       </div>
                       <div className="flex gap-2">
+                        <button
+                          onClick={handleExportCSV}
+                          className="px-4 py-2 rounded-xl bg-zinc-800/50 text-white hover:bg-[#C99733] hover:text-black transition-colors"
+                        >
+                          Export CSV
+                        </button>
                         <button
                           onClick={() => setSortBy('winRate')}
                           className={`px-4 py-2 rounded-xl ${

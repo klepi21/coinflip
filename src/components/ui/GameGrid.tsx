@@ -38,6 +38,7 @@ const BOBER_IDENTIFIER = 'BOBER-9eb764';
 const TOM_IDENTIFIER = 'TOM-48414f';
 const BATEMAN_IDENTIFIER = 'BATEMAN-f6fd19';
 const VILLER_IDENTIFIER = 'VILLER-cab1fb';
+const BLAZZORD_IDENTIFIER = 'BLAZZORD-6fb184';
 
 // Token configuration
 const TOKEN_DECIMALS = 18;
@@ -51,6 +52,7 @@ const TOKEN_DECIMALS_MAP: Record<string, number> = {
   [TOM_IDENTIFIER]: 18,
   [BATEMAN_IDENTIFIER]: 18,
   [VILLER_IDENTIFIER]: 10,
+  [BLAZZORD_IDENTIFIER]: 18
 };
 
 // Token data with images
@@ -61,18 +63,19 @@ const TOKEN_IMAGES: Record<string, string> = {
   [TOM_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${TOM_IDENTIFIER}/icon.svg`,
   [BATEMAN_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${BATEMAN_IDENTIFIER}/icon.svg`,
   [VILLER_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${VILLER_IDENTIFIER}/icon.svg`,
+  [BLAZZORD_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${BLAZZORD_IDENTIFIER}/icon.svg`,
   'EGLD': 'https://s2.coinmarketcap.com/static/img/coins/200x200/6892.png'
 };
 
 // Add SIDES constant at the top with other constants
 const SIDES = {
-  GRM: {
-    name: 'GRM',
-    image: '/img/grm.png'
+  BENI: {
+    name: 'BENI',
+    image: '/img/beni.png'
   },
-  SASU: {
-    name: 'SASU',
-    image: '/img/sasu.png'
+  MIHAI: {
+    name: 'MIHAI',
+    image: '/img/mihai.png'
   }
 };
 
@@ -101,7 +104,7 @@ type PopupState = {
 };
 
 type FilterType = 'all' | 'highest' | 'lowest' | 'yours';
-type TokenFilter = 'all' | 'EGLD' | 'RARE-99e8b0' | 'BOD-204877' | 'BOBER-9eb764' | 'TOM-48414f' | 'BATEMAN-f6fd19' | 'VILLER-cab1fb';
+type TokenFilter = 'all' | 'EGLD' | 'RARE-99e8b0' | 'BOD-204877' | 'BOBER-9eb764' | 'TOM-48414f' | 'BATEMAN-f6fd19' | 'VILLER-cab1fb' | 'BLAZZORD-6fb184';
 
 type GridView = '2x2' | '3x3';
 
@@ -171,6 +174,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   const { balance: tomBalance, isLoading: isLoadingTom } = useTokenBalance(connectedAddress || '', TOM_IDENTIFIER);
   const { balance: bateBalance, isLoading: isLoadingBate } = useTokenBalance(connectedAddress || '', BATEMAN_IDENTIFIER);
   const { balance: villerBalance, isLoading: isLoadingViller } = useTokenBalance(connectedAddress || '', VILLER_IDENTIFIER);
+  const { balance: blazzordBalance, isLoading: isLoadingBlazzord } = useTokenBalance(connectedAddress || '', BLAZZORD_IDENTIFIER);
 
   const [previousGames, setPreviousGames] = useState<Game[]>([]);
   const [disappearingGames, setDisappearingGames] = useState<Game[]>([]);
@@ -276,7 +280,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
     return winnerAddress;
   };
 
-  const handleJoinGame = async (gameId: number, amount: string, token: string) => {
+  const handleJoinGame = async (gameId: number, amount: string, token: string, side: 'BENI' | 'MIHAI') => {
     if (!connectedAddress) {
       toast.error('Please connect your wallet first');
       return;
@@ -291,6 +295,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
         address: new Address(SC_ADDRESS),
         abi: AbiRegistry.create(flipcoinAbi)
       });
+
+      const sideValue = side === 'BENI' ? 0 : 1;
 
       const transaction = contract.methods
         .join([new U64Value(gameId)])
@@ -488,7 +494,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
   };
 
   const canJoinGame = (gameAmount: string, tokenIdentifier: string): boolean => {
-    if (!connectedAddress || isLoadingRare || isLoadingBod || isLoadingBate || isLoadingBober || isLoadingTom || isLoadingViller) return false;
+    if (!connectedAddress || isLoadingRare || isLoadingBod || isLoadingBate || isLoadingBober || isLoadingTom || isLoadingViller || isLoadingBlazzord) return false;
     
     try {
       const currentBalance = tokenIdentifier === RARE_IDENTIFIER ? rareBalance :
@@ -497,6 +503,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                             tokenIdentifier === BOBER_IDENTIFIER ? boberBalance :
                             tokenIdentifier === TOM_IDENTIFIER ? tomBalance :
                             tokenIdentifier === VILLER_IDENTIFIER ? villerBalance :
+                            tokenIdentifier === BLAZZORD_IDENTIFIER ? blazzordBalance :
                             Number(account.balance) / Math.pow(10, 18);
       
       // Get token-specific decimals
@@ -985,8 +992,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       <div className="flex-1 p-2 sm:p-4 flex flex-col items-center justify-center">
                         <div className="w-16 h-16 sm:w-24 sm:h-24">
                           <Image
-                            src={game.side === 0 ? '/img/grm.png?v=3' : '/img/sasu.png?v=3'}
-                            alt={game.side === 0 ? "GRM" : "SASU"}
+                            src={game.side === 0 ? '/img/beni.png?v=3' : '/img/mihai.png?v=3'}
+                            alt={game.side === 0 ? "BENI" : "MIHAI"}
                             width={128}
                             height={128}
                             className="w-full h-full object-contain filter opacity-50"
@@ -1015,8 +1022,8 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                       <div className="flex-1 p-2 sm:p-4 flex flex-col items-center justify-center ml-8  ">
                         <div className="w-16 h-16 sm:w-24 sm:h-24">
                           <Image
-                            src={game.side === 0 ? '/img/sasu.png?v=3' : '/img/grm.png?v=3'}
-                            alt={game.side === 0 ? "SASU" : "GRM"}
+                            src={game.side === 0 ? '/img/mihai.png?v=3' : '/img/beni.png?v=3'}
+                            alt={game.side === 0 ? "MIHAI" : "BENI"}
                             width={128}
                             height={128}
                             className="w-full h-full object-contain"
@@ -1064,7 +1071,7 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
                         </button>
                       ) : (
                         <button 
-                          onClick={() => handleJoinGame(game.id, game.amount, game.token)}
+                          onClick={() => handleJoinGame(game.id, game.amount, game.token, game.side === 0 ? 'BENI' : 'MIHAI')}
                           disabled={!canJoinGame(game.amount, game.token)}
                           className={`w-full font-semibold py-2 px-4 whitespace-nowrap rounded-full text-sm transition-colors shadow-lg border-8 border-black ${
                             canJoinGame(game.amount, game.token)

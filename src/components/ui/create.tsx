@@ -21,6 +21,7 @@ const BOBER_IDENTIFIER = 'BOBER-9eb764';
 const TOM_IDENTIFIER = 'TOM-48414f';
 const BATEMAN_IDENTIFIER = 'BATEMAN-f6fd19';
 const VILLER_IDENTIFIER = 'VILLER-cab1fb';
+const BLAZZORD_IDENTIFIER = 'BLAZZORD-6fb184';
 
 // Token data with images
 type TokenData = {
@@ -82,17 +83,24 @@ const TOKENS: Record<string, TokenData> = {
     image: `https://tools.multiversx.com/assets-cdn/tokens/${VILLER_IDENTIFIER}/icon.svg`,
     decimals: 10,
     minAmount: 10000
+  },
+  BLAZZORD: {
+    id: 'BLAZZORD',
+    name: 'BLAZZORD',
+    image: `https://tools.multiversx.com/assets-cdn/tokens/${BLAZZORD_IDENTIFIER}/icon.svg`,
+    decimals: 18,
+    minAmount: 1000
   }
 };
 
 const SIDES = {
-  GRM: {
-    name: 'GRM',
-    image: '/img/grm.png?v=3'
+  BENI: {
+    name: 'BENI',
+    image: '/img/beni.png'
   },
-  SASU: {
-    name: 'SASU',
-    image: '/img/sasu.png?v=3'
+  MIHAI: {
+    name: 'MIHAI',
+    image: '/img/mihai.png'
   }
 };
 
@@ -107,9 +115,9 @@ const GAME_MULTIPLIERS = [1, 2, 5, 10, 15];
 
 export default function Create() {
   const [amount, setAmount] = useState('');
-  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'BOBER' | 'TOM' | 'EGLD' | 'BATEMAN' | 'VILLER'>('RARE');
+  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'BOBER' | 'TOM' | 'EGLD' | 'BATEMAN' | 'VILLER' | 'BLAZZORD'>('RARE');
   const [multiplier, setMultiplier] = useState(1);
-  const [selectedSide, setSelectedSide] = useState<'GRM' | 'SASU' | null>(null);
+  const [selectedSide, setSelectedSide] = useState<'BENI' | 'MIHAI' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isWaitingForTx, setIsWaitingForTx] = useState(false);
@@ -137,7 +145,8 @@ export default function Create() {
   const { balance: tomBalance, isLoading: isLoadingTom } = useTokenBalance(address || '', TOM_IDENTIFIER);
   const { balance: bateBalance, isLoading: isLoadingBate } = useTokenBalance(address || '', BATEMAN_IDENTIFIER);
   const { balance: villerBalance, isLoading: isLoadingViller } = useTokenBalance(address || '', VILLER_IDENTIFIER);
-  const isLoadingBalance = isLoadingRare || isLoadingBod || isLoadingBober || isLoadingTom || isLoadingBate || isLoadingViller;
+  const { balance: blazzordBalance, isLoading: isLoadingBlazzord } = useTokenBalance(address || '', BLAZZORD_IDENTIFIER);
+  const isLoadingBalance = isLoadingRare || isLoadingBod || isLoadingBober || isLoadingTom || isLoadingBate || isLoadingViller || isLoadingBlazzord;
 
   // Reset popup when component mounts or when sessionId changes to null
   useEffect(() => {
@@ -160,7 +169,7 @@ export default function Create() {
       setIsSubmitting(true);
       setIsWaitingForTx(true);
 
-      const sideValue = selectedSide === 'GRM' ? 0 : 1;
+      const sideValue = selectedSide === 'BENI' ? 0 : 1;
 
       let transaction;
       if (selectedToken === 'EGLD') {
@@ -183,6 +192,7 @@ export default function Create() {
                                selectedToken === 'BOBER' ? BOBER_IDENTIFIER :
                                selectedToken === 'TOM' ? TOM_IDENTIFIER :
                                selectedToken === 'BATEMAN' ? BATEMAN_IDENTIFIER :
+                               selectedToken === 'BLAZZORD' ? BLAZZORD_IDENTIFIER :
                                VILLER_IDENTIFIER;
         transaction = {
           value: '0',
@@ -238,6 +248,7 @@ export default function Create() {
                           selectedToken === 'TOM' ? tomBalance :
                           selectedToken === 'BATEMAN' ? bateBalance :
                           selectedToken === 'VILLER' ? villerBalance :
+                          selectedToken === 'BLAZZORD' ? blazzordBalance :
                           Number(account.balance) / Math.pow(10, 18);
     const amountValue = parseFloat(amount);
     const totalAmount = amountValue * multiplier;
@@ -373,32 +384,32 @@ export default function Create() {
                       backgroundPosition: 'center',
                       backgroundRepeat: 'no-repeat'
                     }}>
-                      {/* GRM Side */}
-                      <div className={`w-32 h-40 transition-all duration-300 flex flex-col items-center ${selectedSide === 'GRM' ? 'opacity-100' : 'opacity-40 blur-sm'}`}>
+                      {/* BENI Side */}
+                      <div className={`w-32 h-40 transition-all duration-300 flex flex-col items-center ${selectedSide === 'BENI' ? 'opacity-100' : 'opacity-40 blur-sm'}`}>
                         <div className="w-32 h-32 flex items-center justify-center">
                           <Image
-                            src={SIDES.GRM.image}
-                            alt="GRM"
+                            src={SIDES.BENI.image}
+                            alt="BENI"
                             width={100}
                             height={100}
                             className="w-28 h-28 object-contain"
                           />
                         </div>
-                        <span className="text-black font-bold text-lg mt-2">GRM</span>
+                        <span className="text-black font-bold text-lg mt-2">BENI</span>
                       </div>
 
-                      {/* SASU Side */}
-                      <div className={`w-32 h-40 transition-all duration-300 flex flex-col items-center ${selectedSide === 'SASU' ? 'opacity-100' : 'opacity-40 blur-sm'}`}>
+                      {/* MIHAI Side */}
+                      <div className={`w-32 h-40 transition-all duration-300 flex flex-col items-center ${selectedSide === 'MIHAI' ? 'opacity-100' : 'opacity-40 blur-sm'}`}>
                         <div className="w-32 h-32 flex items-center justify-center">
                           <Image
-                            src={SIDES.SASU.image}
-                            alt="SASU"
+                            src={SIDES.MIHAI.image}
+                            alt="MIHAI"
                             width={100}
                             height={100}
                             className="w-28 h-28 object-contain"
                           />
                         </div>
-                        <span className="text-black font-bold text-lg mt-2">SASU</span>
+                        <span className="text-black font-bold text-lg mt-2">MIHAI</span>
                       </div>
                     </div>
                   </div>
@@ -411,7 +422,7 @@ export default function Create() {
                         {Object.entries(TOKENS).map(([key, token]) => (
                           <button
                             key={key}
-                            onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'TOM' | 'EGLD' | 'BATEMAN' | 'VILLER')}
+                            onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'TOM' | 'EGLD' | 'BATEMAN' | 'VILLER' | 'BLAZZORD')}
                             className={`flex items-center justify-center w-12 h-12 rounded-xl border transition-all ${
                               selectedToken === key 
                                 ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black' 
@@ -482,28 +493,28 @@ export default function Create() {
                       <label className="block text-zinc-400 text-sm mb-2">Pick your side</label>
                       <div className="flex gap-4">
                         <button
-                          onClick={() => setSelectedSide('GRM')}
+                          onClick={() => setSelectedSide('BENI')}
                           className={`flex-1 h-16 rounded-xl ${
-                            selectedSide === 'GRM' 
+                            selectedSide === 'BENI' 
                               ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-2 border-black text-black' 
                               : 'bg-zinc-800 text-white'
                           } font-medium transition-all flex items-center justify-center gap-3 hover:bg-gradient-to-r hover:from-[#C99733] hover:to-[#FFD163] hover:text-black`}
                         >
                           <div className="w-10 h-10 rounded-full overflow-hidden bg-black/20 p-1">
                             <Image
-                              src={SIDES.GRM.image}
-                              alt="GRM"
+                              src={SIDES.BENI.image}
+                              alt="BENI"
                               width={32}
                               height={32}
                               className="w-full h-full object-contain rounded-full"
                             />
                           </div>
-                          <span>GRM</span>
+                          <span>BENI</span>
                         </button>
                         <button
-                          onClick={() => setSelectedSide('SASU')}
+                          onClick={() => setSelectedSide('MIHAI')}
                           className={`flex-1 h-16 rounded-xl ${
-                            selectedSide === 'SASU' 
+                            selectedSide === 'MIHAI' 
                               ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-2 border-black text-black' 
                               : 'bg-zinc-800 text-white'
                           } font-medium transition-all flex items-center justify-center gap-3 hover:bg-gradient-to-r hover:from-[#C99733] hover:to-[#FFD163] hover:text-black`}
@@ -511,14 +522,14 @@ export default function Create() {
                           <div className="flex items-center justify-center">
                             <div className="w-10 h-10 rounded-full overflow-hidden bg-black/20 p-1">
                               <Image
-                                src={SIDES.SASU.image}
-                                alt="SASU"
+                                src={SIDES.MIHAI.image}
+                                alt="MIHAI"
                                 width={32}
                                 height={32}
                                 className="w-full h-full object-contain rounded-full"
                               />
                             </div>
-                            <span className="ml-3">SASU</span>
+                            <span className="ml-3">MIHAI</span>
                           </div>
                         </button>
                       </div>
@@ -544,7 +555,7 @@ export default function Create() {
                         <span className="text-white font-medium">
                           {selectedToken === 'EGLD' 
                             ? (Number(account.balance) / Math.pow(10, 18)).toFixed(4)
-                            : (selectedToken === 'RARE' ? rareBalance : selectedToken === 'BOD' ? bodBalance : selectedToken === 'BOBER' ? boberBalance : selectedToken === 'TOM' ? tomBalance : selectedToken === 'BATEMAN' ? bateBalance : villerBalance).toFixed(2)} {selectedToken}
+                            : (selectedToken === 'RARE' ? rareBalance : selectedToken === 'BOD' ? bodBalance : selectedToken === 'BOBER' ? boberBalance : selectedToken === 'TOM' ? tomBalance : selectedToken === 'BATEMAN' ? bateBalance : selectedToken === 'VILLER' ? villerBalance : blazzordBalance).toFixed(2)} {selectedToken}
                         </span>
                       )}
                     </div>
@@ -584,32 +595,32 @@ export default function Create() {
                   backgroundPosition: 'center',
                   backgroundRepeat: 'no-repeat'
                 }}>
-                  {/* GRM Side */}
-                  <div className={`w-32 h-40 ml-8 transition-all duration-300 flex flex-col items-center ${selectedSide === 'GRM' ? 'opacity-100' : 'opacity-99 blur-sm'}`}>
+                  {/* BENI Side */}
+                  <div className={`w-32 h-40 ml-8 transition-all duration-300 flex flex-col items-center ${selectedSide === 'BENI' ? 'opacity-100' : 'opacity-99 blur-sm'}`}>
                     <div className="w-32 h-32 flex items-center justify-center">
                       <Image
-                        src={SIDES.GRM.image}
-                        alt="GRM"
+                        src={SIDES.BENI.image}
+                        alt="BENI"
                         width={100}
                         height={100}
                         className="w-28 h-28 object-contain"
                       />
                     </div>
-                    <span className="text-white font-bold text-lg mb-8">GRM</span>
+                    <span className="text-white font-bold text-lg mb-8">BENI</span>
                   </div>
 
-                  {/* SASU Side */}
-                  <div className={`w-32 h-40 transition-all mr-8 duration-300 flex flex-col items-center ${selectedSide === 'SASU' ? 'opacity-100' : 'opacity-99 blur-sm'}`}>
+                  {/* MIHAI Side */}
+                  <div className={`w-32 h-40 transition-all mr-8 duration-300 flex flex-col items-center ${selectedSide === 'MIHAI' ? 'opacity-100' : 'opacity-99 blur-sm'}`}>
                     <div className="w-32 h-32 flex items-center justify-center">
                       <Image
-                        src={SIDES.SASU.image}
-                        alt="SASU"
+                        src={SIDES.MIHAI.image}
+                        alt="MIHAI"
                         width={100}
                         height={100}
                         className="w-28 h-28 object-contain"
                       />
                     </div>
-                    <span className="text-white font-bold text-lg mb-8">SASU</span>
+                    <span className="text-white font-bold text-lg mb-8">MIHAI</span>
                   </div>
                 </div>
               </div>
@@ -622,7 +633,7 @@ export default function Create() {
                     {Object.entries(TOKENS).map(([key, token]) => (
                       <button
                         key={key}
-                        onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'TOM' | 'EGLD' | 'BATEMAN' | 'VILLER')}
+                        onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'TOM' | 'EGLD' | 'BATEMAN' | 'VILLER' | 'BLAZZORD')}
                         className={`flex items-center justify-center w-12 h-12 rounded-xl border transition-all ${
                           selectedToken === key 
                             ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black' 
@@ -693,28 +704,28 @@ export default function Create() {
                   <label className="block text-zinc-400 text-sm mb-2">Pick your side</label>
                   <div className="flex gap-4">
                     <button
-                      onClick={() => setSelectedSide('GRM')}
+                      onClick={() => setSelectedSide('BENI')}
                       className={`flex-1 h-16 rounded-xl ${
-                        selectedSide === 'GRM' 
+                        selectedSide === 'BENI' 
                           ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-2 border-black text-black' 
                           : 'bg-zinc-800 text-white'
                       } font-medium transition-all flex items-center justify-center gap-3 hover:bg-gradient-to-r hover:from-[#C99733] hover:to-[#FFD163] hover:text-black`}
                     >
                       <div className="w-10 h-10 rounded-full overflow-hidden bg-black/20 p-1">
                         <Image
-                          src={SIDES.GRM.image}
-                          alt="GRM"
+                          src={SIDES.BENI.image}
+                          alt="BENI"
                           width={32}
                           height={32}
                           className="w-full h-full object-contain rounded-full"
                         />
                       </div>
-                      <span>GRM</span>
+                      <span>BENI</span>
                     </button>
                     <button
-                      onClick={() => setSelectedSide('SASU')}
+                      onClick={() => setSelectedSide('MIHAI')}
                       className={`flex-1 h-16 rounded-xl ${
-                        selectedSide === 'SASU' 
+                        selectedSide === 'MIHAI' 
                           ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-2 border-black text-black' 
                           : 'bg-zinc-800 text-white'
                       } font-medium transition-all flex items-center justify-center gap-3 hover:bg-gradient-to-r hover:from-[#C99733] hover:to-[#FFD163] hover:text-black`}
@@ -722,14 +733,14 @@ export default function Create() {
                       <div className="flex items-center justify-center">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-black/20 p-1">
                           <Image
-                            src={SIDES.SASU.image}
-                            alt="SASU"
+                            src={SIDES.MIHAI.image}
+                            alt="MIHAI"
                             width={32}
                             height={32}
                             className="w-full h-full object-contain rounded-full"
                           />
                         </div>
-                        <span className="ml-3">SASU</span>
+                        <span className="ml-3">MIHAI</span>
                       </div>
                     </button>
                   </div>
@@ -761,6 +772,7 @@ export default function Create() {
                            selectedToken === 'TOM' ? tomBalance :
                            selectedToken === 'BATEMAN' ? bateBalance :
                            selectedToken === 'VILLER' ? villerBalance :
+                           selectedToken === 'BLAZZORD' ? blazzordBalance :
                            0).toFixed(2)} {selectedToken}
                     </span>
                   )}
