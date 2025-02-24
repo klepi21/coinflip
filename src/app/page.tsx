@@ -13,6 +13,7 @@ import { useGetNetworkConfig } from "@multiversx/sdk-dapp/hooks";
 import flipcoinAbi from '@/config/flipcoin.abi.json';
 import Create from '@/components/ui/create';
 import GameGrid from '@/components/ui/GameGrid';
+import BoberGrid from '@/components/ui/BoberGrid';
 import { AnimatedText } from "@/components/ui/animated-underline-text-one";
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
@@ -23,12 +24,38 @@ import { cn } from "@/lib/utils";
 import { FudGauge } from '@/components/ui/fud-gauge';
 import { VoteBanner } from '@/components/ui/VoteBanner';
 import { WofAnnouncement } from '@/components/ui/WofAnnouncement';
+import { ToggleLeft, ToggleRight } from 'lucide-react';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
 
 const CreateDynamic = dynamic(() => import('@/components/ui/create'), { ssr: false });
 const GameGridDynamic = dynamic(() => import('@/components/ui/GameGrid'), { ssr: false });
+const BoberGridDynamic = dynamic(() => import('@/components/ui/BoberGrid'), { 
+  ssr: false,
+  loading: () => (
+    <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={`placeholder-${index}`} className="relative pb-8">
+          <div className="bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-lg animate-pulse">
+            <div className="flex relative min-h-[160px] sm:min-h-[200px] bg-[#007E76]">
+              <div className="flex-1 p-4 flex flex-col items-center justify-center bg-black/30">
+                <div className="w-16 h-16 rounded-full bg-zinc-800 mb-2"></div>
+                <div className="h-4 w-20 bg-zinc-800 rounded mb-2"></div>
+                <div className="h-4 w-16 bg-zinc-800 rounded"></div>
+              </div>
+              <div className="flex-1 p-4 flex flex-col items-center justify-center bg-black/30">
+                <div className="w-16 h-16 rounded-full bg-zinc-800 mb-2"></div>
+                <div className="h-4 w-20 bg-zinc-800 rounded mb-2"></div>
+                <div className="h-4 w-16 bg-zinc-800 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+});
 
 export default function Home() {
   const [totalGamesPlayed, setTotalGamesPlayed] = useState<number>(0);
@@ -36,6 +63,7 @@ export default function Home() {
   const { network } = useGetNetworkConfig();
   const [showTooltip, setShowTooltip] = useState(false);
   const [isButtonClicked, setIsButtonClicked] = useState(false);
+  const [showBoberGames, setShowBoberGames] = useState(false);
 
   const fetchTotalGames = async () => {
     try {
@@ -75,16 +103,36 @@ export default function Home() {
       
       <div className="w-full md:container mx-auto flex-1 mb-auto relative z-10">
         {/* Title Section */}
-        <div className="flex flex-col items-center py-4 md:py-12 mb-8">
+        <div className="flex flex-col items-center py-4 md:py-12">
           <WofAnnouncement />
-          <div className="flex items-center gap-6 justify-center">
           
-
+          {/* Toggle Switch - Moved inside title section */}
+          <div className="w-full flex justify-end mb-6">
+            <button
+              onClick={() => setShowBoberGames(!showBoberGames)}
+              className={cn(
+                "relative transition-all duration-300",
+                "flex items-center gap-2 md:gap-3",
+                "px-3 md:px-8 py-1.5 md:py-2 rounded-full",
+                showBoberGames 
+                  ? "bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black"
+                  : "bg-zinc-800 text-white"
+              )}
+            >
+              <span className="text-xs md:text-sm font-medium whitespace-nowrap">
+                {showBoberGames ? 'FUDOUT Fights' : 'Show Bober'}
+              </span>
+              {showBoberGames ? (
+                <ToggleRight className="w-4 h-4 md:w-5 md:h-5" />
+              ) : (
+                <ToggleLeft className="w-4 h-4 md:w-5 md:h-5" />
+              )}
+            </button>
           </div>
         </div>
 
         {/* Main Content - Split Screen */}
-        <div className="flex flex-col md:flex-row gap-8">
+        <div className="flex flex-col md:flex-row gap-8 mt-4">
           {/* Left Half - Create Game */}
           <div className="w-full md:w-1/3">
             <CreateDynamic />
@@ -101,7 +149,29 @@ export default function Home() {
 
           {/* Right Half - Game Grid and Mobile FUD Gauge */}
           <div className="w-full md:w-2/3" style={{ marginTop: '-86px' }}>
-            <GameGridDynamic onActiveGamesChange={setActiveGames} />
+            <AnimatePresence mode="wait">
+              {showBoberGames ? (
+                <motion.div
+                  key="bober"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <BoberGridDynamic onActiveGamesChange={setActiveGames} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="regular"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <GameGridDynamic onActiveGamesChange={setActiveGames} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

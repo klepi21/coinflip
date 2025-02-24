@@ -646,20 +646,22 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
       />
       {/* Stats and Filter Row */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="flex gap-2 lg:gap-4 text-sm lg:text-base">
-          <div className="bg-[#1A1A1A] rounded-full px-3 lg:px-6 py-1.5 lg:py-2 text-white">
-            <span className="font-bold">{games.length}</span> ACTIVE
+        <div className="flex gap-2 lg:gap-4 text-xs lg:text-sm">
+          <div className="bg-[#1A1A1A] rounded-full px-3 lg:px-4 py-1.5 lg:py-1.5 text-white flex items-center gap-1">
+            <span className="font-bold">{games.length}</span>
+            <span className="text-white/80">ACTIVE</span>
           </div>
-          <div className="bg-[#1A1A1A] rounded-full px-3 lg:px-6 py-1.5 lg:py-2 text-white">
-            <span className="font-bold">{totalGames - games.length}</span> CREATED
+          <div className="bg-[#1A1A1A] rounded-full px-3 lg:px-4 py-1.5 lg:py-1.5 text-white flex items-center gap-1">
+            <span className="font-bold">{totalGames - games.length}</span>
+            <span className="text-white/80">CREATED</span>
           </div>
         </div>
         
         {/* Token Filter */}
-        <div className="flex items-center gap-4 bg-[#1A1A1A] rounded-xl p-2">
+        <div className="flex items-center gap-2 bg-[#1A1A1A] rounded-xl p-1">
           <button
             onClick={() => setTokenFilter('all')}
-            className={`px-3 py-1.5 rounded-lg transition-colors ${
+            className={`px-2 py-1 rounded-lg transition-colors text-sm ${
               tokenFilter === 'all' 
                 ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black' 
                 : 'text-white hover:text-[#C99733]'
@@ -679,26 +681,26 @@ export default function GameGrid({ onActiveGamesChange }: Props) {
               <button
                 key={token}
                 onClick={() => setTokenFilter(token as TokenFilter)}
-                className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all relative ${
+                className={`flex items-center justify-center w-7 h-7 rounded-lg transition-all relative ${
                   tokenFilter === token 
-                    ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] p-1' 
+                    ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] p-[3px]' 
                     : count > 0 
                       ? 'hover:bg-zinc-800' 
                       : 'opacity-40 hover:opacity-60'
                 }`}
                 title={`${token === 'EGLD' ? 'EGLD' : token.split('-')[0]} (${count} active)`}
               >
-                <div className={`w-6 h-6 rounded-full overflow-hidden ${count === 0 ? 'grayscale' : ''}`}>
+                <div className={`w-5 h-5 rounded-full overflow-hidden ${count === 0 ? 'grayscale' : ''}`}>
                   <Image
                     src={image}
                     alt={token}
-                    width={24}
-                    height={24}
+                    width={20}
+                    height={20}
                     className="w-full h-full object-cover"
                   />
                 </div>
                 {count > 0 && (
-                  <div className="absolute -top-2 -right-2 bg-[#C99733] text-black text-[10px] px-1.5 rounded-full min-w-[18px] text-center">
+                  <div className="absolute -top-1.5 -right-1.5 bg-[#C99733] text-black text-[10px] px-1 rounded-full min-w-[16px] text-center">
                     {count}
                   </div>
                 )}
