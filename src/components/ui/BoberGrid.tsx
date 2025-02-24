@@ -16,8 +16,6 @@ import { refreshAccount } from "@multiversx/sdk-dapp/utils/account";
 import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { toast, Toaster } from 'sonner';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { TransactionStatus } from '@multiversx/sdk-dapp/types/enums.types';
-import { TransactionToastContent } from '@multiversx/sdk-dapp/UI/TransactionToastContent';
 import { useGetSignedTransactions } from '@multiversx/sdk-dapp/hooks/transactions/useGetSignedTransactions';
 import { useGetPendingTransactions } from '@multiversx/sdk-dapp/hooks/transactions/useGetPendingTransactions';
 import { useGetSuccessfulTransactions } from '@multiversx/sdk-dapp/hooks/transactions/useGetSuccessfulTransactions';
@@ -343,11 +341,31 @@ export default function BoberGrid({ onActiveGamesChange }: Props) {
       
       {/* Transaction Notification */}
       {(hasPendingTransactions || hasSignedTransactions || hasSuccessfulTransactions || hasFailedTransactions) && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#1A1A1A] rounded-lg p-4 border border-[#C99733] text-white">
-          {hasPendingTransactions && <div>Processing transaction...</div>}
-          {hasSignedTransactions && <div>Transaction signed</div>}
-          {hasSuccessfulTransactions && <div>Transaction successful!</div>}
-          {hasFailedTransactions && <div>Transaction failed</div>}
+        <div className="fixed bottom-4 right-4 z-50 bg-[#1A1A1A] rounded-lg p-4 border border-[#C99733] text-white shadow-lg">
+          {hasPendingTransactions && (
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#C99733] border-t-transparent"></div>
+              <span>Processing transaction...</span>
+            </div>
+          )}
+          {hasSignedTransactions && (
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-[#C99733]" />
+              <span>Transaction signed</span>
+            </div>
+          )}
+          {hasSuccessfulTransactions && (
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-500" />
+              <span>Transaction successful!</span>
+            </div>
+          )}
+          {hasFailedTransactions && (
+            <div className="flex items-center gap-2">
+              <span className="text-red-500">×</span>
+              <span>Transaction failed</span>
+            </div>
+          )}
         </div>
       )}
       
