@@ -30,6 +30,10 @@ const BOBER_IDENTIFIER = 'BOBER-9eb764';
 const TOM_IDENTIFIER = 'TOM-48414f';
 const BATEMAN_IDENTIFIER = 'BATEMAN-f6fd19';
 const VILLER_IDENTIFIER = 'VILLER-cab1fb';
+const MEX_IDENTIFIER = 'MEX-455c57';
+const USDC_IDENTIFIER = 'USDC-c76f1f';
+const DNA_IDENTIFIER = 'DNA-b144d1';
+const XOXNO_IDENTIFIER = 'XOXNO-c1293a';
 
 // Token configuration
 const TOKEN_DECIMALS = 18;
@@ -43,6 +47,10 @@ const TOKEN_DECIMALS_MAP: Record<string, number> = {
   [TOM_IDENTIFIER]: 18,
   [BATEMAN_IDENTIFIER]: 18,
   [VILLER_IDENTIFIER]: 10,
+  [MEX_IDENTIFIER]: 18,
+  [USDC_IDENTIFIER]: 6,
+  [DNA_IDENTIFIER]: 18,
+  [XOXNO_IDENTIFIER]: 18
 };
 
 // Token data with images
@@ -53,6 +61,10 @@ const TOKEN_IMAGES: Record<string, string> = {
   [TOM_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${TOM_IDENTIFIER}/icon.svg`,
   [BATEMAN_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${BATEMAN_IDENTIFIER}/icon.svg`,
   [VILLER_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${VILLER_IDENTIFIER}/icon.svg`,
+  [MEX_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${MEX_IDENTIFIER}/icon.svg`,
+  [USDC_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${USDC_IDENTIFIER}/icon.svg`,
+  [DNA_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${DNA_IDENTIFIER}/icon.svg`,
+  [XOXNO_IDENTIFIER]: `https://tools.multiversx.com/assets-cdn/tokens/${XOXNO_IDENTIFIER}/icon.svg`,
   'EGLD': 'https://s2.coinmarketcap.com/static/img/coins/200x200/6892.png'
 };
 
@@ -68,7 +80,7 @@ const SIDES = {
   }
 };
 
-type TokenFilter = 'all' | 'EGLD' | 'RARE-99e8b0' | 'BOD-204877' | 'BOBER-9eb764' | 'TOM-48414f' | 'BATEMAN-f6fd19' | 'VILLER-cab1fb';
+type TokenFilter = 'all' | 'EGLD' | 'RARE-99e8b0' | 'BOD-204877' | 'BOBER-9eb764' | 'TOM-48414f' | 'BATEMAN-f6fd19' | 'VILLER-cab1fb' | 'MEX-455c57' | 'USDC-c76f1f' | 'DNA-b144d1' | 'XOXNO-c1293a';
 
 const formatTokenAmount = (amount: string, token: string): string => {
   try {
