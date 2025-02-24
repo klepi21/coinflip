@@ -107,6 +107,22 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="description" content="F.0. - Fud Out, a blockchain-based PvP coin flip fighting game" />
         <title>F.O. - Fud Out, a blockchain-based PvP coin flip fighting game</title>
+
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-FTWPRW81TD"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-FTWPRW81TD');
+          `}
+        </Script>
+
         <meta name="description" content="Experience the thrill of PvP combat with F.0. - Fud Out, a blockchain-based coin flip fighting game. Compete against other players and claim your rewards." />
         
         {/* Open Graph / Facebook */}
