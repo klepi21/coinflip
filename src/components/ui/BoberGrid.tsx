@@ -144,7 +144,7 @@ export default function BoberGrid({ onActiveGamesChange }: Props) {
         
         joinTransaction = {
           value: '0',
-          data: `ESDTTransfer@${Buffer.from(token).toString('hex')}@${amountHex}@${Buffer.from('join').toString('hex')}@${gameIdHex}`,
+          data: `ESDTTransfer@${Buffer.from(token).toString('hex')}@${amountHex}@${Buffer.from('joinGame').toString('hex')}@${gameIdHex}`,
           receiver: SC_ADDRESS,
           gasLimit: 10000000
         };
