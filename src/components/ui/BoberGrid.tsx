@@ -134,8 +134,13 @@ export default function BoberGrid({ onActiveGamesChange }: Props) {
           gasLimit: 10000000
         };
       } else {
-        // Convert amount to hex for ESDT tokens
-        const amountHex = BigInt(amount).toString(16).padStart(2, '0');
+        // Convert amount to hex and ensure even length
+        const amountBigInt = BigInt(amount);
+        let amountHex = amountBigInt.toString(16);
+        // Pad with leading zero if odd length
+        if (amountHex.length % 2 !== 0) {
+          amountHex = '0' + amountHex;
+        }
         
         joinTransaction = {
           value: '0',
