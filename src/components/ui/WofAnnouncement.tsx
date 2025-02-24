@@ -4,7 +4,7 @@ import { HeroPill } from "@/components/ui/hero-pill"
 
 export function WofAnnouncement() {
   return (
-    <div className="flex justify-center w-full mb-6 relative z-50">
+    <div className="flex justify-center w-full mt-20 relative z-50">
       <HeroPill 
         href="/wof"
         label="Wheel of FOMO just landed! Try it now"
