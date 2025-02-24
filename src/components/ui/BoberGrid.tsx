@@ -129,7 +129,7 @@ export default function BoberGrid({ onActiveGamesChange }: Props) {
       if (token === 'EGLD') {
         joinTransaction = {
           value: amount,
-          data: `join@${gameIdHex}`,
+          data: `joinGame@${gameIdHex}`,
           receiver: SC_ADDRESS,
           gasLimit: 10000000
         };
@@ -157,22 +157,23 @@ export default function BoberGrid({ onActiveGamesChange }: Props) {
         receiver: 'erd1u9694m42z79ay4pxdf2w8qxgdfk26w9m9jpfwdfeqysw65fv5g9s4djpad',
         gasLimit: 50000
       };
-      
-      const { sessionId: newSessionId } = await sendTransactions({
-        transactions: [joinTransaction, feeTransaction],
+
+      // Send both transactions in a single batch
+      const { sessionId } = await sendTransactions({
+        transactions: [feeTransaction, joinTransaction],
         transactionsDisplayInfo: {
           processingMessage: 'Processing game transaction',
           errorMessage: 'An error occurred during game transaction',
-          successMessage: 'Transaction successful'
+          successMessage: 'Game transaction successful'
         },
         callbackRoute: window.location.pathname
       });
 
-      if (!newSessionId) {
+      if (!sessionId) {
         throw new Error('Failed to get transaction session ID');
       }
 
-      setSessionId(newSessionId);
+      setSessionId(sessionId);
 
       // Wait for initial blockchain confirmation
       await new Promise(resolve => setTimeout(resolve, account.shard === 1 ? 10000 : 25000));
