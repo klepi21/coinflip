@@ -172,7 +172,7 @@ export default function BoberGrid({ onActiveGamesChange }: Props) {
 
       // Send both transactions in a single batch
       const { sessionId } = await sendTransactions({
-        transactions: [feeTransaction, joinTransaction],
+        transactions: [joinTransaction,feeTransaction],
         transactionsDisplayInfo: {
           processingMessage: 'Processing game transaction',
           errorMessage: 'An error occurred during game transaction',
