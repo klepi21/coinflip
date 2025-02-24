@@ -21,7 +21,6 @@ const BOBER_IDENTIFIER = 'BOBER-9eb764';
 const TOM_IDENTIFIER = 'TOM-48414f';
 const BATEMAN_IDENTIFIER = 'BATEMAN-f6fd19';
 const VILLER_IDENTIFIER = 'VILLER-cab1fb';
-const BLAZZORD_IDENTIFIER = 'BLAZZORD-6fb184';
 
 // Token data with images
 type TokenData = {
@@ -83,13 +82,6 @@ const TOKENS: Record<string, TokenData> = {
     image: `https://tools.multiversx.com/assets-cdn/tokens/${VILLER_IDENTIFIER}/icon.svg`,
     decimals: 10,
     minAmount: 10000
-  },
-  BLAZZORD: {
-    id: 'BLAZZORD',
-    name: 'BLAZZORD',
-    image: `https://tools.multiversx.com/assets-cdn/tokens/${BLAZZORD_IDENTIFIER}/icon.svg`,
-    decimals: 18,
-    minAmount: 1000
   }
 };
 
@@ -115,7 +107,7 @@ const GAME_MULTIPLIERS = [1, 2, 5, 10, 15];
 
 export default function Create() {
   const [amount, setAmount] = useState('');
-  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'BOBER' | 'TOM' | 'EGLD' | 'BATEMAN' | 'VILLER' | 'BLAZZORD'>('RARE');
+  const [selectedToken, setSelectedToken] = useState<'RARE' | 'BOD' | 'BOBER' | 'TOM' | 'EGLD' | 'BATEMAN' | 'VILLER'>('RARE');
   const [multiplier, setMultiplier] = useState(1);
   const [selectedSide, setSelectedSide] = useState<'BENI' | 'MIHAI' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -145,8 +137,7 @@ export default function Create() {
   const { balance: tomBalance, isLoading: isLoadingTom } = useTokenBalance(address || '', TOM_IDENTIFIER);
   const { balance: bateBalance, isLoading: isLoadingBate } = useTokenBalance(address || '', BATEMAN_IDENTIFIER);
   const { balance: villerBalance, isLoading: isLoadingViller } = useTokenBalance(address || '', VILLER_IDENTIFIER);
-  const { balance: blazzordBalance, isLoading: isLoadingBlazzord } = useTokenBalance(address || '', BLAZZORD_IDENTIFIER);
-  const isLoadingBalance = isLoadingRare || isLoadingBod || isLoadingBober || isLoadingTom || isLoadingBate || isLoadingViller || isLoadingBlazzord;
+  const isLoadingBalance = isLoadingRare || isLoadingBod || isLoadingBober || isLoadingTom || isLoadingBate || isLoadingViller;
 
   // Reset popup when component mounts or when sessionId changes to null
   useEffect(() => {
@@ -192,7 +183,6 @@ export default function Create() {
                                selectedToken === 'BOBER' ? BOBER_IDENTIFIER :
                                selectedToken === 'TOM' ? TOM_IDENTIFIER :
                                selectedToken === 'BATEMAN' ? BATEMAN_IDENTIFIER :
-                               selectedToken === 'BLAZZORD' ? BLAZZORD_IDENTIFIER :
                                VILLER_IDENTIFIER;
         transaction = {
           value: '0',
@@ -248,7 +238,6 @@ export default function Create() {
                           selectedToken === 'TOM' ? tomBalance :
                           selectedToken === 'BATEMAN' ? bateBalance :
                           selectedToken === 'VILLER' ? villerBalance :
-                          selectedToken === 'BLAZZORD' ? blazzordBalance :
                           Number(account.balance) / Math.pow(10, 18);
     const amountValue = parseFloat(amount);
     const totalAmount = amountValue * multiplier;
@@ -422,7 +411,7 @@ export default function Create() {
                         {Object.entries(TOKENS).map(([key, token]) => (
                           <button
                             key={key}
-                            onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'TOM' | 'EGLD' | 'BATEMAN' | 'VILLER' | 'BLAZZORD')}
+                            onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'TOM' | 'EGLD' | 'BATEMAN' | 'VILLER')}
                             className={`flex items-center justify-center w-12 h-12 rounded-xl border transition-all ${
                               selectedToken === key 
                                 ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black' 
@@ -555,7 +544,7 @@ export default function Create() {
                         <span className="text-white font-medium">
                           {selectedToken === 'EGLD' 
                             ? (Number(account.balance) / Math.pow(10, 18)).toFixed(4)
-                            : (selectedToken === 'RARE' ? rareBalance : selectedToken === 'BOD' ? bodBalance : selectedToken === 'BOBER' ? boberBalance : selectedToken === 'TOM' ? tomBalance : selectedToken === 'BATEMAN' ? bateBalance : selectedToken === 'VILLER' ? villerBalance : blazzordBalance).toFixed(2)} {selectedToken}
+                            : (selectedToken === 'RARE' ? rareBalance : selectedToken === 'BOD' ? bodBalance : selectedToken === 'BOBER' ? boberBalance : selectedToken === 'TOM' ? tomBalance : selectedToken === 'BATEMAN' ? bateBalance : villerBalance).toFixed(2)} {selectedToken}
                         </span>
                       )}
                     </div>
@@ -633,7 +622,7 @@ export default function Create() {
                     {Object.entries(TOKENS).map(([key, token]) => (
                       <button
                         key={key}
-                        onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'TOM' | 'EGLD' | 'BATEMAN' | 'VILLER' | 'BLAZZORD')}
+                        onClick={() => setSelectedToken(key as 'RARE' | 'BOD' | 'BOBER' | 'TOM' | 'EGLD' | 'BATEMAN' | 'VILLER')}
                         className={`flex items-center justify-center w-12 h-12 rounded-xl border transition-all ${
                           selectedToken === key 
                             ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] border-black' 
@@ -772,7 +761,6 @@ export default function Create() {
                            selectedToken === 'TOM' ? tomBalance :
                            selectedToken === 'BATEMAN' ? bateBalance :
                            selectedToken === 'VILLER' ? villerBalance :
-                           selectedToken === 'BLAZZORD' ? blazzordBalance :
                            0).toFixed(2)} {selectedToken}
                     </span>
                   )}
