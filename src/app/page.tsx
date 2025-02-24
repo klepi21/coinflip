@@ -120,7 +120,7 @@ export default function Home() {
               )}
             >
               <span className="text-xs md:text-sm font-medium whitespace-nowrap">
-                {showBoberGames ? 'FUDOUT Fights' : 'Show Bober'}
+                {showBoberGames ? 'FUDOUT Fights' : 'Show Bobe Flips'}
               </span>
               {showBoberGames ? (
                 <ToggleRight className="w-4 h-4 md:w-5 md:h-5" />
