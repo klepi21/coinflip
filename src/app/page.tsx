@@ -25,6 +25,7 @@ import { FudGauge } from '@/components/ui/fud-gauge';
 import { VoteBanner } from '@/components/ui/VoteBanner';
 import { WofAnnouncement } from '@/components/ui/WofAnnouncement';
 import { ToggleLeft, ToggleRight } from 'lucide-react';
+import Image from 'next/image';
 
 // Constants
 const SC_ADDRESS = 'erd1qqqqqqqqqqqqqpgqwpmgzezwm5ffvhnfgxn5uudza5mp7x6jfhwsh28nqx';
@@ -119,9 +120,20 @@ export default function Home() {
                   : "bg-zinc-800 text-white"
               )}
             >
-              <span className="text-xs md:text-sm font-medium whitespace-nowrap">
-                {showBoberGames ? 'FUDOUT Fights' : 'Show Bobe Flips'}
-              </span>
+              <div className="flex items-center gap-2">
+                {!showBoberGames && (
+                  <Image
+                    src="https://boberbattle.com/_next/static/media/logo.4806603e.webp"
+                    alt="Bober"
+                    width={20}
+                    height={20}
+                    className="w-5 h-5 object-contain"
+                  />
+                )}
+                <span className="text-xs md:text-sm font-medium whitespace-nowrap">
+                  {showBoberGames ? 'FUDOUT Fights' : 'Show Bober Flips'}
+                </span>
+              </div>
               {showBoberGames ? (
                 <ToggleRight className="w-4 h-4 md:w-5 md:h-5" />
               ) : (
