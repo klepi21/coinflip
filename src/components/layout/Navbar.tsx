@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WalletButton } from '@/components/wallet/WalletButton';
@@ -19,11 +19,33 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
+  const [isWheelHighlighted, setIsWheelHighlighted] = useState(false);
   const { isLoggedIn } = useWallet();
+
+  // Set wheel highlighted if user hasn't visited the Wheel of FOMO page
+  useEffect(() => {
+    const hasVisitedWof = localStorage.getItem('visited_wof');
+    if (!hasVisitedWof && pathname !== '/wof') {
+      setIsWheelHighlighted(true);
+    } else {
+      setIsWheelHighlighted(false);
+    }
+    
+    // If we're on the WOF page, mark it as visited
+    if (pathname === '/wof') {
+      localStorage.setItem('visited_wof', 'true');
+    }
+  }, [pathname]);
 
   const navItems = [
     { title: 'Fight', icon: '⚔️', type: undefined, url: '/' },
-    { title: 'Wheel of Fomo', icon: '🎡', type: undefined, url: '/wof' },
+    { 
+      title: 'Wheel of Fomo', 
+      icon: '🎡', 
+      type: undefined, 
+      url: '/wof',
+      isHighlighted: isWheelHighlighted
+    },
     { title: 'Vote Fighter', icon: '🗳️', type: undefined, url: '/vote' },
     { title: 'Vote Token', icon: '🎁', type: undefined, url: '/votetoken' },
     { title: 'Faucet', icon: '🚰', type: undefined, url: '/faucet' },
@@ -38,6 +60,50 @@ export function Navbar() {
         router.push(selectedItem.url);
       }
     }
+  };
+
+  // Custom rendering for navbar items to highlight special items
+  const renderNavItem = (item: any, isActive: boolean) => {
+    if (item.type === 'separator') return null;
+    
+    return (
+      <div key={item.title} className="relative">
+        <Link
+          href={item.url}
+          className={cn(
+            "flex items-center gap-3 px-4 py-3 rounded-xl transition-colors",
+            isActive
+              ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-medium'
+              : 'text-white/80 hover:text-white hover:bg-white/5'
+          )}
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          <span className={cn(
+            "text-xl",
+            item.isHighlighted && !isActive && "animate-pulse"
+          )}>
+            {item.icon}
+          </span>
+          <span className={cn(
+            "font-medium",
+            item.isHighlighted && !isActive && "text-[#FFD163]"
+          )}>
+            {item.title}
+          </span>
+          
+          {/* Special badge for highlighted items */}
+          {item.isHighlighted && !isActive && (
+            <motion.span 
+              className="absolute -top-1 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] px-2 py-0.5 rounded-full"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              HOT
+            </motion.span>
+          )}
+        </Link>
+      </div>
+    );
   };
 
   return (
@@ -65,6 +131,26 @@ export function Navbar() {
               onChange={handleTabChange}
             />
           </div>
+
+          {/* Wheel of FOMO Highlight for desktops */}
+          {isWheelHighlighted && (
+            <motion.div 
+              className="hidden md:flex absolute top-[4px] left-1/2 transform -translate-x-1/2 -translate-y-full opacity-0 z-50"
+              initial={{ y: 0, opacity: 0 }}
+              animate={{ y: 40, opacity: 1 }}
+              transition={{ delay: 1, duration: 0.5 }}
+            >
+              <motion.div
+                className="bg-[#FFD163] text-black px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, repeatType: "mirror" }}
+              >
+                <span>🎡</span>
+                <span>Try Wheel of FOMO!</span>
+                <span>⬇️</span>
+              </motion.div>
+            </motion.div>
+          )}
 
           {/* Wallet - Right */}
           <div className="absolute right-0">
@@ -95,24 +181,9 @@ export function Navbar() {
         >
           {navItems.filter(item => item.type !== 'separator' && item.title).map((item) => {
             if (!item.title || !item.url) return null;
+            const isActive = pathname === item.url;
             
-            return (
-              <div key={item.title} className="relative">
-                <Link
-                  href={item.url}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-colors",
-                    pathname === item.url
-                      ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-medium'
-                      : 'text-white/80 hover:text-white hover:bg-white/5'
-                  )}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <span className="text-xl">{item.icon}</span>
-                  <span className="font-medium">{item.title}</span>
-                </Link>
-              </div>
-            );
+            return renderNavItem(item, isActive);
           })}
           
           <div className="px-4 pt-2">

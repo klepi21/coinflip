@@ -11,6 +11,7 @@ interface Tab {
   icon: LucideIcon | string;
   type?: never;
   url?: string;
+  isHighlighted?: boolean;
 }
 
 interface Separator {
@@ -18,6 +19,7 @@ interface Separator {
   title?: never;
   icon?: never;
   url?: never;
+  isHighlighted?: never;
 }
 
 type TabItem = Tab | Separator;
@@ -99,6 +101,7 @@ export function ExpandableTabs({
         const isActive = tab.url === activePath;
         const isSelected = selected === index;
         const showTitle = shouldShowTitle(tab, index);
+        const isHighlighted = tab.isHighlighted && !isActive;
 
         return (
           <motion.button
@@ -121,16 +124,19 @@ export function ExpandableTabs({
             {typeof tab.icon === 'string' ? (
               <span className={cn(
                 "text-xl",
-                isActive && "text-[#FFD163]"
+                isActive && "text-[#FFD163]",
+                isHighlighted && "animate-pulse"
               )}>{tab.icon}</span>
             ) : (
               <tab.icon 
                 size={20} 
                 className={cn(
-                  isActive && "text-[#FFD163]"
+                  isActive && "text-[#FFD163]",
+                  isHighlighted && "animate-pulse"
                 )}
               />
             )}
+            
             <AnimatePresence>
               {showTitle && (
                 <motion.span
@@ -141,13 +147,25 @@ export function ExpandableTabs({
                   transition={transition}
                   className={cn(
                     "ml-2",
-                    isActive ? "text-[#FFD163]" : "text-white"
+                    isActive ? "text-[#FFD163]" : "text-white",
+                    isHighlighted && "text-[#FFD163]"
                   )}
                 >
                   {tab.title}
                 </motion.span>
               )}
             </AnimatePresence>
+            
+            {/* Hot badge for highlighted items */}
+            {isHighlighted && (
+              <motion.span 
+                className="absolute -top-1 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] px-2 py-0.5 rounded-full"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                HOT
+              </motion.span>
+            )}
           </motion.button>
         );
       })}
