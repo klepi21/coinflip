@@ -69,14 +69,21 @@ export function Navbar() {
     return (
       <div key={item.title} className="relative">
         <Link
-          href={item.url}
+          href={item.disabled ? "#" : item.url}
           className={cn(
             "flex items-center gap-3 px-4 py-3 rounded-xl transition-colors",
             isActive
               ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-medium'
-              : 'text-white/80 hover:text-white hover:bg-white/5'
+              : 'text-white/80 hover:text-white hover:bg-white/5',
+            item.disabled && "opacity-50 cursor-not-allowed pointer-events-none"
           )}
-          onClick={() => setIsMobileMenuOpen(false)}
+          onClick={(e) => {
+            if (item.disabled) {
+              e.preventDefault();
+              return;
+            }
+            setIsMobileMenuOpen(false);
+          }}
         >
           <span className={cn(
             "text-xl",
@@ -92,7 +99,7 @@ export function Navbar() {
           </span>
           
           {/* Special badge for highlighted items */}
-          {item.isHighlighted && !isActive && (
+          {item.isHighlighted && !isActive && !item.disabled && (
             <motion.span 
               className="absolute -top-1 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] px-2 py-0.5 rounded-full"
               animate={{ scale: [1, 1.2, 1] }}
@@ -100,6 +107,13 @@ export function Navbar() {
             >
               HOT
             </motion.span>
+          )}
+          
+          {/* Disabled indicator */}
+          {item.disabled && (
+            <span className="absolute -top-1 right-0 bg-zinc-700 text-white text-[10px] px-2 py-0.5 rounded-full">
+              Coming Soon
+            </span>
           )}
         </Link>
       </div>
@@ -132,7 +146,25 @@ export function Navbar() {
             />
           </div>
 
-         
+          {/* Wheel of FOMO Highlight for desktops */}
+          {isWheelHighlighted && (
+            <motion.div 
+              className="hidden md:flex absolute top-[4px] left-1/2 transform -translate-x-1/2 -translate-y-full opacity-0 z-50"
+              initial={{ y: 0, opacity: 0 }}
+              animate={{ y: 40, opacity: 1 }}
+              transition={{ delay: 1, duration: 0.5 }}
+            >
+              <motion.div
+                className="bg-[#FFD163] text-black px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, repeatType: "mirror" }}
+              >
+                <span>🎡</span>
+                <span>Try Wheel of FOMO!</span>
+                <span>⬇️</span>
+              </motion.div>
+            </motion.div>
+          )}
 
           {/* Wallet - Right */}
           <div className="absolute right-0">

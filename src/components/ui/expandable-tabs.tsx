@@ -12,6 +12,7 @@ interface Tab {
   type?: never;
   url?: string;
   isHighlighted?: boolean;
+  disabled?: boolean;
 }
 
 interface Separator {
@@ -69,6 +70,9 @@ export function ExpandableTabs({
   });
 
   const handleSelect = (index: number) => {
+    const tab = tabs[index];
+    if (tab.type === 'separator' || tab.disabled) return;
+    
     setSelected(selected === index ? null : index);
     onChange?.(index);
   };
@@ -102,6 +106,7 @@ export function ExpandableTabs({
         const isSelected = selected === index;
         const showTitle = shouldShowTitle(tab, index);
         const isHighlighted = tab.isHighlighted && !isActive;
+        const isDisabled = tab.disabled === true;
 
         return (
           <motion.button
@@ -111,6 +116,7 @@ export function ExpandableTabs({
             animate="animate"
             custom={showTitle}
             onClick={() => handleSelect(index)}
+            disabled={isDisabled}
             transition={transition}
             className={cn(
               "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
@@ -118,7 +124,8 @@ export function ExpandableTabs({
                 ? "bg-black/20"
                 : isSelected
                 ? "bg-black/20"
-                : "text-white/60 hover:bg-black/20 hover:text-white"
+                : "text-white/60 hover:bg-black/20 hover:text-white",
+              isDisabled && "opacity-50 cursor-not-allowed"
             )}
           >
             {typeof tab.icon === 'string' ? (
@@ -148,7 +155,8 @@ export function ExpandableTabs({
                   className={cn(
                     "ml-2",
                     isActive ? "text-[#FFD163]" : "text-white",
-                    isHighlighted && "text-[#FFD163]"
+                    isHighlighted && "text-[#FFD163]",
+                    isDisabled && "text-white/50"
                   )}
                 >
                   {tab.title}
@@ -157,7 +165,7 @@ export function ExpandableTabs({
             </AnimatePresence>
             
             {/* Hot badge for highlighted items */}
-            {isHighlighted && (
+            {isHighlighted && !isDisabled && (
               <motion.span 
                 className="absolute -top-1 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] px-2 py-0.5 rounded-full"
                 animate={{ scale: [1, 1.2, 1] }}
