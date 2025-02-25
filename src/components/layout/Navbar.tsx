@@ -132,25 +132,7 @@ export function Navbar() {
             />
           </div>
 
-          {/* Wheel of FOMO Highlight for desktops */}
-          {isWheelHighlighted && (
-            <motion.div 
-              className="hidden md:flex absolute top-[4px] left-1/2 transform -translate-x-1/2 -translate-y-full opacity-0 z-50"
-              initial={{ y: 0, opacity: 0 }}
-              animate={{ y: 40, opacity: 1 }}
-              transition={{ delay: 1, duration: 0.5 }}
-            >
-              <motion.div
-                className="bg-[#FFD163] text-black px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg"
-                animate={{ y: [0, -5, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity, repeatType: "mirror" }}
-              >
-                <span>🎡</span>
-                <span>Try Wheel of FOMO!</span>
-                <span>⬇️</span>
-              </motion.div>
-            </motion.div>
-          )}
+         
 
           {/* Wallet - Right */}
           <div className="absolute right-0">

@@ -83,22 +83,7 @@ export function WofAnnouncement() {
         />
       )}
       
-      {/* First-time visitor floating tooltip */}
-      {!hasVisited && (
-        <motion.div 
-          className="absolute -top-10 right-10 bg-[#FFD163] text-black px-4 py-2 rounded-lg font-bold shadow-lg z-50"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          exit={{ opacity: 0 }}
-        >
-          <div className="flex items-center gap-2">
-            <span>🔥 NEW!</span>
-            <span>Try our newest game!</span>
-          </div>
-          <div className="absolute -bottom-2 right-10 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-[#FFD163]"></div>
-        </motion.div>
-      )}
+
       
       <Link href="/wof">
         <motion.div 
