@@ -37,6 +37,24 @@ export function Navbar() {
     }
   }, [pathname]);
 
+  // Create a Date object for June 27th, 2024 at 16:00 UTC
+  const tokenVotingEndDate = new Date('2024-06-27T16:00:00Z');
+  
+  // Ensure the date is in the future for testing
+  if (tokenVotingEndDate.getTime() <= Date.now()) {
+    // If the date has passed, set it to 7 days from now for testing
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 7);
+    futureDate.setHours(16, 0, 0, 0);
+    tokenVotingEndDate.setTime(futureDate.getTime());
+  }
+  
+  // Debug log
+  console.log('Token voting end date:', tokenVotingEndDate);
+  console.log('Current date:', new Date());
+  console.log('Is future date?', tokenVotingEndDate.getTime() > Date.now());
+  console.log('Time difference (ms):', tokenVotingEndDate.getTime() - Date.now());
+
   const navItems = [
     { title: 'Fight', icon: '⚔️', type: undefined, url: '/' },
     { 
@@ -46,8 +64,20 @@ export function Navbar() {
       url: '/wof',
       isHighlighted: isWheelHighlighted
     },
-    { title: 'Vote Fighter', icon: '🗳️', type: undefined, url: '/vote' },
-    { title: 'Vote Token', icon: '🎁', type: undefined, url: '/votetoken' },
+    { 
+      title: 'Vote Fighter', 
+      icon: '🗳️', 
+      type: undefined, 
+      url: '/vote',
+      disabled: true 
+    },
+    { 
+      title: 'Vote Token', 
+      icon: '🎁', 
+      type: undefined, 
+      url: '/votetoken',
+      countdownTo: tokenVotingEndDate
+    },
     { title: 'Faucet', icon: '🚰', type: undefined, url: '/faucet' },
     { type: 'separator' as const },
     { title: 'FUDerboard', icon: '📊', type: undefined, url: '/fuderboard' }
@@ -66,6 +96,38 @@ export function Navbar() {
   const renderNavItem = (item: any, isActive: boolean) => {
     if (item.type === 'separator') return null;
     
+    // Countdown timer calculation for mobile menu
+    const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+    
+    useEffect(() => {
+      if (!item.countdownTo) return;
+      
+      const calculateTimeLeft = () => {
+        const now = new Date();
+        const difference = item.countdownTo.getTime() - now.getTime();
+        
+        if (difference <= 0) {
+          return { hours: 0, minutes: 0, seconds: 0 };
+        }
+        
+        const hours = Math.floor(difference / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        
+        return { hours, minutes, seconds };
+      };
+      
+      // Initial calculation
+      setTimeLeft(calculateTimeLeft());
+      
+      // Update timer every second
+      const timer = setInterval(() => {
+        setTimeLeft(calculateTimeLeft());
+      }, 1000);
+      
+      return () => clearInterval(timer);
+    }, [item.countdownTo]);
+    
     return (
       <div key={item.title} className="relative">
         <Link
@@ -74,9 +136,16 @@ export function Navbar() {
             "flex items-center gap-3 px-4 py-3 rounded-xl transition-colors",
             isActive
               ? 'bg-gradient-to-r from-[#C99733] to-[#FFD163] text-black font-medium'
-              : 'text-white/80 hover:text-white hover:bg-white/5'
+              : 'text-white/80 hover:text-white hover:bg-white/5',
+            item.disabled && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-white/60"
           )}
-          onClick={() => setIsMobileMenuOpen(false)}
+          onClick={(e) => {
+            if (item.disabled) {
+              e.preventDefault();
+              return;
+            }
+            setIsMobileMenuOpen(false);
+          }}
         >
           <span className={cn(
             "text-xl",
@@ -100,6 +169,22 @@ export function Navbar() {
             >
               HOT
             </motion.span>
+          )}
+          
+          {/* Countdown timer for token voting */}
+          {item.countdownTo && (
+            <div className="absolute -top-2 -right-2">
+              <motion.div 
+                className="px-2 py-1 text-[10px] font-bold text-white bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full whitespace-nowrap shadow-md"
+                initial={{ scale: 0.95 }}
+                animate={{ scale: [0.95, 1.05, 0.95] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                {timeLeft.hours.toString().padStart(2, '0')}:
+                {timeLeft.minutes.toString().padStart(2, '0')}:
+                {timeLeft.seconds.toString().padStart(2, '0')}
+              </motion.div>
+            </div>
           )}
         </Link>
       </div>
