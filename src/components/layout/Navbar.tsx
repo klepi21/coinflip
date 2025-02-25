@@ -13,6 +13,13 @@ import { cn } from '@/lib/utils';
 import { ExpandableTabs } from '@/components/ui/expandable-tabs';
 import Image from 'next/image';
 
+// Define a type for the countdown timer state
+type TimeLeft = {
+  hours: number;
+  minutes: number;
+  seconds: number;
+};
+
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -21,6 +28,9 @@ export function Navbar() {
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [isWheelHighlighted, setIsWheelHighlighted] = useState(false);
   const { isLoggedIn } = useWallet();
+  
+  // Create a state for countdown timers - one for each item that might need it
+  const [countdownTimers, setCountdownTimers] = useState<Record<string, TimeLeft>>({});
 
   // Set wheel highlighted if user hasn't visited the Wheel of FOMO page
   useEffect(() => {
@@ -55,6 +65,50 @@ export function Navbar() {
   console.log('Is future date?', tokenVotingEndDate.getTime() > Date.now());
   console.log('Time difference (ms):', tokenVotingEndDate.getTime() - Date.now());
 
+  // Function to calculate time left for a given target date
+  const calculateTimeLeft = (targetDate: Date): TimeLeft => {
+    const now = new Date();
+    const difference = targetDate.getTime() - now.getTime();
+    
+    if (difference <= 0) {
+      return { hours: 0, minutes: 0, seconds: 0 };
+    }
+    
+    const hours = Math.floor(difference / (1000 * 60 * 60));
+    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+    
+    return { hours, minutes, seconds };
+  };
+
+  // Update all countdown timers
+  useEffect(() => {
+    // Initial calculation
+    const timers: Record<string, TimeLeft> = {};
+    
+    // Set up timer for token voting
+    if (tokenVotingEndDate) {
+      timers['votetoken'] = calculateTimeLeft(tokenVotingEndDate);
+    }
+    
+    setCountdownTimers(timers);
+    
+    // Update timers every second
+    const interval = setInterval(() => {
+      setCountdownTimers(prev => {
+        const updated = { ...prev };
+        
+        if (tokenVotingEndDate) {
+          updated['votetoken'] = calculateTimeLeft(tokenVotingEndDate);
+        }
+        
+        return updated;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [tokenVotingEndDate]);
+
   const navItems = [
     { title: 'Fight', icon: '⚔️', type: undefined, url: '/' },
     { 
@@ -76,7 +130,8 @@ export function Navbar() {
       icon: '🎁', 
       type: undefined, 
       url: '/votetoken',
-      countdownTo: tokenVotingEndDate
+      countdownTo: tokenVotingEndDate,
+      countdownKey: 'votetoken'
     },
     { title: 'Faucet', icon: '🚰', type: undefined, url: '/faucet' },
     { type: 'separator' as const },
@@ -96,37 +151,8 @@ export function Navbar() {
   const renderNavItem = (item: any, isActive: boolean) => {
     if (item.type === 'separator') return null;
     
-    // Countdown timer calculation for mobile menu
-    const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
-    
-    useEffect(() => {
-      if (!item.countdownTo) return;
-      
-      const calculateTimeLeft = () => {
-        const now = new Date();
-        const difference = item.countdownTo.getTime() - now.getTime();
-        
-        if (difference <= 0) {
-          return { hours: 0, minutes: 0, seconds: 0 };
-        }
-        
-        const hours = Math.floor(difference / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-        
-        return { hours, minutes, seconds };
-      };
-      
-      // Initial calculation
-      setTimeLeft(calculateTimeLeft());
-      
-      // Update timer every second
-      const timer = setInterval(() => {
-        setTimeLeft(calculateTimeLeft());
-      }, 1000);
-      
-      return () => clearInterval(timer);
-    }, [item.countdownTo]);
+    // Get the countdown timer for this item if it exists
+    const timeLeft = item.countdownKey ? countdownTimers[item.countdownKey] : null;
     
     return (
       <div key={item.title} className="relative">
@@ -172,7 +198,7 @@ export function Navbar() {
           )}
           
           {/* Countdown timer for token voting */}
-          {item.countdownTo && (
+          {item.countdownTo && timeLeft && (
             <div className="absolute -top-2 -right-2">
               <motion.div 
                 className="px-2 py-1 text-[10px] font-bold text-white bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full whitespace-nowrap shadow-md"
