@@ -12,8 +12,6 @@ interface Tab {
   type?: never;
   url?: string;
   isHighlighted?: boolean;
-  disabled?: boolean;
-  countdownTo?: Date;
 }
 
 interface Separator {
@@ -22,8 +20,6 @@ interface Separator {
   icon?: never;
   url?: never;
   isHighlighted?: never;
-  disabled?: never;
-  countdownTo?: never;
 }
 
 type TabItem = Tab | Separator;
@@ -57,65 +53,6 @@ const spanVariants = {
 
 const transition = { delay: 0.1, type: "spring", bounce: 0, duration: 0.6 };
 
-// Countdown timer component
-function CountdownTimer({ targetDate }: { targetDate: Date }) {
-  const [timeLeft, setTimeLeft] = React.useState({
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-  });
-
-  React.useEffect(() => {
-    // Debug log
-    console.log('CountdownTimer mounted with target date:', targetDate);
-    
-    const calculateTimeLeft = () => {
-      const now = new Date();
-      const difference = targetDate.getTime() - now.getTime();
-      
-      // Debug log
-      console.log('Time difference in ms:', difference);
-      
-      if (difference <= 0) {
-        console.log('Target date is in the past or now');
-        return { hours: 0, minutes: 0, seconds: 0 };
-      }
-      
-      // Calculate hours, minutes and seconds
-      const hours = Math.floor(difference / (1000 * 60 * 60));
-      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-      
-      const result = { hours, minutes, seconds };
-      console.log('Calculated time left:', result);
-      return result;
-    };
-
-    // Initial calculation
-    setTimeLeft(calculateTimeLeft());
-    
-    // Update the timer every second
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 1000);
-    
-    return () => clearInterval(timer);
-  }, [targetDate]);
-  
-  return (
-    <motion.div 
-      className="px-2 py-1 text-[10px] font-bold text-white bg-gradient-to-r from-[#C99733] to-[#FFD163] rounded-full whitespace-nowrap shadow-md"
-      initial={{ scale: 0.95 }}
-      animate={{ scale: [0.95, 1.05, 0.95] }}
-      transition={{ duration: 1.5, repeat: Infinity }}
-    >
-      {timeLeft.hours.toString().padStart(2, '0')}:
-      {timeLeft.minutes.toString().padStart(2, '0')}:
-      {timeLeft.seconds.toString().padStart(2, '0')}
-    </motion.div>
-  );
-}
-
 export function ExpandableTabs({
   tabs,
   className,
@@ -132,12 +69,6 @@ export function ExpandableTabs({
   });
 
   const handleSelect = (index: number) => {
-    const tab = tabs[index];
-    // Don't allow selecting disabled tabs
-    if ('disabled' in tab && tab.disabled) {
-      return;
-    }
-    
     setSelected(selected === index ? null : index);
     onChange?.(index);
   };
@@ -171,7 +102,6 @@ export function ExpandableTabs({
         const isSelected = selected === index;
         const showTitle = shouldShowTitle(tab, index);
         const isHighlighted = tab.isHighlighted && !isActive;
-        const isDisabled = tab.disabled;
 
         return (
           <motion.button
@@ -181,7 +111,6 @@ export function ExpandableTabs({
             animate="animate"
             custom={showTitle}
             onClick={() => handleSelect(index)}
-            disabled={isDisabled}
             transition={transition}
             className={cn(
               "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
@@ -189,8 +118,7 @@ export function ExpandableTabs({
                 ? "bg-black/20"
                 : isSelected
                 ? "bg-black/20"
-                : "text-white/60 hover:bg-black/20 hover:text-white",
-              isDisabled && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-white/60"
+                : "text-white/60 hover:bg-black/20 hover:text-white"
             )}
           >
             {typeof tab.icon === 'string' ? (
@@ -228,15 +156,8 @@ export function ExpandableTabs({
               )}
             </AnimatePresence>
             
-            {/* Countdown timer badge */}
-            {tab.countdownTo && (
-              <div className="absolute -top-2 -right-2">
-                <CountdownTimer targetDate={tab.countdownTo} />
-              </div>
-            )}
-            
             {/* Hot badge for highlighted items */}
-            {isHighlighted && !tab.countdownTo && (
+            {isHighlighted && (
               <motion.span 
                 className="absolute -top-1 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] px-2 py-0.5 rounded-full"
                 animate={{ scale: [1, 1.2, 1] }}
